@@ -110,7 +110,7 @@ Route::group(
 
             Route::get('/fetch-sekolah', ['GuruController@index', 'fetchSekolah'])->name('fetchSekolah');
 
-
+            
             // Guru / Eksternal
             Route::prefix('eksternal')->group(function () {
                 Route::get('/', 'GuruController@index')->name('guru.index');
@@ -154,6 +154,17 @@ Route::group(
 
                 Route::get('/penugasan/{id}', 'PegawaiController@editPenugasan')->name('pegawai.editPenugasan');
                 Route::get('/pendamping/{id}', 'PegawaiController@editPendamping')->name('pegawai.editPendamping');
+            });
+
+            // Berkas
+            Route::prefix('berkas')->group(function () {
+                Route::get('/', 'BerkasController@index')->name('berkas.index');
+                Route::get('/create', 'BerkasController@create')->name('berkas.create');
+                Route::post('/store', 'BerkasController@store')->name('berkas.store');
+                Route::get('/edit/{id}', 'BerkasController@edit')->name('berkas.edit');
+                Route::put('/update', 'BerkasController@update')->name('berkas.update');
+                Route::post('/hapus/{id}', 'BerkasController@destroy')->name('berkas.hapus');
+                
             });
 
             // Kepegawaian
@@ -259,6 +270,8 @@ Route::group(
                 Route::put('/update', 'AkunController@update')->name('akun.update');
                 Route::post('/hapus/{id}', 'AkunController@destroy')->name('akun.hapus');
             });
+
+            
 
 
             // Kegiatan

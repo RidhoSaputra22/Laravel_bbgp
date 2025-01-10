@@ -408,7 +408,7 @@
                                                 Swal.fire({
                                                     title: "Warning",
                                                     // text: "Peserta tidak terdaftar dalam kegiatan ini. Silahkan registrasi untuk mengikuti kegiatan",
-                                                    text: "Peserta tidak terdaftar dalam kegiatan ini. Silahkan registrasi ke menu Data > Data Eksternal",
+                                                    text: "Peserta belum mendaftar dalam kegiatan ini. Silahkan registrasi ke menu Data > Data Eksternal",
                                                     icon: "warning",
                                                     showCancelButton: true,
                                                     confirmButtonColor: "#4040f5",

@@ -242,7 +242,7 @@
                                         if (response.success) {
                                             swal({
                                                 title: "Warning",
-                                                text: "Anda tidak terdaftar di kegiatan ini. Tapi anda sudah pernah mengikuti kegiatan BBGP sebelumnya. Lanjut ke Registrasi ? \n Form akan terisi otomatis dari data anda sebelumnya",
+                                                text: "Anda belum terdaftar di kegiatan ini. Tapi anda sudah pernah mengikuti kegiatan BBGP sebelumnya. Lanjut ke Registrasi ? \n Form akan terisi otomatis dari data anda sebelumnya",
                                                 icon: "success",
                                                 buttons: true,
                                                 dangerMode: true,

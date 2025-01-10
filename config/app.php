@@ -1,5 +1,6 @@
 <?php
 
+use App\Helpers\Helper as Helper;
 use Illuminate\Support\Facades\Facade;
 use Illuminate\Support\ServiceProvider;
 use Maatwebsite\Excel\ExcelServiceProvider;
@@ -71,7 +72,7 @@ return [
     |
     */
 
-    'timezone' => 'UTC',
+    'timezone' => 'Asia/Jakarta',
 
     /*
     |--------------------------------------------------------------------------
@@ -84,7 +85,7 @@ return [
     |
     */
 
-    'locale' => 'en',
+    'locale' => 'id',
 
     /*
     |--------------------------------------------------------------------------
@@ -97,7 +98,7 @@ return [
     |
     */
 
-    'fallback_locale' => 'en',
+    'fallback_locale' => 'id',
 
     /*
     |--------------------------------------------------------------------------
@@ -110,7 +111,7 @@ return [
     |
     */
 
-    'faker_locale' => 'en_US',
+    'faker_locale' => 'id_ID',
 
     /*
     |--------------------------------------------------------------------------
@@ -191,6 +192,7 @@ return [
         // 'Excel' => Maatwebsite\Excel\Facades\Excel::class
         Barryvdh\DomPDF\ServiceProvider::class,
         'Excel' => Maatwebsite\Excel\Facades\Excel::class,
+        'Helper' => Helper::class,
 
     ])->toArray(),
 

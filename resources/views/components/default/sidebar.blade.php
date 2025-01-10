@@ -238,6 +238,11 @@
                         <i class="fas fa-sign-out-alt"></i> <span>Data Internal</span>
                     </a>
                 </li>
+                <li class="{{ $menu == 'berkas' ? 'active' : '' }}">
+                    <a class="nav-link" href="{{ route('berkas.index', session('no_ktp')) }}">
+                        <i class="fas fa-sign-out-alt"></i> <span>Laporan Kegiatan</span>
+                    </a>
+                </li>
             @endif
 
             @if (Session('role') == 'tenaga pendidik' ||
