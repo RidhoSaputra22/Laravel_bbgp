@@ -28,7 +28,7 @@ class BerkasController extends Controller
     {
         try {
             $validator = Validator::make($r->all(), [
-                'nama_berkas' => 'mimes:pdf|max:5120',
+                'nama_berkas' => 'required|mimes:pdf|max:5120',
             ]);
 
             if ($validator->fails()) {
@@ -74,8 +74,10 @@ class BerkasController extends Controller
     public function edit(string $id)
     {
         $data = Berkas::find($id);
-
-        return view('pages.admin.berkas.edit', ['menu' => 'berkas', 'datas' => $data]);
+        return response()->json([
+            'data' => $data
+        ]);
+        // return view('pages.admin.berkas.index', ['menu' => 'berkas'])->with('datas', json_encode($data));
     }
 
     // public function verifikasi(string $id)
@@ -94,28 +96,52 @@ class BerkasController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request)
+    public function update(Request $r)
     {
-        //
-        // $cek_username = Berkas::where('username', $request->username)->where('role', $request->role)->first();
-        // if($cek_username == null) {
+        try {
+            $validator = Validator::make($r->all(), [
+                'nama_berkas' => 'mimes:pdf|max:5120',
+            ]);
 
-        $r = $request->all();
-        $data = Berkas::find($r['id']);
-        $dataUser = User::find($r['id']);
-        // dump($r);
-        $r['password'] = bcrypt($r['password']);
+            if ($validator->fails()) {
+                return response()->json([
+                    'status' => 'error',
+                    'errors' => $validator->errors()
+                ], 422);
+            }
 
-        $data->update($r);
-        $dataUser->update($r);
-        // dump($dataUser);
-        // dd($data);
-        return redirect()->route('berkas.index')->with('message', 'update');
-        // }
-        // else {
-        //     return redirect()->route('berkas.index')->with('message', 'username sudah ada');
-        // }
+            $data = Berkas::find($r->formId);
+            if (!$r->hasFile('nama_berkas')) {
+                $data->nama_berkas = $r->nama_berkas_old;
+                $data->save();
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Cancel uploaded file'
+                ]);
+            }
 
+            $foto = $r->file('nama_berkas');
+            $ext = $foto->getClientOriginalExtension();
+            $fileName = date('Y-m-d_H-i-s') . "." . $ext;
+            $destinationPath = '/home/simbbgps/public_html/upload/berkas';
+
+            $foto->move($destinationPath, $fileName);
+
+            $berkas = new Berkas();
+            $berkas->nama_berkas = $fileName;
+            $berkas->nik = session('no_ktp');
+            $berkas->save();
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'File uploaded successfully'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Failed to upload file'
+            ], 500);
+        }
     }
 
     /**

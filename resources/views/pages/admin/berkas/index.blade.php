@@ -29,7 +29,7 @@
                                                 <button class="btn btn-primary" type="button" data-toggle="modal"
                                                     data-target="#uploadModal">
                                                     <i class="fas fa-plus"></i>
-                                                    Upload berkas
+                                                    Upload laporan
                                                 </button>
                                             </div>
                                         </div>
@@ -45,7 +45,7 @@
                                                 <th class="text-center">
                                                     #
                                                 </th>
-                                                <th>Tanggal upload </th>
+                                                <th>Tanggal laporan </th>
                                                 <th>Preview berkas</th>
                                                 <th>Action</th>
                                             </tr>
@@ -56,7 +56,7 @@
                                                     <td>
                                                         {{ ++$i }}
                                                     </td>
-                                                    <td>{{ Helper::dateIndo(explode(" ",$data->created_at, -1)[0]) }}</td>
+                                                    <td>{{ Helper::dateIndo(explode(' ', $data->created_at, -1)[0]) }}</td>
                                                     <td>
                                                         <a href="{{ asset('upload/berkas/' . $data->nama_berkas) }}"
                                                             target="_blank" class="btn btn-icon btn-primary btn-sm">
@@ -64,9 +64,9 @@
                                                         </a>
                                                     </td>
                                                     <td>
-                                                        {{-- <a href="" data-id="{{ $data->id }}" data-toggle="modal"
+                                                        <a href="" data-id="{{ $data->id }}" data-toggle="modal"
                                                             data-target="#uploadModal" class="btn btn-warning my-2"><i
-                                                                class="fas fa-edit"></i></a> --}}
+                                                                class="fas fa-edit"></i></a>
 
                                                         <button onclick="deleteData({{ $data->id }}, 'berkas')"
                                                             class="btn btn-danger">
@@ -101,13 +101,16 @@
                     </button>
                 </div>
                 <form action="#" id="submitForm" enctype="multipart/form-data">
+                    @csrf
                     <input name="methodId" type="hidden" id="methodId" value="">
                     <input type="hidden" name="formId" id="formId" value="">
-                    @csrf
                     <div class="modal-body">
                         <div class="fallback">
+                            <a href="{{ asset('upload/berkas/' . $data->nama_berkas) }}" target="_blank"
+                                class="btn btn-icon btn-primary btn-sm btn-update-laporan mb-3">
+                                Preview laporan
+                            </a>
                             <input name="nama_berkas" required type="file" class="form-control" />
-                            <input name="nama_berkas_old" id="nama_berkas_old" type="hidden" class="form-control" />
                         </div>
                     </div>
                     <div class="modal-footer">
@@ -128,6 +131,7 @@
         <!-- Page Specific JS File -->
         <script>
             $(document).ready(function() {
+                $('.btn-update-laporan').hide();
                 $('#uploadModal').on('hidden.bs.modal', function() {
                     $('#submitForm')[0].reset();
                     $('#formId').val('');
@@ -138,17 +142,25 @@
                 $('.btn-warning').on('click', function(e) {
                     e.preventDefault();
                     const id = $(this).data('id');
+                    let url = "{{ route('berkas.edit', ':id') }}"
+                    url = url.replace(':id', id)
 
-                    // Set form ID for update operation
                     $('#formId').val(id);
 
-                    // Fetch existing data via Ajax
                     $.ajax({
-                        url: `/berkas/${id}/edit`,
+                        url: url,
                         method: 'GET',
                         success: function(response) {
                             $('#nama_berkas_old').val(response.data.nama_berkas);
                             $('#methodId').val('PUT');
+                            if (id != null || id != '' || id != undefined) {
+                                $('.btn-update-laporan').show();
+                                $('.btn-update-laporan').attr('href',
+                                    `{{ asset('upload/berkas/') }}/${response.data.nama_berkas}`
+                                    );
+                            } else {
+                                $('.btn-update-laporan').hide();
+                            }
                         },
                         error: function(xhr) {
                             Swal.fire({
@@ -167,19 +179,26 @@
                     const formData = new FormData($('#submitForm')[0]);
                     const id = $('#formId').val();
                     const method = $('#methodId').val() || 'POST';
-                    const url = method === 'PUT' ? `/berkas/${id}` : '{{ route('berkas.store') }}';
-                    console.log(formData);
+
+                    const url = method === 'PUT' ? '{{ route('berkas.update') }}' :
+                        '{{ route('berkas.store') }}';
+                    method === 'PUT' ? formData.append('_method', 'PUT') : ''
+
                     $.ajax({
+                        headers: {
+                            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr(
+                                'content')
+                        },
                         url: url,
-                        method: method,
+                        method: 'POST',
                         data: formData,
                         processData: false,
                         contentType: false,
                         success: function(response) {
                             $('#uploadModal').modal('hide');
                             swal({
-                                icon: 'success',
-                                title: 'Success',
+                                icon: response.status || 'success',
+                                title: response.status || 'Success',
                                 text: response.message
                             }).then((result) => {
                                 location.reload();
@@ -194,11 +213,10 @@
                             } else {
                                 errorMessage = xhr.responseJSON.message;
                             }
-
                             swal({
                                 icon: 'error',
                                 title: 'Error',
-                                text: 'Periksa format berkas anda (harus tipe pdf)'
+                                text: 'Periksa kembali file yang anda upload (.pdf)'
                             });
                         }
                     });
