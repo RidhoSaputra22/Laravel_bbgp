@@ -10,7 +10,9 @@ class Berkas extends Model
     use HasFactory;
     protected $fillable = [
         'nik',
-        'nama_berkas'
+        'nama_berkas',
+        'nama_kegiatan',
+        'status',
     ];
 
     public function pegawai() {

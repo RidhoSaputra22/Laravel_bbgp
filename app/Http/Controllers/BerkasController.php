@@ -27,8 +27,13 @@ class BerkasController extends Controller
     public function store(Request $r)
     {
         try {
+
+            $r['nama_berkas'] = !$r->hasFile('nama_berkas') ? $r->nama_link : $r['nama_berkas'];
+            dd($r->all());
+
             $validator = Validator::make($r->all(), [
-                'nama_berkas' => 'required|mimes:pdf|max:5120',
+                'nama_berkas' => 'required|mimes:pdf|max:10024',
+                'nama_kegiatan' => 'required',
             ]);
 
             if ($validator->fails()) {
@@ -38,17 +43,24 @@ class BerkasController extends Controller
                 ], 422);
             }
 
-            $foto = $r->file('nama_berkas');
-            $ext = $foto->getClientOriginalExtension();
-            // $r['pas_foto'] = $request->file('pas_foto');
+            if ($r->hasFile('nama_berkas')) {
+                $foto = $r->file('nama_berkas');
+                $ext = $foto->getClientOriginalExtension();
+                // $r['pas_foto'] = $request->file('pas_foto');
 
-            $fileName = date('Y-m-d_H-i-s') . "." . $ext;
-            $destinationPath = '/home/simbbgps/public_html/upload/berkas';
+                $fileName = date('Y-m-d_H-i-s') . "." . $ext;
+                $destinationPath = '/home/simbbgps/public_html/upload/berkas';
 
-            $foto->move($destinationPath, $fileName);
+                $foto->move($destinationPath, $fileName);
 
-            $berkas = new Berkas();
-            $berkas->nama_berkas = $fileName;
+                $berkas = new Berkas();
+                $berkas->nama_berkas = $fileName;
+            } else {
+                $r['nama_berkas'] = $r->nama_link;
+            }
+
+            $berkas->nama_kegiatan = $r->nama_kegiatan;
+            $berkas->metode_upload = $r->metode_upload;
             $berkas->nik = session('no_ktp');
             $berkas->save();
 
@@ -127,10 +139,10 @@ class BerkasController extends Controller
 
             $foto->move($destinationPath, $fileName);
 
-            $berkas = new Berkas();
-            $berkas->nama_berkas = $fileName;
-            $berkas->nik = session('no_ktp');
-            $berkas->save();
+            $data->update([
+                'nama_berkas' => $fileName,
+                'nik' => session('no_ktp'),
+            ]);
 
             return response()->json([
                 'status' => 'success',

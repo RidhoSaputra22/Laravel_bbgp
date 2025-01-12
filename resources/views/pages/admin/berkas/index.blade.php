@@ -26,8 +26,8 @@
                                     <div class="col-md-12 col-lg-12">
                                         <div class="row mb-4">
                                             <div class="col-md-4">
-                                                <button class="btn btn-primary" type="button" data-toggle="modal"
-                                                    data-target="#uploadModal">
+                                                <button class="btn btn-primary btn-tambah" type="button"
+                                                    data-toggle="modal" data-target="#uploadModal">
                                                     <i class="fas fa-plus"></i>
                                                     Upload laporan
                                                 </button>
@@ -38,7 +38,64 @@
 
                                 </div>
 
-                                <div class="table-responsive">
+                                <div id="accordion">
+                                    @foreach ($datas as $i => $data)
+                                        <div class="accordion">
+                                            <div class="accordion-header collapsed" role="button" data-toggle="collapse"
+                                                data-target="#panel-{{ $data->id }}" aria-expanded="false">
+                                                <h3>{{ $data->nama_kegiatan ?? 'Tes Nama Kegiatan ' . $data->id }}</h3>
+                                            </div>
+                                            <div class="accordion-body collapse" id="panel-{{ $data->id }}"
+                                                data-parent="#accordion" style="">
+                                                <div class="table-responsive">
+                                                    <table class="table table-striped">
+                                                        <thead>
+                                                            <tr>
+                                                                <th>Tanggal laporan </th>
+                                                                <th>Preview laporan</th>
+                                                                <th class="text-center">Status Verifikasi</th>
+                                                                <th>Action</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            <tr>
+                                                                <td>{{ Helper::dateIndo(explode(' ', $data->created_at, -1)[0]) }}
+                                                                </td>
+                                                                <td>
+                                                                    <a href="{{ asset('upload/berkas/' . $data->nama_berkas) }}"
+                                                                        target="_blank"
+                                                                        class="btn btn-icon btn-primary btn-sm">
+                                                                        Preview file
+                                                                    </a>
+                                                                </td>
+                                                                <td class="text-center">
+                                                                    <button type="button" class="btn btn-warning">
+                                                                        Proses
+                                                                    </button>
+                                                                </td>
+                                                                <td>
+                                                                    <a href="" data-id="{{ $data->id }}"
+                                                                        data-toggle="modal" data-target="#uploadModal"
+                                                                        class="btn btn-warning my-2"><i
+                                                                            class="fas fa-edit"></i></a>
+
+                                                                    <button
+                                                                        onclick="deleteData({{ $data->id }}, 'berkas')"
+                                                                        class="btn btn-danger">
+                                                                        <i class="fas fa-trash-alt"></i>
+                                                                    </button>
+                                                                </td>
+                                                            </tr>
+
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    @endforeach
+                                </div>
+
+                                {{-- <div class="table-responsive">
                                     <table class="table table-striped" id="table-temp">
                                         <thead>
                                             <tr>
@@ -78,7 +135,7 @@
 
                                         </tbody>
                                     </table>
-                                </div>
+                                </div> --}}
                             </div>
                         </div>
                     </div>
@@ -95,7 +152,7 @@
         <div class="modal-dialog modal-dialog-centered" role="document">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="exampleModalLabel">Upload berkas</h5>
+                    <h5 class="modal-title" id="exampleModalLabel"><span id="titleMethod">Tambah</span> Berkas</h5>
                     <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true">&times;</span>
                     </button>
@@ -105,16 +162,38 @@
                     <input name="methodId" type="hidden" id="methodId" value="">
                     <input type="hidden" name="formId" id="formId" value="">
                     <div class="modal-body">
+                        <div class="dropdown d-inline mr-2">
+                            <button class="btn btn-primary dropdown-toggle" type="button" id="dropdownMenuButton"
+                                data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                Pilih metode upload
+                            </button>
+                            <div class="dropdown-menu">
+                                <a class="dropdown-item" id="methodUpload" data-method="upload">Upload file</a>
+                                <a class="dropdown-item" id="methodLink" data-method="link">Sisipkan link</a>
+                            </div>
+                        </div>
                         <div class="fallback">
                             <a href="{{ asset('upload/berkas/' . $data->nama_berkas) }}" target="_blank"
-                                class="btn btn-icon btn-primary btn-sm btn-update-laporan mb-3">
+                                class="btn btn-icon btn-primary btn-sm btn-update-laporan mt-3">
                                 Preview laporan
                             </a>
-                            <input name="nama_berkas" required type="file" class="form-control" />
+                            <input name="nama_kegiatan" id="nama_kegiatan" required type="text"
+                                placeholder="Nama kegiatan" class="form-control mt-3" />
+                            <input name="metode_upload" id="metode_upload" type="hidden" class="form-control mt-3" />
+                            <div id="uploadForm">
+                                <input name="nama_berkas" id="nama_berkas" required type="file"
+                                    class="form-control mt-3" />
+                                <input name="nama_berkas_old" id="nama_berkas_old" type="hidden"
+                                    class="form-control mt-3" />
+                            </div>
+                            <div id="linkForm">
+                                <input name="nama_link" placeholder="Link yang terhubung ke laporan" id="nama_link"
+                                    type="url" class="form-control mt-3" />
+                            </div>
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                        <button type="button" class="btn btn-secondary btn-cancel" data-dismiss="modal">Close</button>
                         <button type="button" id="submitBtn" class="btn btn-primary">Submit</button>
                     </div>
                 </form>
@@ -132,11 +211,38 @@
         <script>
             $(document).ready(function() {
                 $('.btn-update-laporan').hide();
+                const uploadForm = $('#uploadForm').hide();
+                const linkForm = $('#linkForm').hide();
+                let methodUpload = ''
+
+                $('#methodUpload').on('click', function(e) {
+                    e.preventDefault()
+                    methodUpload = $(this).data('method')
+                    uploadForm.show()
+                    linkForm.hide()
+                    $('#nama_link').val('')
+                })
+
+                $('#methodLink').on('click', function(e) {
+                    e.preventDefault()
+                    methodUpload = $(this).data('method')
+                    uploadForm.hide()
+                    linkForm.show()
+                    $('#nama_berkas').val('')
+                })
+
                 $('#uploadModal').on('hidden.bs.modal', function() {
                     $('#submitForm')[0].reset();
                     $('#formId').val('');
                     $('#methodId').val('');
                 });
+
+                $('.btn-tambah').on('click', function(e) {
+                    e.preventDefault()
+                    $('#titleMethod').html('Tambah')
+                    $('.btn-update-laporan').hide();
+
+                })
 
                 // Handle edit button click
                 $('.btn-warning').on('click', function(e) {
@@ -147,17 +253,21 @@
 
                     $('#formId').val(id);
 
+
                     $.ajax({
                         url: url,
                         method: 'GET',
                         success: function(response) {
                             $('#nama_berkas_old').val(response.data.nama_berkas);
                             $('#methodId').val('PUT');
+                            $('#titleMethod').html('Edit')
+
+
                             if (id != null || id != '' || id != undefined) {
                                 $('.btn-update-laporan').show();
                                 $('.btn-update-laporan').attr('href',
                                     `{{ asset('upload/berkas/') }}/${response.data.nama_berkas}`
-                                    );
+                                );
                             } else {
                                 $('.btn-update-laporan').hide();
                             }
@@ -179,6 +289,12 @@
                     const formData = new FormData($('#submitForm')[0]);
                     const id = $('#formId').val();
                     const method = $('#methodId').val() || 'POST';
+                    formData.append('metode_upload', methodUpload)
+
+                    for (const [key, value] of formData) {
+                        console.log('»', key, value)
+                    }
+
 
                     const url = method === 'PUT' ? '{{ route('berkas.update') }}' :
                         '{{ route('berkas.store') }}';
