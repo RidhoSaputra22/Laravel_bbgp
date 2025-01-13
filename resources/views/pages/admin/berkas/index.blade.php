@@ -43,7 +43,7 @@
                                         <div class="accordion">
                                             <div class="accordion-header collapsed" role="button" data-toggle="collapse"
                                                 data-target="#panel-{{ $data->id }}" aria-expanded="false">
-                                                <h3>{{ $data->nama_kegiatan ?? 'Tes Nama Kegiatan ' . $data->id }}</h3>
+                                                <h3>{{ 'Laporan Kegiatan ' . ++$i }}</h3>
                                             </div>
                                             <div class="accordion-body collapse" id="panel-{{ $data->id }}"
                                                 data-parent="#accordion" style="">
@@ -51,6 +51,7 @@
                                                     <table class="table table-striped">
                                                         <thead>
                                                             <tr>
+                                                                <th>Nama kegiatan </th>
                                                                 <th>Tanggal laporan </th>
                                                                 <th>Preview laporan</th>
                                                                 <th class="text-center">Status Verifikasi</th>
@@ -59,18 +60,29 @@
                                                         </thead>
                                                         <tbody>
                                                             <tr>
-                                                                <td>{{ Helper::dateIndo(explode(' ', $data->created_at, -1)[0]) }}
+                                                                <td>{{ $data->nama_kegiatan }}</td>
+                                                                <td class="text-nowrap">
+                                                                    {{ Helper::dateIndo(explode(' ', $data->created_at, -1)[0]) }}
                                                                 </td>
-                                                                <td>
-                                                                    <a href="{{ asset('upload/berkas/' . $data->nama_berkas) }}"
+                                                                @php
+                                                                    $path = asset(
+                                                                        'upload/berkas/' . $data->nama_berkas,
+                                                                    );
+                                                                    $path = explode('/', $path);
+                                                                @endphp
+                                                                <td class="text-nowrap">
+                                                                    <a href="{{ $path[5] == $data->nama_berkas
+                                                                        ? asset('upload/berkas/' . $data->nama_berkas)
+                                                                        : $data->nama_berkas }}"
                                                                         target="_blank"
                                                                         class="btn btn-icon btn-primary btn-sm">
-                                                                        Preview file
+                                                                        Preview laporan
                                                                     </a>
                                                                 </td>
                                                                 <td class="text-center">
-                                                                    <button type="button" class="btn btn-warning">
-                                                                        Proses
+                                                                    <button type="button"
+                                                                        class="btn btn-{{ $data->status == 'proses' ? 'warning' : 'success' }}">
+                                                                        {{ $data->status == 'proses' ? 'Proses' : 'Selesai' }}
                                                                     </button>
                                                                 </td>
                                                                 <td>
@@ -95,47 +107,6 @@
                                     @endforeach
                                 </div>
 
-                                {{-- <div class="table-responsive">
-                                    <table class="table table-striped" id="table-temp">
-                                        <thead>
-                                            <tr>
-                                                <th class="text-center">
-                                                    #
-                                                </th>
-                                                <th>Tanggal laporan </th>
-                                                <th>Preview berkas</th>
-                                                <th>Action</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            @foreach ($datas as $i => $data)
-                                                <tr>
-                                                    <td>
-                                                        {{ ++$i }}
-                                                    </td>
-                                                    <td>{{ Helper::dateIndo(explode(' ', $data->created_at, -1)[0]) }}</td>
-                                                    <td>
-                                                        <a href="{{ asset('upload/berkas/' . $data->nama_berkas) }}"
-                                                            target="_blank" class="btn btn-icon btn-primary btn-sm">
-                                                            Preview
-                                                        </a>
-                                                    </td>
-                                                    <td>
-                                                        <a href="" data-id="{{ $data->id }}" data-toggle="modal"
-                                                            data-target="#uploadModal" class="btn btn-warning my-2"><i
-                                                                class="fas fa-edit"></i></a>
-
-                                                        <button onclick="deleteData({{ $data->id }}, 'berkas')"
-                                                            class="btn btn-danger">
-                                                            <i class="fas fa-trash-alt"></i>
-                                                        </button>
-                                                    </td>
-                                                </tr>
-                                            @endforeach
-
-                                        </tbody>
-                                    </table>
-                                </div> --}}
                             </div>
                         </div>
                     </div>
@@ -173,10 +144,6 @@
                             </div>
                         </div>
                         <div class="fallback">
-                            <a href="{{ asset('upload/berkas/' . $data->nama_berkas) }}" target="_blank"
-                                class="btn btn-icon btn-primary btn-sm btn-update-laporan mt-3">
-                                Preview laporan
-                            </a>
                             <input name="nama_kegiatan" id="nama_kegiatan" required type="text"
                                 placeholder="Nama kegiatan" class="form-control mt-3" />
                             <input name="metode_upload" id="metode_upload" type="hidden" class="form-control mt-3" />
@@ -210,7 +177,6 @@
         <!-- Page Specific JS File -->
         <script>
             $(document).ready(function() {
-                $('.btn-update-laporan').hide();
                 const uploadForm = $('#uploadForm').hide();
                 const linkForm = $('#linkForm').hide();
                 let methodUpload = ''
@@ -240,8 +206,6 @@
                 $('.btn-tambah').on('click', function(e) {
                     e.preventDefault()
                     $('#titleMethod').html('Tambah')
-                    $('.btn-update-laporan').hide();
-
                 })
 
                 // Handle edit button click
@@ -253,24 +217,25 @@
 
                     $('#formId').val(id);
 
-
                     $.ajax({
                         url: url,
                         method: 'GET',
                         success: function(response) {
-                            $('#nama_berkas_old').val(response.data.nama_berkas);
+                            console.log(response);
+                            let metodeUpload = response.data.metode_upload
+                            if (metodeUpload == 'link') {
+                                uploadForm.hide()
+                                linkForm.show()
+                                $('#nama_link').val(response.data.nama_berkas)
+                            } else {
+                                uploadForm.show()
+                                linkForm.hide()
+                                $('#nama_berkas_old').val(response.data.nama_berkas);
+                            }
+                            methodUpload = metodeUpload
+                            $('#nama_kegiatan').val(response.data.nama_kegiatan);
                             $('#methodId').val('PUT');
                             $('#titleMethod').html('Edit')
-
-
-                            if (id != null || id != '' || id != undefined) {
-                                $('.btn-update-laporan').show();
-                                $('.btn-update-laporan').attr('href',
-                                    `{{ asset('upload/berkas/') }}/${response.data.nama_berkas}`
-                                );
-                            } else {
-                                $('.btn-update-laporan').hide();
-                            }
                         },
                         error: function(xhr) {
                             Swal.fire({
@@ -323,16 +288,19 @@
                         error: function(xhr) {
                             let errors = xhr.responseJSON.errors;
                             let errorMessage = '';
-
                             if (errors) {
-                                errorMessage = Object.values(errors).flat().join('\n');
+                                errorMessage = Object.values(errors).flat().join('\n') ==
+                                    'validation.mimes' ?
+                                    'Laporan yang anda upload harus format .pdf' :
+                                    'Laporan tidak boleh kosong';
+                                console.log(errorMessage);
                             } else {
                                 errorMessage = xhr.responseJSON.message;
                             }
                             swal({
                                 icon: 'error',
                                 title: 'Error',
-                                text: 'Periksa kembali file yang anda upload (.pdf)'
+                                text: errorMessage
                             });
                         }
                     });

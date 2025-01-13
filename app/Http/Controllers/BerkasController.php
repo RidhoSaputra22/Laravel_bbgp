@@ -27,23 +27,21 @@ class BerkasController extends Controller
     public function store(Request $r)
     {
         try {
-
-            $r['nama_berkas'] = !$r->hasFile('nama_berkas') ? $r->nama_link : $r['nama_berkas'];
-            dd($r->all());
-
-            $validator = Validator::make($r->all(), [
-                'nama_berkas' => 'required|mimes:pdf|max:10024',
-                'nama_kegiatan' => 'required',
-            ]);
-
-            if ($validator->fails()) {
-                return response()->json([
-                    'status' => 'error',
-                    'errors' => $validator->errors()
-                ], 422);
-            }
+            $berkas = new Berkas();
 
             if ($r->hasFile('nama_berkas')) {
+                $validator = Validator::make($r->all(), [
+                    'nama_berkas' => 'required|mimes:pdf|max:10024',
+                    'nama_kegiatan' => 'required',
+                ]);
+
+                if ($validator->fails()) {
+                    return response()->json([
+                        'status' => 'error',
+                        'errors' => $validator->messages()
+                    ], 422);
+                }
+
                 $foto = $r->file('nama_berkas');
                 $ext = $foto->getClientOriginalExtension();
                 // $r['pas_foto'] = $request->file('pas_foto');
@@ -53,25 +51,36 @@ class BerkasController extends Controller
 
                 $foto->move($destinationPath, $fileName);
 
-                $berkas = new Berkas();
                 $berkas->nama_berkas = $fileName;
             } else {
-                $r['nama_berkas'] = $r->nama_link;
+                $validator = Validator::make($r->all(), [
+                    'nama_link' => 'required',
+                    'nama_kegiatan' => 'required',
+                ]);
+
+                if ($validator->fails()) {
+                    return response()->json([
+                        'status' => 'error',
+                        'errors' => $validator->messages()
+                    ], 422);
+                }
+                $berkas->nama_berkas = $r->nama_link;
             }
 
             $berkas->nama_kegiatan = $r->nama_kegiatan;
             $berkas->metode_upload = $r->metode_upload;
+            $berkas->status = 'proses';
             $berkas->nik = session('no_ktp');
             $berkas->save();
 
             return response()->json([
                 'status' => 'success',
-                'message' => 'File uploaded successfully'
+                'message' => 'Laporan telah di buat'
             ]);
         } catch (\Exception $e) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'Failed to upload file'
+                'message' => $e
             ], 500);
         }
     }
@@ -111,42 +120,77 @@ class BerkasController extends Controller
     public function update(Request $r)
     {
         try {
-            $validator = Validator::make($r->all(), [
-                'nama_berkas' => 'mimes:pdf|max:5120',
-            ]);
-
-            if ($validator->fails()) {
-                return response()->json([
-                    'status' => 'error',
-                    'errors' => $validator->errors()
-                ], 422);
-            }
-
             $data = Berkas::find($r->formId);
-            if (!$r->hasFile('nama_berkas')) {
-                $data->nama_berkas = $r->nama_berkas_old;
-                $data->save();
+
+            if (!$r->hasFile('nama_berkas') && empty($r->nama_link)) {
+                $validator = Validator::make($r->all(), [
+                    'nama_kegiatan' => 'required',
+                ]);
+
+                if ($validator->fails()) {
+                    return response()->json([
+                        'status' => 'error',
+                        'errors' => $validator->messages()
+                    ], 422);
+                }
+
+                $data->update([
+                    'nama_kegiatan' => $r->nama_kegiatan,
+                    'nik' => session('no_ktp'),
+                ]);
+
                 return response()->json([
-                    'status' => 'error',
-                    'message' => 'Cancel uploaded file'
+                    'status' => 'success',
+                    'message' => 'Data updated successfully'
                 ]);
             }
 
-            $foto = $r->file('nama_berkas');
-            $ext = $foto->getClientOriginalExtension();
-            $fileName = date('Y-m-d_H-i-s') . "." . $ext;
-            $destinationPath = '/home/simbbgps/public_html/upload/berkas';
+            if ($r->hasFile('nama_berkas')) {
+                $validator = Validator::make($r->all(), [
+                    'nama_berkas' => 'mimes:pdf|max:10024',
+                    'nama_kegiatan' => 'required',
+                ]);
 
-            $foto->move($destinationPath, $fileName);
+                if ($validator->fails()) {
+                    return response()->json([
+                        'status' => 'error',
+                        'errors' => $validator->messages()
+                    ], 422);
+                }
+
+                $foto = $r->file('nama_berkas');
+                $ext = $foto->getClientOriginalExtension();
+                $fileName = date('Y-m-d_H-i-s') . "." . $ext;
+                $destinationPath = '/home/simbbgps/public_html/upload/berkas';
+
+                $foto->move($destinationPath, $fileName);
+
+                $data->nama_berkas = $fileName;
+            } else {
+                $validator = Validator::make($r->all(), [
+                    'nama_link' => 'required',
+                    'nama_kegiatan' => 'required',
+                ]);
+
+                if ($validator->fails()) {
+                    return response()->json([
+                        'status' => 'error',
+                        'errors' => $validator->messages()
+                    ], 422);
+                }
+                $data->nama_berkas = $r->nama_link;
+            }
 
             $data->update([
-                'nama_berkas' => $fileName,
+                'metode_upload' => $r->metode_upload,
+                'nama_kegiatan' => $r->nama_kegiatan,
+                'nama_berkas' => $data->nama_berkas,
                 'nik' => session('no_ktp'),
             ]);
 
             return response()->json([
                 'status' => 'success',
-                'message' => 'File uploaded successfully'
+                'message' => 'Data updated successfully'
             ]);
         } catch (\Exception $e) {
             return response()->json([

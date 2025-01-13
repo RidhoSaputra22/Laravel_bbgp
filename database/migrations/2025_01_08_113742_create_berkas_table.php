@@ -16,6 +16,7 @@ return new class extends Migration
             $table->string('nik');
             $table->string('nama_berkas');
             $table->string('nama_kegiatan');
+            $table->string('metode_uploS');
             $table->string('status');
             $table->timestamps();
         });

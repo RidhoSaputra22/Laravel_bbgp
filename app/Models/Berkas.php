@@ -12,6 +12,7 @@ class Berkas extends Model
         'nik',
         'nama_berkas',
         'nama_kegiatan',
+        'metode_upload',
         'status',
     ];
 
