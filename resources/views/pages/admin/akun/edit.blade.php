@@ -55,7 +55,7 @@
                                         <div class="col-md-6">
                                             <div class="form-group">
                                                 <label>Password</label>
-                                                <input name="password" value="{{ $datas->password }}"
+                                                <input name="password" value=""
                                                     placeholder="Masukkan Password" type="password" class="form-control">
                                             </div>
                                         </div>

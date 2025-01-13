@@ -27,29 +27,19 @@ class AuthController extends Controller
         if ($request->role == null) {
             return redirect()->back()->with('message', 'gagal login');
         }
-        // dump($request->all());
-        // dump(Auth::attempt(['username' => $request->username, 'password' => $request->password, 'role' => $request->role]));
-        // dump(Admin::where('username', $request->username)->where('role', $request->role)->first());
         
         $user = Admin::where('username', $request->username)->where('role', $request->role)->first();
         $user1 = User::where('username', $request->username)->where('role', $request->role)->first();
         
-        // dump($user);
-        // dump($user1);
-        // dump(Auth::attempt(['username' => $user->username, 'password' => $user->password, 'role' => $user->role]));
 
         $cek = Auth::attempt(['username' => $request->username, 'password' => $request->password, 'role' => $request->role]);
-        // $cek = Auth::attempt(['username' => $user->username, 'password' => $user->password, 'role' => $user->role]);
-        // dd($cek);
         if ($cek) {
-            // dd($user);
             Session::put('user_id', $user->id);
             Session::put('name', $user->name);
             Session::put('nip', $user->nip);
             Session::put('no_ktp', $user->no_ktp);
             Session::put('username', $user->username);
             Session::put('role', $user->role);
-            // Session::put('role', $user->role);
             Session::put('cek', true);
 
             if($user->role == 'pegawai') {

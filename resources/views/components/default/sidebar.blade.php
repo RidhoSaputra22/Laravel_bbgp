@@ -29,6 +29,11 @@
                         </li>
 
                     </ul>
+                <li class="{{ $menu == 'berkas' ? 'active' : '' }}">
+                    <a class="nav-link" href="{{ route('berkas.index', session('no_ktp')) }}">
+                        <i class="fas fa-sign-out-alt"></i> <span>Laporan Kegiatan</span>
+                    </a>
+                </li>
                 </li>
 
                 <li class="{{ $menu == 'internal' ? 'active' : '' }}">
@@ -107,7 +112,7 @@
                         <i class="fas fa-user"></i> <span>Data Akun</span>
                     </a>
                 </li>
-                
+
                 <li class="menu-header">Landing Page</li>
                 <li class="nav-item  {{ $menu == 'agenda' ? 'active' : '' }}">
                     <a href="{{ route('agenda.index') }}" class="nav-link "><i class="fas fa-thumbtack"></i>

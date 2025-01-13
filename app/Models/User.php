@@ -26,6 +26,10 @@ class User extends Authenticatable
 
     ];
 
+    public function berkas() {
+        return $this->hasMany(Berkas::class, 'nik', 'no_ktp');
+    }
+
     /**
      * The attributes that should be hidden for serialization.
      *

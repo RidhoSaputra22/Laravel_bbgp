@@ -40,4 +40,10 @@ class Pegawai extends Model
     {
         return $this->hasMany(Internal::class, 'nik', 'no_ktp');
     }
+    public function berkas() {
+        return $this->hasMany(Berkas::class, 'nik', 'no_ktp');
+    }
+    public function user() {
+        return $this->hasOne(Berkas::class, 'no_ktp', 'no_ktp');
+    }
 }

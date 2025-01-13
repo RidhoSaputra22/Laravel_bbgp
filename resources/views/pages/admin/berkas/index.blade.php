@@ -21,90 +21,163 @@
                         <div class="card">
                             <div class="card-body">
 
-                                <div class="row">
+                                @if (session('role') == 'pegawai')
+                                    <div class="row">
 
-                                    <div class="col-md-12 col-lg-12">
-                                        <div class="row mb-4">
-                                            <div class="col-md-4">
-                                                <button class="btn btn-primary btn-tambah" type="button"
-                                                    data-toggle="modal" data-target="#uploadModal">
-                                                    <i class="fas fa-plus"></i>
-                                                    Upload laporan
-                                                </button>
+                                        <div class="col-md-12 col-lg-12">
+                                            <div class="row mb-4">
+                                                <div class="col-md-4">
+                                                    <button class="btn btn-primary btn-tambah" type="button"
+                                                        data-toggle="modal" data-target="#uploadModal">
+                                                        <i class="fas fa-plus"></i>
+                                                        Upload laporan
+                                                    </button>
+                                                </div>
                                             </div>
+
                                         </div>
 
                                     </div>
-
-                                </div>
-
+                                @endif
                                 <div id="accordion">
-                                    @foreach ($datas as $i => $data)
-                                        <div class="accordion">
-                                            <div class="accordion-header collapsed" role="button" data-toggle="collapse"
-                                                data-target="#panel-{{ $data->id }}" aria-expanded="false">
-                                                <h3>{{ 'Laporan Kegiatan ' . ++$i }}</h3>
-                                            </div>
-                                            <div class="accordion-body collapse" id="panel-{{ $data->id }}"
-                                                data-parent="#accordion" style="">
-                                                <div class="table-responsive">
-                                                    <table class="table table-striped">
-                                                        <thead>
-                                                            <tr>
-                                                                <th>Nama kegiatan </th>
-                                                                <th>Tanggal laporan </th>
-                                                                <th>Preview laporan</th>
-                                                                <th class="text-center">Status Verifikasi</th>
-                                                                <th>Action</th>
-                                                            </tr>
-                                                        </thead>
-                                                        <tbody>
-                                                            <tr>
-                                                                <td>{{ $data->nama_kegiatan }}</td>
-                                                                <td class="text-nowrap">
-                                                                    {{ Helper::dateIndo(explode(' ', $data->created_at, -1)[0]) }}
-                                                                </td>
-                                                                @php
-                                                                    $path = asset(
-                                                                        'upload/berkas/' . $data->nama_berkas,
-                                                                    );
-                                                                    $path = explode('/', $path);
-                                                                @endphp
-                                                                <td class="text-nowrap">
-                                                                    <a href="{{ $path[5] == $data->nama_berkas
-                                                                        ? asset('upload/berkas/' . $data->nama_berkas)
-                                                                        : $data->nama_berkas }}"
-                                                                        target="_blank"
-                                                                        class="btn btn-icon btn-primary btn-sm">
-                                                                        Preview laporan
-                                                                    </a>
-                                                                </td>
-                                                                <td class="text-center">
-                                                                    <button type="button"
-                                                                        class="btn btn-{{ $data->status == 'proses' ? 'warning' : 'success' }}">
-                                                                        {{ $data->status == 'proses' ? 'Proses' : 'Selesai' }}
-                                                                    </button>
-                                                                </td>
-                                                                <td>
-                                                                    <a href="" data-id="{{ $data->id }}"
-                                                                        data-toggle="modal" data-target="#uploadModal"
-                                                                        class="btn btn-warning my-2"><i
-                                                                            class="fas fa-edit"></i></a>
-
-                                                                    <button
-                                                                        onclick="deleteData({{ $data->id }}, 'berkas')"
-                                                                        class="btn btn-danger">
-                                                                        <i class="fas fa-trash-alt"></i>
-                                                                    </button>
-                                                                </td>
-                                                            </tr>
-
-                                                        </tbody>
-                                                    </table>
+                                    @if (session('role') == 'admin' || session('role') == 'superadmin')
+                                        @foreach ($datas as $user)
+                                            <div class="accordion">
+                                                <div class="accordion-header collapsed" role="button"
+                                                    data-toggle="collapse" data-target="#panel-user-{{ $user->id }}"
+                                                    aria-expanded="false">
+                                                    <h4>{{ $user->nama_lengkap }} - Total Laporan:
+                                                        {{ $user->berkas->count() }}
+                                                    </h4>
+                                                </div>
+                                                <div class="accordion-body collapse" id="panel-user-{{ $user->id }}"
+                                                    data-parent="#accordion">
+                                                    <div class="table-responsive">
+                                                        <table class="table table-striped">
+                                                            <thead>
+                                                                <tr>
+                                                                    <th>No</th>
+                                                                    <th>Nama kegiatan</th>
+                                                                    <th>Tanggal laporan</th>
+                                                                    <th>Preview laporan</th>
+                                                                    <th class="text-center">Status Verifikasi</th>
+                                                                    <th>Action</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody>
+                                                                @foreach ($user->berkas as $i => $data)
+                                                                    <tr>
+                                                                        <td>{{ ++$i }}</td>
+                                                                        <td>{{ $data->nama_kegiatan }}</td>
+                                                                        <td class="text-nowrap">
+                                                                            {{ Helper::dateIndo(explode(' ', $data->created_at, -1)[0]) }}
+                                                                        </td>
+                                                                        @php
+                                                                            $path = asset(
+                                                                                'upload/berkas/' . $data->nama_berkas,
+                                                                            );
+                                                                            $path = explode('/', $path);
+                                                                        @endphp
+                                                                        <td class="text-nowrap">
+                                                                            <a href="{{ $path[5] == $data->nama_berkas ? asset('upload/berkas/' . $data->nama_berkas) : $data->nama_berkas }}"
+                                                                                target="_blank"
+                                                                                class="btn btn-icon btn-primary btn-sm">
+                                                                                Preview laporan
+                                                                            </a>
+                                                                        </td>
+                                                                        <td class="text-center">
+                                                                            <button type="button"
+                                                                                class="btn btn-{{ $data->status == 'proses' ? 'warning' : 'success' }}">
+                                                                                {{ $data->status == 'proses' ? 'Proses' : 'Selesai' }}
+                                                                            </button>
+                                                                        </td>
+                                                                        <td>
+                                                                            @if ($data->status == 'proses')
+                                                                                <button type="button"
+                                                                                    onclick="updateStatus({{ $data->id }})"
+                                                                                    class="btn btn-info">
+                                                                                    Verifikasi
+                                                                                </button>
+                                                                            @endif
+                                                                        </td>
+                                                                    </tr>
+                                                                @endforeach
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
                                                 </div>
                                             </div>
-                                        </div>
-                                    @endforeach
+                                        @endforeach
+                                    @else
+                                        @foreach ($datas as $i => $data)
+                                            <div class="accordion">
+                                                <div class="accordion-header collapsed" role="button"
+                                                    data-toggle="collapse" data-target="#panel-{{ $data->id }}"
+                                                    aria-expanded="false">
+                                                    <h3>{{ 'Laporan Kegiatan ' . ++$i }}</h3>
+                                                </div>
+                                                <div class="accordion-body collapse" id="panel-{{ $data->id }}"
+                                                    data-parent="#accordion" style="">
+                                                    <div class="table-responsive">
+                                                        <table class="table table-striped">
+                                                            <thead>
+                                                                <tr>
+                                                                    <th>Nama kegiatan </th>
+                                                                    <th>Tanggal laporan </th>
+                                                                    <th>Preview laporan</th>
+                                                                    <th class="text-center">Status Verifikasi</th>
+                                                                    <th>Action</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody>
+                                                                <tr>
+                                                                    <td>{{ $data->nama_kegiatan }}</td>
+                                                                    <td class="text-nowrap">
+                                                                        {{ Helper::dateIndo(explode(' ', $data->created_at, -1)[0]) }}
+                                                                    </td>
+                                                                    @php
+                                                                        $path = asset(
+                                                                            'upload/berkas/' . $data->nama_berkas,
+                                                                        );
+                                                                        $path = explode('/', $path);
+                                                                    @endphp
+                                                                    <td class="text-nowrap">
+                                                                        <a href="{{ $path[5] == $data->nama_berkas ? asset('upload/berkas/' . $data->nama_berkas) : $data->nama_berkas }}"
+                                                                            target="_blank"
+                                                                            class="btn btn-icon btn-primary btn-sm">
+                                                                            Preview laporan
+                                                                        </a>
+                                                                    </td>
+                                                                    <td class="text-center">
+                                                                        <button type="button"
+                                                                            class="btn btn-{{ $data->status == 'proses' ? 'warning' : 'success' }}">
+                                                                            {{ $data->status == 'proses' ? 'Proses' : 'Selesai' }}
+                                                                        </button>
+                                                                    </td>
+                                                                    <td>
+                                                                        @if (session('role') == 'pegawai')
+                                                                            <a href="" data-id="{{ $data->id }}"
+                                                                                data-toggle="modal"
+                                                                                data-target="#uploadModal"
+                                                                                class="btn btn-warning my-2"><i
+                                                                                    class="fas fa-edit"></i></a>
+
+                                                                            <button
+                                                                                onclick="deleteData({{ $data->id }}, 'berkas')"
+                                                                                class="btn btn-danger">
+                                                                                <i class="fas fa-trash-alt"></i>
+                                                                            </button>
+                                                                        @endif
+                                                                    </td>
+                                                                </tr>
+
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        @endforeach
+                                    @endif
                                 </div>
 
                             </div>
@@ -305,7 +378,58 @@
                         }
                     });
                 });
+
             })
+
+            function updateStatus(id) {
+
+                let url = "{{ route('berkas.verify', ':id') }}"
+                url = url.replace(':id', id)
+                console.log(url);
+                swal({
+                    title: 'Verifikasi Laporan?',
+                    text: "Status laporan akan diubah menjadi selesai",
+                    icon: 'warning',
+                    buttons: true,
+                    dangerMode: true,
+                    buttons: ['Cancel', 'Ya, verifikasi!']
+                }).then((result) => {
+                    if (result) {
+                        try {
+                            $.ajax({
+                                url: url,
+                                method: 'GET',
+                                headers: {
+                                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                                },
+                                success: function(response) {
+                                    swal(
+                                        'Berhasil!',
+                                        'Status laporan telah diverifikasi.',
+                                        'success'
+                                    ).then(() => {
+                                        location.reload();
+                                    });
+                                },
+                                error: function(xhr) {
+                                    console.log(xhr);
+                                    swal(
+                                        'Error!',
+                                        'Terjadi kesalahan saat memverifikasi laporan.',
+                                        'error'
+                                    );
+                                }
+                            });
+                        } catch (error) {
+                            swal({
+                                icon: 'error',
+                                title: 'Error',
+                                text: error
+                            })
+                        }
+                    }
+                });
+            }
         </script>
     @endpush
 @endsection

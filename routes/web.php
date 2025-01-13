@@ -164,6 +164,7 @@ Route::group(
                 Route::get('/edit/{id}', 'BerkasController@edit')->name('berkas.edit');
                 Route::put('/update', 'BerkasController@update')->name('berkas.update');
                 Route::post('/hapus/{id}', 'BerkasController@destroy')->name('berkas.hapus');
+                Route::get('/verify/{id}', 'BerkasController@verify')->name('berkas.verify');
                 
             });
 

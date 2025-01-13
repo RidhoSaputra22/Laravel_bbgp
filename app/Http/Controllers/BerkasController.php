@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Admin;
 use App\Models\Berkas;
+use App\Models\Pegawai;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Session;
@@ -16,8 +17,26 @@ class BerkasController extends Controller
      */
     public function index()
     {
-        $data = Berkas::orderByDesc('id')->get();
-        return view('pages.admin.berkas.index', ['menu' => 'berkas', 'datas' => $data]);
+        if (auth()->user()->role === 'admin' || auth()->user()->role === 'superadmin') {
+            $users = Pegawai::with(['berkas' => function ($query) {
+                $query->orderBy('created_at', 'desc');
+            }])
+                ->whereHas('berkas')
+                ->get();
+            return view('pages.admin.berkas.index', [
+                'datas' => $users,
+                'menu' => 'berkas'
+            ]);
+        }
+
+        $datas = Berkas::where('nik', session('no_ktp'))
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        return view('pages.admin.berkas.index', [
+            'datas' => $datas,
+            'menu' => 'berkas'
+        ]);
     }
 
 
@@ -209,5 +228,23 @@ class BerkasController extends Controller
         $data = Berkas::find($id);
         $data->delete();
         return response()->json($data);
+    }
+
+    public function verify($id)
+    {
+        try {
+            $berkas = Berkas::findOrFail($id);
+            $berkas->update(['status' => 'selesai']);
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Berkas berhasil diverifikasi'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Gagal memverifikasi berkas'
+            ], 500);
+        }
     }
 }

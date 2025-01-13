@@ -74,17 +74,7 @@ const verifikasi = (id, tabel, status) => {
                 },
                 type: "POST",
                 url: `${tabel}/verifikasi/${id}`,
-                // url: `{{ route('${tabel}.' verifikasi'/${id}') }}`, 
-                // url: `{{ route('${tabel}.verifikasi', ['id' => ${id}]) }}`,
-                // let url = $(this).data('url'),
-                // url: `{{ route('${tabel}.verifikasi', ['tabel' => $tabel, 'id' => $id]) }}`,
-                //    url : `{{ route('${tabel}.verifikasi', ['tabel' => ${tabel}, 'id' => ${id}]) }}`,
-                // url : `{{ route('${tabel}.verifikasi', ['tabel' => ${tabel}, 'id' => ${id}]) }}`,
                 success: function (response) {
-                    console.log(response.data.data);
-                    console.log(response.data.stats);
-                    console.log(response.status);
-                    console.log(response.status.nama);
                     if (response.status) {
 
                         register(response.status)
@@ -115,11 +105,6 @@ const verifikasi = (id, tabel, status) => {
 function register(data) {
    console.log('loginnnnnnn');
    let token = $("meta[name='csrf-token']").attr("content");
-    console.log('resgis', data);
-    console.log('resgis', data.nama_lengkap);
-    console.log('resgis', data.no_ktp);
-    console.log('resgis', data.role);
-    console.log('resgis', data['nama_lengkap']);
     
     $.ajax({
         headers: {
