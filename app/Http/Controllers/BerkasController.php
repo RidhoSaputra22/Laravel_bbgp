@@ -50,7 +50,7 @@ class BerkasController extends Controller
 
             if ($r->hasFile('nama_berkas')) {
                 $validator = Validator::make($r->all(), [
-                    'nama_berkas' => 'required|mimes:pdf|max:10024',
+                    'nama_berkas' => 'required|mimes:pdf,doc,docx|max:10024',
                     'nama_kegiatan' => 'required',
                 ]);
 
@@ -166,7 +166,7 @@ class BerkasController extends Controller
 
             if ($r->hasFile('nama_berkas')) {
                 $validator = Validator::make($r->all(), [
-                    'nama_berkas' => 'mimes:pdf|max:10024',
+                    'nama_berkas' => 'mimes:pdf,doc,docx|max:10024',
                     'nama_kegiatan' => 'required',
                 ]);
 

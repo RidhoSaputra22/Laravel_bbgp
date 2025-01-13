@@ -364,7 +364,7 @@
                             if (errors) {
                                 errorMessage = Object.values(errors).flat().join('\n') ==
                                     'validation.mimes' ?
-                                    'Laporan yang anda upload harus format .pdf' :
+                                    'Laporan yang anda upload harus format .pdf .docx' :
                                     'Laporan tidak boleh kosong';
                                 console.log(errorMessage);
                             } else {
