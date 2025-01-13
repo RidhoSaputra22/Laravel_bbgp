@@ -23,25 +23,14 @@ Route::group(
         Route::redirect('/', '/');
         // Dashboard
 
-        //         Route::get(
-        //             '/',
-        //             function () {
-        //                 return view('pages.landing.index');
-        //             }
-        //         )->name('user.index');
-
-        // Route::get(
-        //     '/',
-        //     function () {
-        //         return view('pages.landing.index');
-        //     }
-        // )->name('user.index');
-
         Route::get('/', 'UserController@index')->name('user.index');
         Route::get('/kontak', 'UserController@kontak')->name('user.kontak');
         Route::get('/eksternal', 'UserController@guru')->name('user.guru');
 
         Route::get('/detail/{jenis}/{id}', 'UserController@detail')->name('user.detail.post');
+        
+        // analisis kebutuhan pelatihan
+        Route::get('/analisis-kebutuhan-pelatihan', 'UserController@analisisPelatihan')->name('user.analisisPelatihan');
 
 
         Route::get('/pegawai', 'UserController@pegawai')->name('user.pegawai');

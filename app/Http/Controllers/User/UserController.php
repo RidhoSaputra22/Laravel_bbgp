@@ -240,7 +240,7 @@ class UserController extends Controller
 
             if ($r['kabupaten'] == 'Tidak ada' && $r['diluarKab'] != null) {
                 $r['kabupaten'] = $r['diluarKab'];
-            } 
+            }
 
             $r['kategori_jabatan'] = $r['jabKategori'] ?? '';
             $r['tugas_jabatan'] = $r['jabTugas'] ?? '';
@@ -256,12 +256,12 @@ class UserController extends Controller
             $reg['no_ktp'] = (string) $r['no_ktp'];
             $reg['role'] = $role;
             $reg['password'] = bcrypt('12345');
-            
+
             // dump($r);
             // dd($reg);
-            
-            
-            
+
+
+
             User::create($reg);
             Admin::create($reg);
             Guru::create($r);
@@ -359,5 +359,12 @@ class UserController extends Controller
             ->count();
 
         return response()->json(['jumlah' => $jumlah]);
+    }
+
+    public function analisisPelatihan()
+    {
+        return view('pages.landing.analisisPelatihan.index', [
+            'menu' => 'analisisPelatihan',
+        ]);
     }
 }

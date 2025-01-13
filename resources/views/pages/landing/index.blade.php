@@ -233,19 +233,22 @@
             <div class="row my-icon2-slider">
 
                 <div class="col-lg col-md ">
-                    <div class="ts-service-box">
-                        <div class="ts-service-image-wrapper">
-                            <img loading="lazy" class="w-100"
-                                src="{{ asset('landing/images/icon-slider/slider2/icon-web-jurnal.png') }}"
-                                alt="icon web jurnal">
-                        </div>
-                        <div class="text-center">
-                            <div class="ts-service-info">
-                                <h3 class="service-box-title"><a href="service-single.html">Jurnal Edutrans</a></h3>
-
+                    <a href="{{ route('user.analisisPelatihan') }}" >
+                        <div class="ts-service-box">
+                            <div class="ts-service-image-wrapper">
+                                <img loading="lazy" class="w-100"
+                                    src="{{ asset('landing/images/icon-slider/slider2/icon-web-jurnal.png') }}"
+                                    alt="icon web jurnal">
                             </div>
-                        </div>
-                    </div><!-- Service1 end -->
+                            <div class="text-center">
+                                <div class="ts-service-info">
+                                    <h3 class="service-box-title"><a href="service-single.html">Analisis Kebutuhan
+                                            Pelatihan</a></h3>
+
+                                </div>
+                            </div>
+                        </div><!-- Service1 end -->
+                    </a>
                 </div><!-- Col 1 end -->
 
                 <div class="col-lg col-md ">
