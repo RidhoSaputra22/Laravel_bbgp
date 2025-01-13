@@ -34,14 +34,17 @@
 
             <div class="row">
                 <div class="col-md-4">
-                    <div class="ts-service-box-bg text-center h-100">
-                        <span class="ts-service-icon icon-round">
-                            <i class="fas fa-school"></i>
-                        </span>
-                        <div class="ts-service-box-content">
-                            <h4>Responden Guru</h4>
+                    <a href="https://docs.google.com/forms/d/e/1FAIpQLSdRwvQOt7vSkRwE0Dp8w5dAGQSkNHV3mfa-UDnTLJcQp37rJQ/viewform?usp=sharing"
+                        target="_blank">
+                        <div class="ts-service-box-bg text-center h-100">
+                            <span class="ts-service-icon icon-round">
+                                <i class="fas fa-school"></i>
+                            </span>
+                            <div class="ts-service-box-content">
+                                <h4>Responden Guru</h4>
+                            </div>
                         </div>
-                    </div>
+                    </a>
                 </div><!-- Col 1 end -->
 
                 <div class="col-md-4">
@@ -57,7 +60,6 @@
 
                 <div class="col-md-4">
                     <a href="">
-
                         <div class="ts-service-box-bg text-center h-100">
                             <span class="ts-service-icon icon-round">
                                 <i class="fas fa-video"></i>
@@ -71,7 +73,6 @@
 
             </div><!-- 1st row end -->
 
-            <div class="gap-60"></div>
 
 
             <div class="gap-40"></div>
