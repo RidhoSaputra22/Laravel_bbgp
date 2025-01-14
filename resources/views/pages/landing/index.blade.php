@@ -242,7 +242,7 @@
                             </div>
                             <div class="text-center">
                                 <div class="ts-service-info">
-                                    <h3 class="service-box-title"><a href="service-single.html">Analisis Kebutuhan
+                                    <h3 class="service-box-title"><a href="{{ route('user.analisisPelatihan') }}">Analisis Kebutuhan
                                             Pelatihan</a></h3>
 
                                 </div>

@@ -48,18 +48,21 @@
                 </div><!-- Col 1 end -->
 
                 <div class="col-md-4">
-                    <div class="ts-service-box-bg text-center h-100">
-                        <span class="ts-service-icon icon-round">
-                            <i class="fas fa-user-graduate"></i>
-                        </span>
-                        <div class="ts-service-box-content">
-                            <h4>Responden Kepala Sekolah</h4>
+                    <a href="https://docs.google.com/forms/d/e/1FAIpQLSd9PuiyjDa8AqXevMgzalXgP14qWrrw6wRNZ6sVdgyNPmkNyA/viewform?usp=dialog" target="_blank">
+                        <div class="ts-service-box-bg text-center h-100">
+                            <span class="ts-service-icon icon-round">
+                                <i class="fas fa-user-graduate"></i>
+                            </span>
+                            <div class="ts-service-box-content">
+                                <h4>Responden Kepala Sekolah</h4>
+                            </div>
                         </div>
-                    </div>
+                    </a>
                 </div><!-- Col 2 end -->
 
                 <div class="col-md-4">
-                    <a href="">
+                    
+                    <a href="https://docs.google.com/forms/d/e/1FAIpQLSc4o53pGI4UtrNWs6baEmRkVKp7OhJG4Bdnadtzx3JOTknwtQ/viewform?usp=header" target="_blank">
                         <div class="ts-service-box-bg text-center h-100">
                             <span class="ts-service-icon icon-round">
                                 <i class="fas fa-video"></i>
