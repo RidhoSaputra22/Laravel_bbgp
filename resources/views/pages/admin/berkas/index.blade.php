@@ -39,6 +39,14 @@
 
                                     </div>
                                 @endif
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <input type="text" class="form-control" id="searchEmployee"
+                                                placeholder="Cari nama pegawai...">
+                                        </div>
+                                    </div>
+                                </div>
                                 <div id="accordion">
                                     @if (session('role') == 'admin' || session('role') == 'superadmin')
                                         @foreach ($datas as $user)
@@ -221,7 +229,7 @@
                                 placeholder="Nama kegiatan" class="form-control mt-3" />
                             <input name="metode_upload" id="metode_upload" type="hidden" class="form-control mt-3" />
                             <div id="uploadForm">
-                                <input name="nama_berkas" id="nama_berkas" required type="file"
+                                <input name="nama_berkas" id="nama_berkas" required accept=".doc, .docx, .pdf" type="file"
                                     class="form-control mt-3" />
                                 <input name="nama_berkas_old" id="nama_berkas_old" type="hidden"
                                     class="form-control mt-3" />
@@ -377,6 +385,27 @@
                             });
                         }
                     });
+                });
+
+                $('#searchEmployee').on('keyup', function() {
+                    const searchValue = $(this).val().toLowerCase();
+                    console.log(searchValue);
+                    // Loop through each accordion
+                    $('.accordion').each(function() {
+                        const employeeName = $(this).find('.accordion-header h4').text().toLowerCase();
+
+                        // Show/hide based on search value
+                        if (employeeName.includes(searchValue)) {
+                            $(this).show();
+                        } else {
+                            $(this).hide();
+                        }
+                    });
+
+                    // If search is empty, show all
+                    if (searchValue === '') {
+                        $('.accordion').show();
+                    }
                 });
 
             })
