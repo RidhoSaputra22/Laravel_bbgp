@@ -60,6 +60,7 @@
     <script src="{{ asset('library/selectric/public/jquery.selectric.min.js') }}"></script>
     <script src="{{ asset('library/sweetalert/dist/sweetalert.min.js') }}"></script>
 
+    <script src="{{ asset('library/select2/dist/js/select2.full.min.js') }}"></script>
     
 
     <!-- JS Libraies -->

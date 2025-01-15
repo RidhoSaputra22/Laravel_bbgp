@@ -40,9 +40,9 @@
                     <div class="d-block">
                         <label for="password" class="control-label">Login Sebagai</label>
                     </div>
-                    <select class="form-control  selectric" name="role" id="">
+                    <select class="form-control selectric" name="role" id="">
                         <option value="">-- Pilih Role --</option>
-                        <option value="kepala">Kepala Balai</option> 
+                        <option value="kepala">Kepala Balai</option>
                         <option value="keuangan">Keuangan</option>
                         <option value="kepegawaian">Kepegawaian</option>
                         <option value="kegiatan">Kegiatan</option>
@@ -50,6 +50,7 @@
                         <option value="tenaga kependidikan">Tenaga Kependidikan</option>
                         <option value="stakeholder">Stakeholder</option>
                         <option value="pegawai">Pegawai BBGP</option>
+                        <option value="database">Database</option>
                         <option value="superadmin">Super Admin</option>
                     </select>
                 </div>
@@ -67,9 +68,8 @@
     <div class="mt-5 text-muted text-center">
         <a href="/">Kembali ke beranda</a>
     </div>
-    <script src="{{ asset('library/sweetalert/dist/sweetalert.min.js') }}"></script>
-
-
+    
+    
     @push('scripts')
     @endpush
 

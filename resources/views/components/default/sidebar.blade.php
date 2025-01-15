@@ -260,6 +260,20 @@
                 </li>
             @endif
 
+            @if (Session('role') == 'database')
+                <li class="{{ $menu == 'guru' ? 'active' : '' }}">
+                    <a class="nav-link" href="{{ route('guru.index') }}">
+                        <i class="fas fa-chalkboard-teacher"></i> <span>Data Eksternal</span>
+                    </a>
+                </li>
+
+                <li class="{{ $menu == 'akun' ? 'active' : '' }}">
+                    <a class="nav-link" href="{{ route('akun.index') }}">
+                        <i class="fas fa-user"></i> <span>Data Akun</span>
+                    </a>
+                </li>
+            @endif
+
 
             {{-- @if (Session('role') != 'guru' || Session('role' != 'pegawai')) --}}
             {{-- <li class="{{ $menu == 'kepegawaian' ? 'active' : '' }}"><a class="nav-link"

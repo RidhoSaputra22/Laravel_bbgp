@@ -31,7 +31,9 @@
                                         <div class="col-md">
                                             <div class="form-group">
                                                 <label>NIK</label>
-                                                <input {{ session('role') == 'admin' || session('role') == 'superadmin' ? '' : 'readonly' }} value="{{ $datas->no_ktp }}" name="no_ktp" required
+                                                <input
+                                                    {{ session('role') == 'admin' || session('role') == 'superadmin' ? '' : 'readonly' }}
+                                                    value="{{ $datas->no_ktp }}" name="no_ktp" required
                                                     placeholder="Masukkan Nomor KTP" type="text" class="form-control">
                                             </div>
                                         </div>
@@ -55,8 +57,8 @@
                                         <div class="col-md-6">
                                             <div class="form-group">
                                                 <label>Password</label>
-                                                <input name="password" value=""
-                                                    placeholder="Masukkan Password" type="password" class="form-control">
+                                                <input name="password" value="" placeholder="Masukkan Password"
+                                                    type="password" class="form-control">
                                             </div>
                                         </div>
                                         <div class="col-md-6">
@@ -67,11 +69,14 @@
                                                     <option value="">-- Pilih Role Akun --</option>
                                                     <option {{ $datas->role == 'kepala' ? 'selected' : '' }} value="kepala">
                                                         Kepala Balai</option>
-                                                    <option {{ $datas->role == 'kepegawaian' ? 'selected' : '' }} value="kepegawaian">
+                                                    <option {{ $datas->role == 'kepegawaian' ? 'selected' : '' }}
+                                                        value="kepegawaian">
                                                         Kepegawaian</option>
-                                                    <option {{ $datas->role == 'keuangan' ? 'selected' : '' }} value="keuangan">
+                                                    <option {{ $datas->role == 'keuangan' ? 'selected' : '' }}
+                                                        value="keuangan">
                                                         Keuangan</option>
-                                                    <option {{ $datas->role == 'kegiatan' ? 'selected' : '' }} value="kegiatan">
+                                                    <option {{ $datas->role == 'kegiatan' ? 'selected' : '' }}
+                                                        value="kegiatan">
                                                         Kegiatan</option>
                                                     <option {{ $datas->role == 'tenaga pendidik' ? 'selected' : '' }}
                                                         value="tenaga pendidik">tenaga pendidik</option>
@@ -81,6 +86,8 @@
                                                         value="stakeholder">stakeholder</option>
                                                     <option {{ $datas->role == 'pegawai' ? 'selected' : '' }}
                                                         value="pegawai">Pegawai BBGP</option>
+                                                    <option {{ $datas->role == 'database' ? 'selected' : '' }}
+                                                        value="database">Database</option>
                                                     <option {{ $datas->role == 'superadmin' ? 'selected' : '' }}
                                                         value="superadmin">superadmin</option>
                                                 </select>

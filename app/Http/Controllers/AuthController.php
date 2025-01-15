@@ -23,14 +23,14 @@ class AuthController extends Controller
         if ($request->role == null && $request->username == 'admin') {
             $request->role = 'admin';
         }
-        
+
         if ($request->role == null) {
             return redirect()->back()->with('message', 'gagal login');
         }
-        
+
         $user = Admin::where('username', $request->username)->where('role', $request->role)->first();
         $user1 = User::where('username', $request->username)->where('role', $request->role)->first();
-        
+
 
         $cek = Auth::attempt(['username' => $request->username, 'password' => $request->password, 'role' => $request->role]);
         if ($cek) {
@@ -42,24 +42,17 @@ class AuthController extends Controller
             Session::put('role', $user->role);
             Session::put('cek', true);
 
-            if($user->role == 'pegawai') {
+            if ($user->role == 'pegawai') {
                 return redirect()->route('pegawai.show', $user->no_ktp)->with('message', 'sukses login');
-
             }
 
-
-            if($user->role == 'tenaga pendidik' || $user->role == 'tenaga kependidikan' || $user->role == 'stakeholder') {
+            if ($user->role == 'tenaga pendidik' || $user->role == 'tenaga kependidikan' || $user->role == 'stakeholder') {
                 return redirect()->route('guru.show', $user->no_ktp)->with('message', 'sukses login');
-
             }
-
-
 
             return redirect()->route('dashboard')->with('message', 'sukses login');
         } else {
             return redirect()->back()->with('message', 'gagal login');
         }
     }
-
-   
 }

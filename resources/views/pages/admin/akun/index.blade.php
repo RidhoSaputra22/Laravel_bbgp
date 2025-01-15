@@ -77,6 +77,7 @@
                                                                     <option value="tenaga kependidikan">Tenaga Kependidikan</option>
                                                                     <option value="stakeholder">Stakeholder</option>
                                                                     <option value="pegawai">Pegawai BBGP</option>
+                                                                    <option value="database">Database</option>
                                                                     <option value="superadmin">Super Admin</option>
                                                                 </select>
                                                             </div>
