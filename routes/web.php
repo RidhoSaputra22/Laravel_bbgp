@@ -26,6 +26,8 @@ Route::group(
         Route::get('/', 'UserController@index')->name('user.index');
         Route::get('/kontak', 'UserController@kontak')->name('user.kontak');
         Route::get('/eksternal', 'UserController@guru')->name('user.guru');
+        Route::get('/dataguru', 'UserController@dataguru')->name('user.guru.data');
+        Route::get('/cari', 'UserController@cari')->name('user.cari.guru');
 
         Route::get('/detail/{jenis}/{id}', 'UserController@detail')->name('user.detail.post');
         
@@ -119,6 +121,7 @@ Route::group(
                 Route::get('/show/{id}', 'GuruController@show')->name('guru.show');
                 Route::get('/editByUser/{id}', 'GuruController@editByUser')->name('guru.edit.user');
                 Route::put('/updateByUser', 'GuruController@updateByUser')->name('guru.update.user');
+                Route::get('/cari', 'GuruController@cari')->name('guru.cari');
             });
 
             // Pegawai

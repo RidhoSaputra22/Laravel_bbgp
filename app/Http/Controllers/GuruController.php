@@ -226,10 +226,10 @@ class GuruController extends Controller
             $r['jabJenis'] = $r['jabLainnya'];
             $r['jenis_jabatan'] = $r['jabJenis'];
         } else {
-            $r['jenis_jabatan'] = $r['jabJenis'];   
+            $r['jenis_jabatan'] = $r['jabJenis'];
         }
 
-        if ( $r['kabupaten'] == 'Tidak ada') {
+        if ($r['kabupaten'] == 'Tidak ada') {
             $r['kabupaten'] = $r['diluarKab'];
         }
 
@@ -418,5 +418,53 @@ class GuruController extends Controller
 
         $data->update($r);
         return redirect()->route('guru.show', $r['id'])->with('message', 'update');
+    }
+
+    public function cari(Request $request)
+    {
+        $search = Guru::query()
+            ->join('sekolahs', 'gurus.npsn_sekolah', '=', 'sekolahs.npsn_sekolah')
+            ->select('gurus.*', 'sekolahs.nama_sekolah');
+
+        if ($request->nama_sekolah) {
+            $search->where('sekolahs.nama_sekolah', 'like', '%' . $request->nama_sekolah . '%');
+        }
+
+        if ($request->filled('nama_lengkap')) {
+            $search->where('gurus.nama_lengkap', 'like', '%' . $request->nama_lengkap . '%');
+        }
+    
+        if ($request->filled('status_kepegawaian')) {
+            $search->where('gurus.status_kepegawaian', $request->status_kepegawaian);
+        }
+
+        if ($request->filled('kabupaten')) {
+            $search->where('gurus.kabupaten', $request->kabupaten);
+        }
+
+        $search->orderBy('gurus.created_at', 'desc');
+
+        $result = $search->get();
+
+        return response()->json([
+            'status' => true,
+            'data' => $result->map(function ($item) {
+                return [
+                    'id' => $item->id,
+                    'nama_lengkap' => $item->nama_lengkap,
+                    'no_ktp' => $item->no_ktp,
+                    'npsn_sekolah' => $item->npsn_sekolah,
+                    'nama_sekolah' => $item->nama_sekolah,
+                    'kabupaten' => $item->kabupaten,
+                    'status_kepegawaian' => $item->status_kepegawaian,
+                    'eksternal_jabatan' => $item->eksternal_jabatan,
+                    'kategori_jabatan' => $item->kategori_jabatan,
+                    'jenis_jabatan' => $item->jenis_jabatan,    
+                    'tugas_jabatan' => $item->tugas_jabatan,
+                    'latar_jabatan' => $item->latar_jabatan ?? 'tidak ada',
+                    'is_verif' => $item->is_verif 
+                ];
+            })
+        ]);
     }
 }

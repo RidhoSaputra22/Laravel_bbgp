@@ -183,6 +183,12 @@
             </script>
         @endif
 
+        @if (session('message') == 'nik sudah ada')
+            <script>
+                Swal.fire("Warning", "NIK anda telah terdaftar sebelum nya", "warning");
+            </script>
+        @endif
+
         @if (session('message') == 'sukses daftar')
             <script>
                 // Swal.fire("Berhasil", "Berhasil registrasi Kegiatan", "success");

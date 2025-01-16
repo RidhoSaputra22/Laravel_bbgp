@@ -48,8 +48,7 @@
                                         <div class="col">
                                             <div class="d-flex justify-content-end">
                                                 <div class="text-right">
-                                                    <button target="_blank" 
-                                                        class="btn btn-info btn-lg">
+                                                    <button target="_blank" class="btn btn-info btn-lg">
                                                         <i class="fas fa-file-pdf"></i> Export PDF
                                                     </button>
                                                 </div>
@@ -75,9 +74,9 @@
                                     <h5>Filter Data Eksternal</h5>
 
                                     <div class="row">
-                                        <div class="col-md-3 mb-4">
+                                        {{-- <div class="col-md-3 mb-4">
                                             <label>Jabatan Ketenagaan</label>
-                                            <select  name="jenisJabatan" class="form-control " id="jabEksternal">
+                                            <select name="jenisJabatan" class="form-control " id="jabEksternal">
                                                 <option value="">-- Filter By Jabatan Ketenagaan --</option>
                                                 <option value="Tenaga Pendidik">Tenaga Pendidik</option>
                                                 <option value="Tenaga Kependidikan">Tenaga Kependidikan</option>
@@ -90,21 +89,17 @@
                                                 <label>Jabatan</label>
                                                 <select name="jabJenis" class="form-control" id="jabJenis">
                                                     <option value="">-- Pilih Jenis Jabatan --</option>
-                                                    {{-- <option id="valJabJenis" value="">-- Pilih Jabatan</option> --}}
                                                 </select>
                                             </div>
-                                        </div>
+                                        </div> --}}
 
-                                        <div class="col-md-3 mb-4">
+                                        {{-- <div class="col-md-3 mb-4">
                                             <label>Kategori Jabatan </label>
                                             <select name="jabKategori" class="form-control" id="jabKategori">
                                                 <option value="">-- Pilih Kategori --</option>
-                                                {{-- <option value="GP (Guru Penggerak)">GP (Guru Penggerak)</option>
-                                            <option value="NoN GP (Guru Penggerak)">NoN GP (Guru Penggerak)</option> --}}
-
                                             </select>
-                                        </div>
-                                        <div class="col-md-3">
+                                        </div> --}}
+                                        {{-- <div class="col-md-3">
                                             <div class="form-group" id="latarJabatanContainer">
                                                 <label>Latar Jabatan</label>
                                                 <select name="jabLatar" class="form-control" id="jabLatar">
@@ -112,19 +107,36 @@
                                                     <!-- Options will be populated dynamically -->
                                                 </select>
                                             </div>
-                                        </div>
+                                        </div> --}}
 
-                                        <div class="col-md-3">
-                                            <div class="form-group">
+                                        <div class="col-md-4">
+                                            {{-- <div class="form-group">
                                                 <label>Jenis Tugas</label>
                                                 <select name="jabTugas" class="form-control" id="jabTugas">
                                                     <option value="">-- Pilih Tugas Jabatan --</option>
 
 
                                                 </select>
+                                            </div> --}}
+                                            <div class="form-group">
+                                                <label>Nama Sekolah/Instansi</label>
+                                                <input name="instansi" id="instansi" type="text" value=""
+                                                    placeholder="Masukkan sekolah/instansi anda" class="form-control">
                                             </div>
                                         </div>
-                                        <div class="col-md-3">
+                                        <div class="col-md-4">
+                                            <div class="form-group">
+                                                <label>Status Kepegawaian</label>
+                                                <select name="statusKepegawaian" class="form-control select2"
+                                                    id="statusKepegawaian">
+                                                    <option value="">-- Pilih status kepegawaian --</option>
+                                                    @foreach ($status['s_kepegawaian'] as $v)
+                                                        <option value="{{ $v->name }}">{{ $v->name }}</option>
+                                                    @endforeach
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
                                             <div class="form-group">
                                                 <label>Kota/Kabupaten</label>
                                                 <select name="kabupatenFilter" class="form-control select2"
@@ -178,39 +190,18 @@
 
                                             </tr>
                                         </thead>
-                                        <tbody>
+                                        {{-- <tbody>
                                             @foreach ($datas as $i => $data)
                                                 <tr>
                                                     <td>{{ ++$i }}</td>
-                                                    {{-- <td><img src="{{ asset('/upload/guru/' . $data->pas_foto) }}"
-                                                                    alt="" class="img-fluid"></td> --}}
                                                     <td>{{ $data->nama_lengkap }}</td>
-                                                    {{-- <td>{{ $data->npwp }}</td> --}}
-                                                    {{-- <td>{{ $data->nuptk }}</td> --}}
-                                                    {{-- <td>{{ $data->email }}</td> --}}
-                                                    {{-- <td>{{ $data->no_ktp }}</td> --}}
-                                                    {{-- <td>{{ $data->tempat_lahir . ', ' . $data->tgl_lahir }}</td> --}}
-                                                    {{-- <td>{{ $data->alamat_rumah }}</td> --}}
-                                                    {{-- <td>{{ $data->gender }}</td> --}}
                                                     <td>{{ $data->status_kepegawaian }} </td>
-                                                    {{-- <td>{{ $data->agama }}</td> --}}
-                                                    {{-- <td>{{ $data->pendidikan }}</td> --}}
                                                     <td>{{ $data->eksternal_jabatan }}</td>
                                                     <td>{{ $data->jenis_jabatan }}</td>
                                                     <td>{{ $data->kategori_jabatan }}</td>
                                                     <td>{{ $data->tugas_jabatan ?? '-' }}</td>
                                                     <td>{{ $data->latar_jabatan ?? 'tidak ada' }}</td>
                                                     <td>{{ $data->kabupaten ?? 'tidak ada' }}</td>
-                                                    {{-- <td>{{ $data->npsn_sekolah }} <br>
-                                                        {{ $data->sekolah->nama_sekolah ?? '' }}</td> --}}
-                                                    {{-- <td>{{ $data->kabupaten }}</td> --}}
-                                                    {{-- <td>{{ $data->satuan_pendidikan }}</td> --}}
-                                                    {{-- <td>{{ $data->sekolah->kecamatan ?? '' }}</td> --}}
-                                                    {{-- <td>{{ $data->sekolah->kabupaten ?? '' }}</td> --}}
-                                                    {{-- <td>No. Hp : {{ $data->no_hp }} <br>
-                                                            No. Whatsapp : {{ $data->no_wa }}</td> --}}
-                                                    {{-- <td>{{ $data->no_rek }} - {{ $data->jenis_bank }}</td> --}}
-
                                                     <td>
                                                         @if ($data->is_verif == 'sudah')
                                                             <span class="badge badge-sm  badge-success">Sudah
@@ -239,11 +230,9 @@
                                                             <i class="fas fa-trash-alt"></i>
                                                         </button>
                                                     </td>
-
-
                                                 </tr>
                                             @endforeach
-                                        </tbody>
+                                        </tbody> --}}
                                     </table>
                                 </div>
                             </div>
@@ -282,136 +271,386 @@
         <script src="{{ asset('library/datatables.net-select-bs4/js/select.bootstrap4.min.js') }}"></script>
 
         <script>
+            // function showDetail(pegawaiId) {
+            //     $.ajax({
+            //         url: '{{ route('user.pegawai.detail.eksternal') }}', 
+            //         type: 'GET',
+            //         data: {
+            //             id: pegawaiId
+            //         },
+            //         success: function(response) {
+            //             console.log(response)
+            //             const dateLahir = new Date(response.data.tgl_lahir);
+            //             const dayLahir = String(dateLahir.getDate()).padStart(2, '0');
+            //             const monthLahir = String(dateLahir.getMonth() + 1).padStart(2,
+            //                 '0'); 
+            //             const yearLahir = dateLahir.getFullYear();
+            //             tgl_Lahir = `${dayLahir}-${monthLahir}-${yearLahir}`;
+
+            //             $('#pegawaiDetailContent').html(`
+    //                 <div class="row">
+    //                     <div class="col-md-6">
+    //                         <p><strong>NPSN Sekolah:</strong>${response.sekolah.nama_sekolah} ( ${response.sekolah.npsn_sekolah ?? ''} ) </p>
+    //                         <p><strong>Nama Lengkap:</strong> ${response.data.nama_lengkap ?? ''}</p>
+    //                         <p><strong>NIK:</strong> ${response.data.no_ktp ?? ''}</p>
+    //                         <p><strong>NIP:</strong> ${response.data.nip ?? ''}</p>
+    //                         <p><strong>NPWP:</strong> ${response.data.npwp ?? ''}</p>
+    //                         <p><strong>NUPTK:</strong> ${response.data.nuptk ?? ''}</p>
+    //                         <p><strong>Email:</strong> ${response.data.email ?? ''}</p>
+    //                         <p><strong>Asal Kabupaten:</strong> ${response.data.kabupaten ?? ''}</p>
+    //                         <p><strong>Tempat, Tanggal Lahir:</strong> ${response.data.tempat_lahir ?? ''},  ${tgl_Lahir}</p>
+    //                         <p><strong>Jenis Kelamin:</strong> ${response.data.gender ?? ''}</p>
+    //                         <p><strong>Alamat Rumah:</strong> ${response.data.alamat_rumah ?? ''}</p>
+
+    //                         </div>
+    //                     <div class="col-md-6">    
+    //                         <p><strong>Satuan Pendidikan:</strong> ${response.data.satuan_pendidikan ?? ''}</p>
+    //                         <p><strong>Ketenagaan:</strong> ${response.data.eksternal_jabatan ?? ''}</p>
+    //                         <p><strong>Kategori Jabatan:</strong> ${response.data.kategori_jabatan ?? ''}</p>
+    //                         <p><strong>Jenis Jabatan:</strong> ${response.data.jenis_jabatan ?? ''}</p>
+    //                         <p><strong>Tugas Jabatan:</strong> ${response.data.tugas_jabatan ?? ''}</p>
+    //                         <p><strong>Latar Jabatan:</strong> ${response.data.latar_jabatan ?? 'tidak ada'}</p>
+    //                         <p><strong>Bank:</strong> ( ${response.data.jenis_bank ?? ''} ) - ${response.data.no_rek}</p>
+    //                         <p><strong>No HP:</strong> ${response.data.no_hp ?? ''}</p>
+    //                         <p><strong>No WA:</strong> ${response.data.no_wa ?? ''}</p>
+    //                         <p><strong>Pendidikan Terakhir:</strong> ${response.data.pendidikan ?? ''}</p>
+    //                         <p><strong>Status Kepegawaian:</strong> ${response.data.status_kepegawaian ?? ''}</p>
+    //                     </div>
+    //                 </div>
+    //             `);
+            //             $('#detailModal').modal('show');
+            //         },
+            //         error: function(error) {
+            //             console.error(error);
+            //             alert('Error fetching detail.');
+            //         }
+            //     });
+            // }
+
             function showDetail(pegawaiId) {
                 $.ajax({
-                    url: '{{ route('user.pegawai.detail.eksternal') }}', // Sesuaikan dengan route yang benar
+                    url: '{{ route('user.pegawai.detail.eksternal') }}',
                     type: 'GET',
                     data: {
                         id: pegawaiId
                     },
-                    success: function(response) {
-                        console.log(response)
-                        const dateLahir = new Date(response.data.tgl_lahir);
-                        const dayLahir = String(dateLahir.getDate()).padStart(2, '0');
-                        const monthLahir = String(dateLahir.getMonth() + 1).padStart(2,
-                            '0'); // getMonth() returns 0-11
-                        const yearLahir = dateLahir.getFullYear();
-                        tgl_Lahir = `${dayLahir}-${monthLahir}-${yearLahir}`;
-
-                        $('#pegawaiDetailContent').html(`
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <p><strong>NPSN Sekolah:</strong>${response.sekolah.nama_sekolah} ( ${response.sekolah.npsn_sekolah ?? ''} ) </p>
-                                    <p><strong>Nama Lengkap:</strong> ${response.data.nama_lengkap ?? ''}</p>
-                                    <p><strong>NIK:</strong> ${response.data.no_ktp ?? ''}</p>
-                                    <p><strong>NIP:</strong> ${response.data.nip ?? ''}</p>
-                                    <p><strong>NPWP:</strong> ${response.data.npwp ?? ''}</p>
-                                    <p><strong>NUPTK:</strong> ${response.data.nuptk ?? ''}</p>
-                                    <p><strong>Email:</strong> ${response.data.email ?? ''}</p>
-                                    <p><strong>Asal Kabupaten:</strong> ${response.data.kabupaten ?? ''}</p>
-                                    <p><strong>Tempat, Tanggal Lahir:</strong> ${response.data.tempat_lahir ?? ''},  ${tgl_Lahir}</p>
-                                    <p><strong>Jenis Kelamin:</strong> ${response.data.gender ?? ''}</p>
-                                    <p><strong>Alamat Rumah:</strong> ${response.data.alamat_rumah ?? ''}</p>
-                                    
-                                    </div>
-                                <div class="col-md-6">    
-                                    <p><strong>Satuan Pendidikan:</strong> ${response.data.satuan_pendidikan ?? ''}</p>
-                                    <p><strong>Ketenagaan:</strong> ${response.data.eksternal_jabatan ?? ''}</p>
-                                    <p><strong>Kategori Jabatan:</strong> ${response.data.kategori_jabatan ?? ''}</p>
-                                    <p><strong>Jenis Jabatan:</strong> ${response.data.jenis_jabatan ?? ''}</p>
-                                    <p><strong>Tugas Jabatan:</strong> ${response.data.tugas_jabatan ?? ''}</p>
-                                    <p><strong>Latar Jabatan:</strong> ${response.data.latar_jabatan ?? 'tidak ada'}</p>
-                                    <p><strong>Bank:</strong> ( ${response.data.jenis_bank ?? ''} ) - ${response.data.no_rek}</p>
-                                    <p><strong>No HP:</strong> ${response.data.no_hp ?? ''}</p>
-                                    <p><strong>No WA:</strong> ${response.data.no_wa ?? ''}</p>
-                                    <p><strong>Pendidikan Terakhir:</strong> ${response.data.pendidikan ?? ''}</p>
-                                    <p><strong>Status Kepegawaian:</strong> ${response.data.status_kepegawaian ?? ''}</p>
-                                </div>
-                            </div>
-                        `);
+                    beforeSend: function() {
+                        $('#pegawaiDetailContent').html(
+                            '<div class="text-center"><i class="fa fa-spinner fa-spin fa-3x"></i></div>');
                         $('#detailModal').modal('show');
                     },
-                    error: function(error) {
-                        console.error(error);
-                        alert('Error fetching detail.');
+                    success: function(response) {
+                        try {
+                            const dateLahir = response.data.tgl_lahir ? new Date(response.data.tgl_lahir) : null;
+                            const tgl_Lahir = dateLahir ?
+                                `${String(dateLahir.getDate()).padStart(2, '0')}-${String(dateLahir.getMonth() + 1).padStart(2, '0')}-${dateLahir.getFullYear()}` :
+                                '';
+
+                            $('#pegawaiDetailContent').html(`
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <p><strong>NPSN Sekolah:</strong> ${response.sekolah?.nama_sekolah || ''} (${response.sekolah?.npsn_sekolah || ''})</p>
+                                        <p><strong>Nama Lengkap:</strong> ${response.data?.nama_lengkap || ''}</p>
+                                        <p><strong>NIK:</strong> ${response.data?.no_ktp || ''}</p>
+                                        <p><strong>NIP:</strong> ${response.data?.nip || ''}</p>
+                                        <p><strong>NPWP:</strong> ${response.data?.npwp || ''}</p>
+                                        <p><strong>NUPTK:</strong> ${response.data?.nuptk || ''}</p>
+                                        <p><strong>Email:</strong> ${response.data?.email || ''}</p>
+                                        <p><strong>Asal Kabupaten:</strong> ${response.data?.kabupaten || ''}</p>
+                                        <p><strong>Tempat, Tanggal Lahir:</strong> ${response.data?.tempat_lahir || ''}, ${tgl_Lahir}</p>
+                                        <p><strong>Jenis Kelamin:</strong> ${response.data?.gender || ''}</p>
+                                        <p><strong>Alamat Rumah:</strong> ${response.data?.alamat_rumah || ''}</p>
+                                    </div>
+                                    <div class="col-md-6">    
+                                        <p><strong>Satuan Pendidikan:</strong> ${response.data?.satuan_pendidikan || ''}</p>
+                                        <p><strong>Ketenagaan:</strong> ${response.data?.eksternal_jabatan || ''}</p>
+                                        <p><strong>Kategori Jabatan:</strong> ${response.data?.kategori_jabatan || ''}</p>
+                                        <p><strong>Jenis Jabatan:</strong> ${response.data?.jenis_jabatan || ''}</p>
+                                        <p><strong>Tugas Jabatan:</strong> ${response.data?.tugas_jabatan || ''}</p>
+                                        <p><strong>Latar Jabatan:</strong> ${response.data?.latar_jabatan || 'tidak ada'}</p>
+                                        <p><strong>Bank:</strong> (${response.data?.jenis_bank || ''}) - ${response.data?.no_rek || ''}</p>
+                                        <p><strong>No HP:</strong> ${response.data?.no_hp || ''}</p>
+                                        <p><strong>No WA:</strong> ${response.data?.no_wa || ''}</p>
+                                        <p><strong>Pendidikan Terakhir:</strong> ${response.data?.pendidikan || ''}</p>
+                                        <p><strong>Status Kepegawaian:</strong> ${response.data?.status_kepegawaian || ''}</p>
+                                    </div>
+                                </div>
+                            `);
+                        } catch (error) {
+                            console.error('Error parsing response:', error);
+                            $('#pegawaiDetailContent').html(
+                                '<div class="alert alert-danger">Error loading details</div>');
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('AJAX Error:', error);
+                        $('#pegawaiDetailContent').html(
+                            '<div class="alert alert-danger">Failed to load details</div>');
                     }
                 });
             }
+
             $(document).ready(function() {
                 // Initialize DataTable
                 var tableGuru = $('#table-guru').DataTable({
-                    autoWidth: false,
-                    columnDefs: [{
-                        width: '500px',
-                        targets: 8
-                    }]
+                    processing: true,
+                    serverSide: false,
+                    ajax: {
+                        url: '{{ route('guru.cari') }}',
+                        type: 'GET',
+                        data: function(d) {
+                            d.nama_sekolah = $('#instansi').val();
+                            d.status_kepegawaian = $('#statusKepegawaian').val();
+                            d.eksternal_jabatan = $('#jabEksternal').val();
+                            d.jenis_jabatan = $('#jabJenis').val();
+                            d.kabupaten = $('#kabupatenFilter').val();
+                        }
+                    },
+                    columns: [{
+                            data: null,
+                            render: function(data, type, row, meta) {
+                                return meta.col + 1;
+                            }
+                        },
+                        {
+                            data: 'nama_lengkap'
+                        },
+                        {
+                            data: 'status_kepegawaian'
+                        },
+                        {
+                            data: 'eksternal_jabatan'
+                        },
+                        {
+                            data: 'jenis_jabatan'
+                        },
+                        {
+                            data: 'kategori_jabatan'
+                        },
+                        {
+                            data: 'tugas_jabatan',
+                            render: function(data) {
+                                return data || '-';
+                            }
+                        },
+                        {
+                            data: 'latar_jabatan',
+                            render: function(data) {
+                                return data || 'tidak ada';
+                            }
+                        },
+                        {
+                            data: 'kabupaten',
+                            render: function(data) {
+                                return data || 'tidak ada';
+                            }
+                        },
+                        {
+                            data: null,
+                            render: function(data, type, row) {
+                                const userRole = '{{ session('role') }}';
+                                let buttons = ''
+                                // Verification button
+                                if (['admin', 'superadmin'].includes(userRole) && row.is_verif !==
+                                    'sudah') {
+                                    return `<a href="#" class="btn btn-primary mb-1" 
+                                                    onclick="verifikasi(${row.id}, 'eksternal', '${row.is_verif}')">
+                                                    Verifikasi data
+                                                </a> `;
+                                }
+                                return `<span class="badge badge-sm  badge-success">Sudah Verifikasi</span>`
+                            }
+                        },
+                        {
+                            data: null,
+                            render: function(data, type, row) {
+                                let buttons = '';
+
+                                // Get role from PHP session and pass it to JS
+
+
+                                // Edit button
+                                buttons += `<a href="{{ route('guru.edit', '') }}/${row.id}" 
+                    class="btn btn-warning mb-1">
+                    <i class="fas fa-edit"></i>
+                    </a> `;
+
+                                // Detail button
+                                buttons += `<button onclick="showDetail(${row.id})" 
+                    class="btn btn-info mb-1 mx-1">
+                    <i class="fas fa-info"></i>
+                            </button> `;
+
+                                // Delete button
+                                buttons += `<button onclick="deleteData(${row.id}, 'eksternal')" 
+                                                class="btn btn-danger mb-1">
+                                                <i class="fas fa-trash-alt"></i>
+                                            </button>`;
+
+                                return `<div class="d-flex flex-wrap gap-1">${buttons}</div>`;
+                            },
+                            orderable: false,
+                            searchable: false,
+                            className: 'text-center'
+                        }
+                    ],
+                    order: [
+                        [0, 'desc']
+                    ],
+                    responsive: true,
+                    language: {
+                        processing: '<i class="fa fa-spinner fa-spin fa-3x fa-fw"></i><span class="sr-only">Loading...</span>',
+                        emptyTable: 'Data tidak ditemukan',
+                        zeroRecords: 'Tidak ada data yang cocok'
+                    }
                 });
-                const resetBtn = document.querySelector('#resetBtn');
 
-                // Select input elements
-                const namaInput = document.querySelector('#namaFilter');
-                const jabEksternal = document.querySelector('#jabEksternal');
-                const jabJenis = document.querySelector('#jabJenis');
-                const jabKategori = document.querySelector('#jabKategori');
-                const jabTugas = document.querySelector('#jabTugas');
-                const jabLatar = document.querySelector('#jabLatar');
-                const kabupatenFilter = document.querySelector('#kabupatenFilter');
-                const noDataMessage = document.querySelector('.data-not-found');
-                console.log(kabupatenFilter);
-                // Function to apply search filters
-                function applySearch() {
-                    // Get trimmed input value
-                    const searchText = namaInput.value.trim();
-
-                    // Get select values
-                    const jabEksternalValue = jabEksternal.value;
-                    const jabJenisValue = jabJenis.value;
-                    const jabKategoriValue = jabKategori.value;
-                    const jabTugasValue = jabTugas.value;
-                    const jabLatarValue = jabLatar.value;
-                    const KabupatenValue = kabupatenFilter.value;
-
-                    console.log('Search Text:', KabupatenValue);
-                    console.log('Search Text:', KabupatenValue);
-                    console.log('Select Value 13:', jabEksternalValue);
-                    console.log('Select Value 14:', jabTugasValue);
-
-                    // Update search and redraw tableGuru
-                    tableGuru.column(1).search(searchText).draw();
-                    tableGuru.column(3).search(jabEksternalValue).draw();
-                    tableGuru.column(4).search(jabJenisValue).draw();
-                    tableGuru.column(5).search(jabKategoriValue).draw();
-                    tableGuru.column(6).search(jabTugasValue).draw();
-                    tableGuru.column(7).search(jabLatarValue).draw();
-                    tableGuru.column(8).search(KabupatenValue).draw();
-
-                    // Check search result count
-                    const info = tableGuru.page.info();
-                    // if (info.recordsDisplay === 0) {
-                    //     noDataMessage.style.display = 'block';
-                    // } else {
-                    //     noDataMessage.style.display = 'none';
-                    // }
+                function applyFilters() {
+                    tableGuru.ajax.reload();
                 }
 
+                const resetBtn = document.querySelector('#resetBtn');
+
+                const debouncedApplyFilters = debounce(applyFilters, 500);
+
+                // Select input elements
+                // const jabKategori = document.querySelector('#jabKategori');
+                // const jabTugas = document.querySelector('#jabTugas');
+                // const jabLatar = document.querySelector('#jabLatar');
+                const namaInput = document.querySelector('#namaFilter');
+                // const jabEksternal = document.querySelector('#jabEksternal');
+                // const jabJenis = document.querySelector('#jabJenis');
+                const statusKepegawaian = document.querySelector('#statusKepegawaian');
+                const kabupatenFilter = document.querySelector('#kabupatenFilter');
+
+                // Function to apply search filters
+
+
+                // function applySearch() {
+                //     // Get trimmed input value
+                //     const searchText = namaInput.value.trim();
+
+                //     // Get select values
+                //     const jabEksternalValue = jabEksternal.value;
+                //     const jabJenisValue = jabJenis.value;
+                //     const statusKepegawaianValue = statusKepegawaian.value;
+                //     // const jabKategoriValue = jabKategori.value;
+                //     // const jabTugasValue = jabTugas.value;
+                //     // const jabLatarValue = jabLatar.value;
+                //     const KabupatenValue = kabupatenFilter.value;
+
+                //     console.log('Search Text:', KabupatenValue);
+                //     // console.log('Search Text:', KabupatenValue);
+                //     console.log('Select Value 13:', jabEksternalValue);
+                //     // console.log('Select Value 14:', jabTugasValue);
+
+                //     // Update search and redraw tableGuru
+                //     tableGuru.column(1).search(searchText).draw();
+                //     tableGuru.column(2).search(statusKepegawaianValue).draw();
+                //     tableGuru.column(3).search(jabEksternalValue).draw();
+                //     tableGuru.column(4).search(jabJenisValue).draw();
+                //     // tableGuru.column(5).search(jabKategoriValue).draw();
+                //     // tableGuru.column(6).search(jabTugasValue).draw();
+                //     // tableGuru.column(7).search(jabLatarValue).draw();
+                //     tableGuru.column(8).search(KabupatenValue).draw();
+
+                //     // Check search result count
+                //     const info = tableGuru.page.info();
+                //     // if (info.recordsDisplay === 0) {
+                //     //     noDataMessage.style.display = 'block';
+                //     // } else {
+                //     //     noDataMessage.style.display = 'none';
+                //     // }
+                // }
+
                 // Event listener for name input keyup
-                namaInput.addEventListener('keyup', applySearch);
-
+                // namaInput.addEventListener('keyup', applySearch);
                 // Event listeners for select change
-                jabEksternal.addEventListener('change', applySearch);
-                jabJenis.addEventListener('change', applySearch);
-                jabKategori.addEventListener('change', applySearch);
-                jabTugas.addEventListener('change', applySearch);
-                kabupatenFilter.addEventListener('change', applySearch);
+                // jabEksternal.addEventListener('change', applySearch);
+                // jabJenis.addEventListener('change', applySearch);
+                // statusKepegawaian.addEventListener('change', applySearch);
+                // jabKategori.addEventListener('change', applySearch);
+                // jabTugas.addEventListener('change', applySearch);
+                // kabupatenFilter.addEventListener('change', applySearch);
 
-                $('#kabupatenFilter').on('change', function() {
-                    tableGuru.column(8).search($(this).val()).draw();
 
-                });
+                // $('#kabupatenFilter').on('change', function() {
+                //     tableGuru.column(8).search($(this).val()).draw();
+
+                // });
 
                 resetBtn.addEventListener('click', function() {
-                    location.reload();
+                    tableGuru.ajax.reload();
                 })
+
+                function debounce(func, wait) {
+                    let timeout;
+                    return function(...args) {
+                        clearTimeout(timeout);
+                        timeout = setTimeout(() => func.apply(this, args), wait);
+                    };
+                }
+
+                namaInput.addEventListener('input', debouncedApplyFilters);
+                statusKepegawaian.addEventListener('change', applyFilters);
+                // jabEksternal.addEventListener('change', applyFilters);
+                // jabJenis.addEventListener('change', applyFilters);
+                kabupatenFilter.addEventListener('change', applyFilters);
+
+                function clearFilters() {
+                    namaInput.value = '';
+                    jabEksternal.value = '';
+                    jabJenis.value = '';
+                    statusKepegawaian.value = '';
+                    kabupatenFilter.value = '';
+                    applyFilters();
+                }
+
+                tableGuru.on('draw', function() {
+                    const info = tableGuru.page.info();
+                    const noDataMessage = document.querySelector('.data-not-found');
+                    if (noDataMessage) {
+                        noDataMessage.style.display = info.recordsDisplay === 0 ? 'block' : 'none';
+                    }
+                });
+
+                // const instansi = $('#instansi')
+                // const performSearch = debounce(function(value) {
+                //     let token = $("meta[name='csrf-token']").attr("content");
+                //     let data = {
+                //         'nama_sekolah': value
+                //     };
+
+                //     $.ajax({
+                //         headers: {
+                //             "X-CSRF-TOKEN": token,
+                //         },
+                //         type: 'GET',
+                //         data: data,
+                //         url: '{{ route('guru.cari') }}',
+                //         beforeSend: function() {
+                //             $('#loading-indicator').show();
+                //         },
+                //         success: function(response) {
+                //             if (response.status) {
+                //                 tableGuru.ajax.reload();
+                //             } else {
+                //                 console.error('Response status is false');
+                //             }
+                //         },
+                //         error: function(xhr, status, error) {
+                //             console.error('Error:', error);
+                //             alert('Terjadi kesalahan saat mencari data');
+                //         },
+                //         complete: function() {
+                //             $('#loading-indicator').hide();
+                //         }
+                //     });
+                // }, 500);
+
+                // instansi.on('input', function() {
+                //     performSearch($(this).val());
+                // });
             });
         </script>
 
@@ -443,8 +682,8 @@
                 function fillterJabatan() {
                     var jabEksternal = $('#jabEksternal').val();
                     var jabJenis = $('#jabJenis');
-                    var jabTugas = $('#jabTugas');
-                    var jabKategori = $('#jabKategori');
+                    var jabTugas = $('#jabTugas') || '';
+                    var jabKategori = $('#jabKategori') || '';
                     var option = '';
                     const dataJab = {!! json_encode($status) !!};
 
@@ -503,8 +742,8 @@
                 }
 
                 function fillterKategori() {
-                    var jabKategori = $('#jabKategori').val();
-                    var jabTugas = $('#jabTugas');
+                    var jabKategori = $('#jabKategori').val() || '';
+                    var jabTugas = $('#jabTugas') || '';
                     var option = '';
                     const dataJab = {!! json_encode($status) !!};
 
@@ -538,9 +777,9 @@
                 }
 
                 $('#jabKategori').on('change', function() {
-                    var jabLatar = $('#jabLatar');
-                    var jabJenis = $('#jabJenis');
-                    var jabTugas = $('#jabTugas');
+                    var jabLatar = $('#jabLatar') || '';
+                    var jabJenis = $('#jabJenis') || '';
+                    var jabTugas = $('#jabTugas') || '';
 
                     var option = '';
                     const dataJab = {!! json_encode($status) !!};
@@ -602,10 +841,10 @@
                 });
 
                 $('#jabJenis').on('change', function() {
-                    var jabKategori = $('#jabKategori');
-                    var jabTugas = $('#jabTugas');
-                    var jabLatar = $('#jabLatar');
-                    var jabJenis = $(this);
+                    var jabKategori = $('#jabKategori') || '';
+                    var jabTugas = $('#jabTugas') || '';
+                    var jabLatar = $('#jabLatar') || '';
+                    var jabJenis = $(this) || '';
                     var option = '';
                     const dataJab = {!! json_encode($status) !!};
 
@@ -692,8 +931,8 @@
                 });
 
                 $('#jabLatar').on('change', function() {
-                    var jabLatar = $(this);
-                    var jabTugas = $('#jabTugas');
+                    var jabLatar = $(this) || '';
+                    var jabTugas = $('#jabTugas') || '';
 
                     var option = '';
                     const dataJab = {!! json_encode($status) !!};

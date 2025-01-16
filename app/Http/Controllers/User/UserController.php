@@ -84,43 +84,53 @@ class UserController extends Controller
 
     public function guru()
     {
-        $datas = Guru::where('is_verif', 'sudah')->orderBy('id', 'DESC')->get();
-        // $sekolahs = [];
-        // Sekolah::select('npsn_sekolah', 'nama_sekolah', 'kecamatan', 'kabupaten')
-        // ->chunk(500, function ($sekolahChunk) use (&$sekolahs) {
-        //     foreach ($sekolahChunk as $sekolah) {
-        //         $sekolahs[] = $sekolah;
-        //     }
-        // });
-        // $datas = array(
-        //     's_kepegawaian' => Kepegawaian::get(),
-        //     's_kependidikan' => SatuanPendidikan::get(),
-        //     's_gelar' => Pendidikan::get(),
-        //     's_jabatan' => Jabatan::get(),
-        //     's_kabupaten' => Kabupaten::get(),
-        //     's_kecamatan' => Kecamatan::get(),
-        //     's_sekolah' => Sekolah::get(),
-
-        //     // 's_sekolah' => $sekolahs,
-        //     // 's_jabPendidik' => JabatanPendidik::get(),
-        //     // 's_jabKependidikan' => JabatanKependidikan::get(),
-        //     // 's_jabStakeholder' => JabatanStakeHolder::get(),
-        //     // 's_jabKategori' => ['GP (Guru Penggerak)', 'NoN GP (Guru Penggerak)'],
-        //     // 's_jabTugas' => ['GP (Guru Penggerak)', 'PP (Pengajar Praktik)', 'Fasil (Fasilitator)', 'Instruktur'],
-
-        // );
 
         $status = array(
             's_jabPendidik' => JabatanPendidik::get(),
             's_jabKependidikan' => JabatanKependidikan::get(),
             's_jabStakeholder' => JabatanStakeHolder::get(),
+            's_kabupaten' => Kabupaten::get(),
             's_jabKategori' => ['GP (Guru Penggerak)', 'NoN GP (Guru Penggerak)'],
             's_jabKategoriPengawas' => ['Sertifikat GP (Guru Penggerak)', 'Diklat Cawas', 'Lainnya'],
             's_jabKategoriKepsek' => ['Sertifikat GP (Guru Penggerak)', 'Diklat Cakep', 'Lainnya'],
             's_jabTugas' => ['GP (Guru Penggerak)', 'PP (Pengajar Praktik)', 'Fasil (Fasilitator)', 'Instruktur'],
         );
-        return view('pages.landing.eksternal.index', ['menu' => 'data', 'datas' => $datas, 'status' => $status]);
+        return view('pages.landing.eksternal.index', ['menu' => 'data',  'status' => $status]);
         // return view('pages.user.guru', ['menu' => 'guru', 'datas' => $datas, 'status' => $status]);
+    }
+
+    public function dataguru(Request $request)
+    {
+        $query = Guru::with('sekolah')  // Eager load sekolah relation
+            ->where('is_verif', 'sudah');
+
+        // Handle search parameters
+        if ($request->kabupaten) {
+            $query->where('kabupaten', $request->kabupaten);
+        }
+
+        if ($request->nik) {
+            $query->where('no_ktp', 'like', '%' . $request->nik . '%');
+        }
+
+        $data = $query->orderBy('id', 'DESC')->get();
+
+        return response()->json([
+            'data' => $data->map(function ($item, $index) {
+                return [
+                    'DT_RowIndex' => $index + 1,
+                    'npsn_sekolah' => $item->npsn_sekolah . '<br>' . ($item->sekolah->nama_sekolah ?? ''),
+                    'nama_lengkap' => $item->nama_lengkap,
+                    'status_kepegawaian' => $item->status_kepegawaian,
+                    'eksternal_jabatan' => $item->eksternal_jabatan,
+                    'kategori_jabatan' => $item->kategori_jabatan,
+                    'jenis_jabatan' => $item->jenis_jabatan,
+                    'tugas_jabatan' => $item->tugas_jabatan,
+                    'latar_jabatan' => $item->latar_jabatan ?? 'tidak ada',
+                    'action' => '<button class="btn btn-info" onclick="showDetail(' . $item->id . ')">Detail</button>'
+                ];
+            })
+        ]);
     }
 
     public function pegawai()
@@ -160,6 +170,11 @@ class UserController extends Controller
 
         // $r['pas_foto'] = $nameFoto;
         // dd($r);
+        $findNik = Guru::where('no_ktp', $r['no_ktp'])->first();
+
+        if ($findNik != null)
+            return redirect()->route('user.pegawai')->with('message', 'nik sudah ada');
+
         $r['pas_foto'] = '';
         $r['status'] = 'Belum Kawin';
         $r['alamat_satuan'] = '';
@@ -365,6 +380,25 @@ class UserController extends Controller
     {
         return view('pages.landing.analisisPelatihan.index', [
             'menu' => 'analisisPelatihan',
+        ]);
+    }
+
+    public function cari(Request $request)
+    {
+        $search = Guru::query();
+        if ($request->kabupaten) {
+            $search->where('kabupaten', $request->kabupaten);
+        }
+        if ($request->nik) {
+            $search->where('no_ktp', 'like', '%' . $request->nik . '%');
+        }
+        $search->orderBy('created_at', 'desc');
+
+        $result = $search->get();
+
+        return response()->json([
+            'status' => true,
+            'data'  => $result
         ]);
     }
 }

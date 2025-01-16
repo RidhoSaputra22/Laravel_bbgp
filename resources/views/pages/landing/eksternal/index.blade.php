@@ -53,11 +53,16 @@
         </div>
 
         <div class="row mb-2">
-            <div class="col-md-8">
+            <div class="col-md-6">
+                <h5>Pencarian Data Eksternal BBGP </h5>
                 <div class="form-group">
-                    <h5>Pencarian Data Eksternal BBGP </h5>
-                    <input name="nama" id="namaFilter" type="text" value="" placeholder="Masukkan nama anda"
-                        class="form-control">
+                    <input name="nama" id="namaFilter" type="text" value=""
+                        placeholder="Cari berdasarkan nama anda" class="form-control">
+                </div>
+
+                <div class="form-group">
+                    <input name="nik" id="nik" type="text" value=""
+                        placeholder="Cari berdasarkan No. KTP anda" class="form-control">
                 </div>
             </div>
         </div>
@@ -83,14 +88,34 @@
                 </div>
             </div>
 
-            <div class="col-md-3 mb-4">
+            <div class="col-md-4 mb-4">
+                <label>Kabupaten/Kota </label>
+                <select required name="kabupaten" id="kabupaten" class="form-control select2">
+                    <option value="">-- Pilih Kabupaten / Kota --</option>
+                    <option value="Tidak ada">Diluar SulSel</option>
+                    @foreach ($status['s_kabupaten'] as $v)
+                        <option value="{{ $v->name }}">{{ $v->name }}</option>
+                    @endforeach
+
+                </select>
+            </div>
+
+            <div class="col-md-4" id="diluarKab">
+                <div class="form-group">
+                    <label>Asal Kabupaten/Kota</label>
+                    <input name="noKab" id="noKab" placeholder="jika diluar SulSel" type="text"
+                        class="form-control">
+                </div>
+            </div>
+
+            {{-- <div class="col-md-3 mb-4">
                 <label>Kategori Jabatan </label>
                 <select name="jabKategori" class="form-control" id="jabKategori">
                     <option value="">-- Pilih Kategori --</option>
                 </select>
-            </div>
+            </div> --}}
 
-            <div class="col-md-3" id="colJabatan">
+            {{-- <div class="col-md-3" id="colJabatan">
                 <div class="form-group">
                     <label>Latar Jabatan</label>
                     <select name="jabLatar" class="form-control" id="jabLatar">
@@ -98,16 +123,16 @@
 
                     </select>
                 </div>
-            </div>
+            </div> --}}
 
-            <div class="col-md-3">
+            {{-- <div class="col-md-3">
                 <div class="form-group">
                     <label>Jenis Tugas</label>
                     <select name="jabTugas" class="form-control" id="jabTugas">
                         <option value="">-- Pilih Tugas Jabatan --</option>
                     </select>
                 </div>
-            </div>
+            </div> --}}
 
         </div>
 
@@ -130,13 +155,12 @@
                         <th>Detail</th>
                     </tr>
                 </thead>
-                <tbody>
+                {{-- <tbody>
                     @foreach ($datas as $i => $data)
                         <tr>
                             <td>{{ ++$i }}</td>
                             <td>{{ $data->npsn_sekolah }} <br> {{ $data->sekolah->nama_sekolah ?? '' }}</td>
                             <td>{{ $data->nama_lengkap }} </td>
-                            {{-- <td>{{ $data->no_ktp }}</td> --}}
                             <td>{{ $data->status_kepegawaian }}</td>
                             <td>{{ $data->eksternal_jabatan }}</td>
                             <td>{{ $data->kategori_jabatan }}</td>
@@ -150,7 +174,7 @@
                             </td>
                         </tr>
                     @endforeach
-                </tbody>
+                </tbody> --}}
             </table>
         </div>
     </div>
@@ -220,19 +244,152 @@
 
             $(document).ready(function() {
                 // Initialize DataTable
-                var tableGuru = $('#table-guru').DataTable({
-                    language: {
-                        url: 'https://cdn.datatables.net/plug-ins/2.1.0/i18n/id.json',
+                let table = $('#table-guru').DataTable({
+                    processing: true,
+                    serverSide: false,
+                    ajax: {
+                        url: '{{ route('user.guru.data') }}',
+                        data: function(d) {
+                            d.kabupaten = $('#kabupaten').val();
+                            d.nik = $('#nik').val();
+                        }
                     },
-                    bAutoWidth: false,
+                    columns: [{
+                            data: 'DT_RowIndex',
+                            name: 'DT_RowIndex'
+                        },
+                        {
+                            data: 'npsn_sekolah',
+                            name: 'npsn_sekolah'
+                        },
+                        {
+                            data: 'nama_lengkap',
+                            name: 'nama_lengkap'
+                        },
+                        {
+                            data: 'status_kepegawaian',
+                            name: 'status_kepegawaian'
+                        },
+                        {
+                            data: 'eksternal_jabatan',
+                            name: 'eksternal_jabatan'
+                        },
+                        {
+                            data: 'kategori_jabatan',
+                            name: 'kategori_jabatan'
+                        },
+                        {
+                            data: 'jenis_jabatan',
+                            name: 'jenis_jabatan'
+                        },
+                        {
+                            data: 'tugas_jabatan',
+                            name: 'tugas_jabatan'
+                        },
+                        {
+                            data: 'latar_jabatan',
+                            name: 'latar_jabatan'
+                        },
+                        {
+                            data: 'action',
+                            name: 'action',
+                            orderable: false,
+                            searchable: false
+                        }
+                    ]
                 });
+
+
+                $('#kabupaten').select2({});
+
+                const getKabupaten = $('#kabupaten');
+                const fieldKab = $('#diluarKab');
+                const noKab = $('#noKab');
+                const nikInput = $('#nik');
+                fieldKab.hide()
+
+                function performSearch() {
+                    const kabValue = getKabupaten.find(':selected').val();
+                    const manualKabValue = noKab.val();
+                    const nikValue = nikInput.val();
+
+                    const data = {
+                        'kabupaten': kabValue === 'Tidak ada' ? manualKabValue : kabValue,
+                        'nik': nikValue
+                    };
+
+                    let token = $("meta[name='csrf-token']").attr("content");
+
+                    $.ajax({
+                        headers: {
+                            "X-CSRF-TOKEN": token,
+                        },
+                        type: 'GET',
+                        data: data,
+                        url: '{{ route('user.cari.guru') }}',
+                        success: function(response) {
+                            table.ajax.reload();
+                            // Handle the response here
+                            // For example, update a table or display results
+                        },
+                        error: function(xhr, status, error) {
+                            console.error('Error:', error);
+                        }
+                    });
+
+                }
+
+                // Handle kabupaten dropdown change
+                getKabupaten.on('change', function() {
+                    const selectedValue = $(this).find(':selected').val();
+
+                    if (selectedValue === 'Tidak ada') {
+                        fieldKab.show();
+                    } else {
+                        fieldKab.hide();
+                        noKab.val(''); // Clear manual input when selecting from dropdown
+                    }
+
+                    performSearch();
+                });
+
+                // Handle manual kabupaten input
+                noKab.on('input', function() {
+                    if (getKabupaten.find(':selected').val() === 'Tidak ada') {
+                        performSearch();
+                    }
+                });
+
+                // Handle NIK input
+                nikInput.on('input', function() {
+                    performSearch();
+                });
+
+                // Add debounce to prevent too many requests
+                function debounce(func, wait) {
+                    let timeout;
+                    return function executedFunction(...args) {
+                        const later = () => {
+                            clearTimeout(timeout);
+                            func(...args);
+                        };
+                        clearTimeout(timeout);
+                        timeout = setTimeout(later, wait);
+                    };
+                }
+
+                // Apply debounce to input events
+                const debouncedSearch = debounce(performSearch, 500);
+                $('#nik, #noKab, #kabupaten').on('input change', debouncedSearch);
+
+
 
                 const resetBtn = document.querySelector('#resetBtn');
                 const namaInput = document.querySelector('#namaFilter');
                 const jabEksternal = document.querySelector('#jabEksternal');
                 const jabJenis = document.querySelector('#jabJenis');
-                const jabKategori = document.querySelector('#jabKategori');
-                const jabTugas = document.querySelector('#jabTugas');
+                // const jabKategori = document.querySelector('#jabKategori');
+                // const jabTugas = document.querySelector('#jabTugas');
                 const noDataMessage = document.querySelector('.data-not-found');
 
                 // Function to apply search filters
@@ -240,18 +397,18 @@
                     const searchText = namaInput.value.trim();
                     const jabEksternalValue = jabEksternal.value;
                     const jabJenisValue = jabJenis.value;
-                    const jabKategoriValue = jabKategori.value;
-                    const jabTugasValue = jabTugas.value;
+                    // const jabKategoriValue = jabKategori.value;
+                    // const jabTugasValue = jabTugas.value;
 
                     console.log('Search Text:', searchText);
                     console.log('Select Value 13:', jabEksternalValue);
-                    console.log('Select Value 14:', jabTugasValue);
+                    // console.log('Select Value 14:', jabTugasValue);
 
                     tableGuru.column(2).search(searchText).draw();
                     tableGuru.column(4).search(jabEksternalValue).draw();
                     tableGuru.column(6).search(jabJenisValue).draw();
-                    tableGuru.column(5).search(jabKategoriValue).draw();
-                    tableGuru.column(7).search(jabTugasValue).draw();
+                    // tableGuru.column(5).search(jabKategoriValue).draw();
+                    // tableGuru.column(7).search(jabTugasValue).draw();
 
                     const info = tableGuru.page.info();
                     if (info.recordsDisplay === 0) {
@@ -264,8 +421,8 @@
                 namaInput.addEventListener('keyup', applySearch);
                 jabEksternal.addEventListener('change', applySearch);
                 jabJenis.addEventListener('change', applySearch);
-                jabKategori.addEventListener('change', applySearch);
-                jabTugas.addEventListener('change', applySearch);
+                // jabKategori.addEventListener('change', applySearch);
+                // jabTugas.addEventListener('change', applySearch);
                 resetBtn.addEventListener('click', function() {
                     location.reload();
                 })

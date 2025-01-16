@@ -270,12 +270,12 @@
                                                 data-selected-value="{{ old('jabEksternal', $datas->eksternal_jabatan) }}">
                                                 <option disabled value="">-- Pilih Jabatan Eksternal --</option>
                                                 <option
-                                                    {{ $datas->eksternal_jabatan == 'Tenaga Pendidik' ? 'selected' : 'disabled' }}
+                                                    {{ $datas->eksternal_jabatan == 'Tenaga Pendidik' ? 'selected' : '' }}
                                                     value="Tenaga Pendidik">Tenaga Pendidik</option>
                                                 <option
-                                                    {{ $datas->eksternal_jabatan == 'Tenaga Kependidikan' ? 'selected' : 'disabled' }}
+                                                    {{ $datas->eksternal_jabatan == 'Tenaga Kependidikan' ? 'selected' : '' }}
                                                     value="Tenaga Kependidikan">Tenaga Kependidikan</option>
-                                                <option {{ $datas->eksternal_jabatan == 'Stakeholder' ? 'selected' : 'disabled' }}
+                                                <option {{ $datas->eksternal_jabatan == 'Stakeholder' ? 'selected' : '' }}
                                                     value="Stakeholder">Stakeholder</option>
                                             </select>
                                         </div>
