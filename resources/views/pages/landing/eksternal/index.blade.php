@@ -404,13 +404,13 @@
                     console.log('Select Value 13:', jabEksternalValue);
                     // console.log('Select Value 14:', jabTugasValue);
 
-                    tableGuru.column(2).search(searchText).draw();
-                    tableGuru.column(4).search(jabEksternalValue).draw();
-                    tableGuru.column(6).search(jabJenisValue).draw();
+                    table.column(2).search(searchText).draw();
+                    table.column(4).search(jabEksternalValue).draw();
+                    table.column(6).search(jabJenisValue).draw();
                     // tableGuru.column(5).search(jabKategoriValue).draw();
                     // tableGuru.column(7).search(jabTugasValue).draw();
 
-                    const info = tableGuru.page.info();
+                    const info = table.page.info();
                     if (info.recordsDisplay === 0) {
                         noDataMessage.style.display = 'block';
                     } else {
