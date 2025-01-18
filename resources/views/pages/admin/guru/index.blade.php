@@ -53,7 +53,7 @@
                                                     </button>
                                                 </div>
                                                 <div class="">
-                                                    <button id="resetBtn" class="btn btn-success btn-lg  mx-2">
+                                                    <button type="button" id="resetBtn" class="btn btn-success btn-lg  mx-2">
                                                         <i class="fas fa-redo-alt"></i>
                                                     </button>
                                                 </div>
@@ -399,17 +399,18 @@
                         url: '{{ route('guru.cari') }}',
                         type: 'GET',
                         data: function(d) {
+                            d.nama_lengkap = $('#namaFilter').val();
                             d.nama_sekolah = $('#instansi').val();
                             d.status_kepegawaian = $('#statusKepegawaian').val();
-                            d.eksternal_jabatan = $('#jabEksternal').val();
-                            d.jenis_jabatan = $('#jabJenis').val();
+                            // d.eksternal_jabatan = $('#jabEksternal').val();
+                            // d.jenis_jabatan = $('#jabJenis').val();
                             d.kabupaten = $('#kabupatenFilter').val();
                         }
                     },
                     columns: [{
                             data: null,
                             render: function(data, type, row, meta) {
-                                return meta.col + 1;
+                                return meta.row + 1;
                             }
                         },
                         {
@@ -495,7 +496,7 @@
                         }
                     ],
                     order: [
-                        [0, 'desc']
+                        [0, 'asc']
                     ],
                     responsive: true,
                     language: {
@@ -506,6 +507,7 @@
                 });
 
                 function applyFilters() {
+                    console.log('filter apply');
                     tableGuru.ajax.reload();
                 }
 
@@ -520,67 +522,13 @@
                 const namaInput = document.querySelector('#namaFilter');
                 // const jabEksternal = document.querySelector('#jabEksternal');
                 // const jabJenis = document.querySelector('#jabJenis');
-                const statusKepegawaian = document.querySelector('#statusKepegawaian');
-                const kabupatenFilter = document.querySelector('#kabupatenFilter');
-
-                // Function to apply search filters
-
-
-                // function applySearch() {
-                //     // Get trimmed input value
-                //     const searchText = namaInput.value.trim();
-
-                //     // Get select values
-                //     const jabEksternalValue = jabEksternal.value;
-                //     const jabJenisValue = jabJenis.value;
-                //     const statusKepegawaianValue = statusKepegawaian.value;
-                //     // const jabKategoriValue = jabKategori.value;
-                //     // const jabTugasValue = jabTugas.value;
-                //     // const jabLatarValue = jabLatar.value;
-                //     const KabupatenValue = kabupatenFilter.value;
-
-                //     console.log('Search Text:', KabupatenValue);
-                //     // console.log('Search Text:', KabupatenValue);
-                //     console.log('Select Value 13:', jabEksternalValue);
-                //     // console.log('Select Value 14:', jabTugasValue);
-
-                //     // Update search and redraw tableGuru
-                //     tableGuru.column(1).search(searchText).draw();
-                //     tableGuru.column(2).search(statusKepegawaianValue).draw();
-                //     tableGuru.column(3).search(jabEksternalValue).draw();
-                //     tableGuru.column(4).search(jabJenisValue).draw();
-                //     // tableGuru.column(5).search(jabKategoriValue).draw();
-                //     // tableGuru.column(6).search(jabTugasValue).draw();
-                //     // tableGuru.column(7).search(jabLatarValue).draw();
-                //     tableGuru.column(8).search(KabupatenValue).draw();
-
-                //     // Check search result count
-                //     const info = tableGuru.page.info();
-                //     // if (info.recordsDisplay === 0) {
-                //     //     noDataMessage.style.display = 'block';
-                //     // } else {
-                //     //     noDataMessage.style.display = 'none';
-                //     // }
-                // }
-
-                // Event listener for name input keyup
-                // namaInput.addEventListener('keyup', applySearch);
-                // Event listeners for select change
-                // jabEksternal.addEventListener('change', applySearch);
-                // jabJenis.addEventListener('change', applySearch);
-                // statusKepegawaian.addEventListener('change', applySearch);
-                // jabKategori.addEventListener('change', applySearch);
-                // jabTugas.addEventListener('change', applySearch);
-                // kabupatenFilter.addEventListener('change', applySearch);
-
-
-                // $('#kabupatenFilter').on('change', function() {
-                //     tableGuru.column(8).search($(this).val()).draw();
-
-                // });
+                const instansi = document.querySelector('#instansi');
+                const statusKepegawaian = $('#statusKepegawaian');
+                const kabupatenFilter = $('#kabupatenFilter');
 
                 resetBtn.addEventListener('click', function() {
                     tableGuru.ajax.reload();
+                    clearFilters()
                 })
 
                 function debounce(func, wait) {
@@ -591,16 +539,18 @@
                     };
                 }
 
+                instansi.addEventListener('input', debouncedApplyFilters);
                 namaInput.addEventListener('input', debouncedApplyFilters);
-                statusKepegawaian.addEventListener('change', applyFilters);
-                // jabEksternal.addEventListener('change', applyFilters);
-                // jabJenis.addEventListener('change', applyFilters);
-                kabupatenFilter.addEventListener('change', applyFilters);
+                statusKepegawaian.on('change', applyFilters);
+                // jabEksternal.on('change', applyFilters);
+                // jabJenis.on('change', applyFilters);
+                kabupatenFilter.on('change', applyFilters);
 
                 function clearFilters() {
                     namaInput.value = '';
-                    jabEksternal.value = '';
-                    jabJenis.value = '';
+                    // jabEksternal.value = '';
+                    // jabJenis.value = '';
+                    instansi.value = '';
                     statusKepegawaian.value = '';
                     kabupatenFilter.value = '';
                     applyFilters();
