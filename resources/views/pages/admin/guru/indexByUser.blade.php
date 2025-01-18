@@ -134,7 +134,7 @@
                                                 <th>Jabatan </th>
                                                 <th>Kategori Jabatan </th>
                                                 <th>Tugas Jabatan </th>
-                                                <th>Latar Jabatan </th>
+                                                {{-- <th>Latar Jabatan </th> --}}
                                                 {{-- <th style="width: 200px">NPSN Sekolah</th> --}}
                                                 {{-- <th>Asal Kabupaten/Kota</th> --}}
                                                 {{-- <th>Satuan Pendidikan</th>
@@ -168,7 +168,7 @@
                                                 <td>{{ $datas->jenis_jabatan ?? '' }}</td>
                                                 <td>{{ $datas->kategori_jabatan ?? '' }}</td>
                                                 <td>{{ $datas->tugas_jabatan ?? '-' }}</td>
-                                                <td>{{ $datas->latar_jabatan ?? 'tidak ada' }}</td>
+                                                {{-- <td>{{ $datas->latar_jabatan ?? 'tidak ada' }}</td> --}}
                                                 {{-- <td>{{ $datas->npsn_sekolah }} <br>
                                                         {{ $datas->sekolah->nama_sekolah ?? '' }}</td> --}}
                                                 {{-- <td>{{ $datas->kabupaten }}</td> --}}
