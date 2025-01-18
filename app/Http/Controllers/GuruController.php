@@ -423,7 +423,7 @@ class GuruController extends Controller
     public function cari(Request $request)
     {
         $search = Guru::query()
-            ->join('sekolahs', 'gurus.npsn_sekolah', '=', 'sekolahs.npsn_sekolah')
+            ->leftJoin('sekolahs', 'gurus.npsn_sekolah', '=', 'sekolahs.npsn_sekolah')
             ->select('gurus.*', 'sekolahs.nama_sekolah');
 
         if ($request->nama_sekolah) {
