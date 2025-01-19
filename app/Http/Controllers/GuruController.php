@@ -187,9 +187,9 @@ class GuruController extends Controller
 
         return response()->json([
             'data' => $peserta,
-            'nama_sekolah' => $peserta->sekolah->nama_sekolah,
-            'kecamatan_sekolah' => $peserta->sekolah->kecamatan,
-            'kabupaten_sekolah' => $peserta->sekolah->kabupaten,
+            'nama_sekolah' => $peserta->sekolah->nama_sekolah || '',
+            'kecamatan_sekolah' => $peserta->sekolah->kecamatan || '',
+            'kabupaten_sekolah' => $peserta->sekolah->kabupaten || '',
         ]);
     }
 
@@ -375,7 +375,7 @@ class GuruController extends Controller
             's_jabKategori' => ['GP (Guru Penggerak)', 'NoN GP (Guru Penggerak)'],
             's_jabKategoriPengawas' => ['Sertifikat GP (Guru Penggerak)', 'Diklat Cawas', 'Lainnya'],
             's_jabKategoriKepsek' => ['Sertifikat GP (Guru Penggerak)', 'Diklat Cakep', 'Lainnya'],
-            's_jabTugas' => ['GP (Guru Penggerak)', 'PP (Pengajar Praktik)', 'Fasil (Fasilitator)', 'Instruktur'],
+            's_jabTugas' => ['GP (Guru Penggerak)', 'Non GP (Guru Penggerak)','PP (Pengajar Praktik)', 'Fasil (Fasilitator)', 'Instruktur'],
 
         );
 
