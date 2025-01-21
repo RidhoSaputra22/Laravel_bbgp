@@ -174,8 +174,9 @@
                                                 <th>Ketenagaan</th>
                                                 <th>Jabatan </th>
                                                 <th>Kategori Jabatan </th>
-                                                <th>Tugas Jabatan </th>
-                                                <th>Latar Jabatan </th>
+                                                {{-- <th>Tugas Jabatan </th>
+                                                <th>Latar Jabatan </th> --}}
+                                                <th class="text-nowrap">Asal Sekolah/Instansi</th>
                                                 <th>Kota/Kabupaten</th>
                                                 {{-- <th style="width: 200px">NPSN Sekolah</th> --}}
                                                 {{-- <th>Asal Kabupaten/Kota</th> --}}
@@ -429,17 +430,20 @@
                             data: 'kategori_jabatan'
                         },
                         {
-                            data: 'tugas_jabatan',
-                            render: function(data) {
-                                return data || '-';
-                            }
+                            data: 'nama_sekolah'
                         },
-                        {
-                            data: 'latar_jabatan',
-                            render: function(data) {
-                                return data || 'tidak ada';
-                            }
-                        },
+                        // {
+                        //     data: 'tugas_jabatan',
+                        //     render: function(data) {
+                        //         return data || '-';
+                        //     }
+                        // },
+                        // {
+                        //     data: 'latar_jabatan',
+                        //     render: function(data) {
+                        //         return data || 'tidak ada';
+                        //     }
+                        // },
                         {
                             data: 'kabupaten',
                             render: function(data) {
