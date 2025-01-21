@@ -13,11 +13,11 @@
             <form method="POST" action="{{ route('login_action') }}" class="needs-validation" novalidate="">
                 @csrf
                 <div class="form-group">
-                    <label for="email">NIK</label>
-                    <input id="email" type="number" class="form-control" name="nik" tabindex="1" required
+                    <label for="email">Username</label>
+                    <input id="email" type="username" class="form-control" name="username" tabindex="1" required
                         autofocus>
                     <div class="invalid-feedback">
-                        Please fill in your NIK
+                        Please fill in your username
                     </div>
                 </div>
 
@@ -37,24 +37,6 @@
                 </div>
 
                 <div class="form-group">
-                    <div class="d-block">
-                        <label for="password" class="control-label">Login Sebagai</label>
-                    </div>
-                    <select class="form-control selectric" name="role" id="">
-                        <option value="">-- Pilih Role --</option>
-                        <option value="kepala">Kepala Balai</option>
-                        <option value="keuangan">Keuangan</option>
-                        <option value="kepegawaian">Kepegawaian</option>
-                        <option value="kegiatan">Kegiatan</option>
-                        <option value="tenaga pendidik">Tenaga Pendidik</option>
-                        <option value="tenaga kependidikan">Tenaga Kependidikan</option>
-                        <option value="stakeholder">Stakeholder</option>
-                        <option value="pegawai">Pegawai BBGP</option>
-                        <option value="database">Database</option>
-                    </select>
-                </div>
-
-                <div class="form-group">
                     <button type="submit" class="btn btn-primary btn-lg btn-block" tabindex="4">
                         Login
                     </button>
@@ -67,7 +49,7 @@
     <div class="mt-5 text-muted text-center">
         <div class="d-flex justify-content-between">
             <a href="/">Kembali ke beranda</a>
-            <a href="/auth/login_admin">Login sebagai admin</a>
+            <a href="/auth">Login sebagai user</a>
 
         </div>
     </div>

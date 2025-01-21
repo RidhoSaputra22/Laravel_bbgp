@@ -30,6 +30,7 @@ if (file_exists($maintenance = __DIR__.'/../storage/framework/maintenance.php'))
 | into the script here so we don't need to manually load our classes.
 |
 */
+ini_set('memory_limit', '2048M');
 
 require __DIR__.'/../vendor/autoload.php';
 

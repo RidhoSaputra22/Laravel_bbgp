@@ -450,9 +450,11 @@ Route::get('/get-sekolahs', [SekolahController::class, 'getSekolahs'])->name('ge
 // Auth
 Route::group(['prefix' => 'auth', 'namespace' => 'App\Http\Controllers'], function () {
     Route::get('/', 'AuthController@login')->name('login');
+    Route::get('/login_admin', 'AuthController@login_admin')->name('login.admin');
     // Route::get('/reset', 'AuthController@reset')->name('reset');
     // Route::get('/reset_password', 'AuthController@reset_password')->name('reset.password');
     Route::post('/login', 'AuthController@login_action')->name('login_action');
+    Route::post('/login/admin', 'AuthController@login_action_admin')->name('login_action_admin');
     Route::get('/logout', function () {
         Session::flush();
         return redirect()->route(
