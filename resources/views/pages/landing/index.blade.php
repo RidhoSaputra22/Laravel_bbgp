@@ -233,7 +233,7 @@
             <div class="row my-icon2-slider">
 
                 <div class="col-lg col-md ">
-                    <a href="{{ route('user.analisisPelatihan') }}" >
+                    <a href="{{ route('user.analisisPelatihan') }}">
                         <div class="ts-service-box">
                             <div class="ts-service-image-wrapper">
                                 <img loading="lazy" class="w-100"
@@ -242,7 +242,8 @@
                             </div>
                             <div class="text-center">
                                 <div class="ts-service-info">
-                                    <h3 class="service-box-title"><a href="{{ route('user.analisisPelatihan') }}">Analisis Kebutuhan
+                                    <h3 class="service-box-title"><a
+                                            href="{{ route('user.analisisPelatihan') }}">Analisis Kebutuhan
                                             Pelatihan</a></h3>
 
                                 </div>
@@ -317,19 +318,22 @@
                 </div><!-- Col 1 end -->
 
                 <div class="col-lg col-md ">
-                    <div class="ts-service-box">
-                        <div class="ts-service-image-wrapper">
-                            <img loading="lazy" class="w-100"
-                                src="{{ asset('landing/images/icon-slider/slider2/icon-web-visualisasi-data.png') }}"
-                                alt="icon web visualisasi data">
-                        </div>
-                        <div class="text-center">
-                            <div class="ts-service-info">
-                                <h3 class="service-box-title"><a href="#">Visualisasi Data</a></h3>
-
+                    <a href="{{ route('user.analisisSLB') }}">
+                        <div class="ts-service-box">
+                            <div class="ts-service-image-wrapper">
+                                <img loading="lazy" class="w-100"
+                                    src="{{ asset('landing/images/icon-slider/slider2/icon-web-visualisasi-data.png') }}"
+                                    alt="icon web Pendidik dan Tenaga Kependidikan SLB">
                             </div>
-                        </div>
-                    </div><!-- Service1 end -->
+                            <div class="text-center">
+                                <div class="ts-service-info">
+                                    <h3 class="service-box-title"><a href="#">Pendidik dan Tenaga
+                                            Kependidikan SLB</a></h3>
+
+                                </div>
+                            </div>
+                        </div><!-- Service1 end -->
+                    </a>
                 </div><!-- Col 1 end -->
 
 

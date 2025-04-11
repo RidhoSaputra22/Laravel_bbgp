@@ -33,6 +33,7 @@ Route::group(
         
         // analisis kebutuhan pelatihan
         Route::get('/analisis-kebutuhan-pelatihan', 'UserController@analisisPelatihan')->name('user.analisisPelatihan');
+        Route::get('/analisis-kebutuhan-slb', 'UserController@analisisSLB')->name('user.analisisSLB');
 
 
         Route::get('/pegawai', 'UserController@pegawai')->name('user.pegawai');

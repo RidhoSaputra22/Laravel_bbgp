@@ -383,6 +383,13 @@ class UserController extends Controller
         ]);
     }
 
+    public function analisisSLB()
+    {
+        return view('pages.landing.analisisSLB.index', [
+            'menu' => 'analisisSLB',
+        ]);
+    }
+
     public function cari(Request $request)
     {
         $search = Guru::query();
