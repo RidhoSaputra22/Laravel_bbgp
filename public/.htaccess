@@ -3,6 +3,13 @@
         Options -MultiViews -Indexes
     </IfModule>
 
+    <IfModule mod_deflate.c>
+        AddOutputFilterByType DEFLATE text/html text/plain text/xml text/css application/javascript application/x-javascript application/json
+    </IfModule>
+
+
+    php_value memory_limit 256M
+
     RewriteEngine On
 
     # Handle Authorization Header
