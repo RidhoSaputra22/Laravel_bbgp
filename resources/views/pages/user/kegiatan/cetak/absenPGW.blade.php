@@ -95,7 +95,7 @@
                 <tr>
                     <td>{{ $key + 1 }}</td>
                     <td>{{ $peserta->nama }}</td>
-                    <td>Kantor BBGP SulSel</td>
+                    <td>Kantor BBGTK SulSel</td>
                     <td>Kota Makassar</td>
                     <td style="height: 25px; width:100px;"></td>
                 </tr>

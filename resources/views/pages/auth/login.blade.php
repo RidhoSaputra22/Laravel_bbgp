@@ -49,7 +49,7 @@
                         <option value="tenaga pendidik">Tenaga Pendidik</option>
                         <option value="tenaga kependidikan">Tenaga Kependidikan</option>
                         <option value="stakeholder">Stakeholder</option>
-                        <option value="pegawai">Pegawai BBGP</option>
+                        <option value="pegawai">Pegawai BBGTK</option>
                         {{-- <option value="database">Database</option> --}}
                     </select>
                 </div>

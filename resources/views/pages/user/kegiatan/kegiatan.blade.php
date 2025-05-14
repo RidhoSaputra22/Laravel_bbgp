@@ -1,4 +1,4 @@
-extends('layouts.user.app', ['title' => 'Bank Data BBGP Sulawesi Selatan'])
+extends('layouts.user.app', ['title' => 'Bank Data BBGTK Sulawesi Selatan'])
 
 @section('content')
     @push('styles')

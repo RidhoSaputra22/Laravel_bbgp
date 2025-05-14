@@ -14,7 +14,7 @@
     <div class="main-content">
         <section class="section">
             <div class="section-header">
-                <h1>Data Internal BBGP</h1>
+                <h1>Data Internal BBGTK</h1>
             </div>
 
             <div class="section-body">
@@ -198,7 +198,7 @@
             $(document).ready(function() {
 
                 var language = {
-                    "sSearch": "Pencarian Data Internal BBGP : ",
+                    "sSearch": "Pencarian Data Internal BBGTK : ",
                 };
                 // Initialize DataTables for both tables
                 var tablePpnpn = $('#table-ppnpn').DataTable({

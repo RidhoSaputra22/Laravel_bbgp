@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Data Eksternal BBGP</title>
+    <title>Data Eksternal BBGTK</title>
     <style>
         /* Gaya CSS */
         body {
@@ -99,7 +99,7 @@
     </style>
 </head>
 <body>
-    <h2>Data Eksternal BBGP Sul-Sel</h2>
+    <h2>Data Eksternal BBGTK Sul-Sel</h2>
     <table>
         <thead>
             <tr>

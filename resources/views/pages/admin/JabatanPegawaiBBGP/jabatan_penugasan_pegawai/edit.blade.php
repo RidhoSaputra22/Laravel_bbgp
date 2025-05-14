@@ -11,7 +11,7 @@
     <div class="main-content">
         <section class="section">
             <div class="section-header">
-                <h1>Edit Data Jabatan Pegawai BBGP</h1>
+                <h1>Edit Data Jabatan Pegawai BBGTK</h1>
             </div>
 
             <div class="section-body">
@@ -28,7 +28,7 @@
                                     <div class="row">
                                         <div class="col-md">
                                             <div class="form-group">
-                                                <label>Nama Data Jabatan Pegawai BBGP</label>
+                                                <label>Nama Data Jabatan Pegawai BBGTK</label>
                                                 <input value="{{ $datas->name }}" required name="name" type="text" class="form-control">
                                             </div>
                                         </div>

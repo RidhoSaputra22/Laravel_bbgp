@@ -1,7 +1,7 @@
 @extends('layouts.landing.app')
 @section('content')
     <div id="banner-area" class="banner-area"
-        style="background-image:url({{ asset('landing/images/banner/bannerStatistik.png') }})">
+        style="background-image:url({{ asset('landing/images/banner/bbgtk.jpg') }})">
         <div class="banner-text">
             <div class="container">
                 <div class="row">

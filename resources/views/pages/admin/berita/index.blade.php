@@ -14,7 +14,7 @@
     <div class="main-content">
         <section class="section">
             <div class="section-header">
-                <h1>Data Berita BBGP</h1>
+                <h1>Data Berita BBGTK</h1>
             </div>
 
             <div class="section-body">
@@ -94,7 +94,7 @@
             $(document).ready(function() {
                 // Existing DataTable initialization
                 var language = {
-                    "sSearch": "Pencarian Data Kegiatan BBGP : ",
+                    "sSearch": "Pencarian Data Kegiatan BBGTK : ",
                 };
                 var tableKegiatan = $('#table-berita').DataTable({
                     paging: true,

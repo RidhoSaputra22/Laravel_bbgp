@@ -303,7 +303,7 @@ class GuruController extends Controller
 
 
         // Download PDF dengan nama file 'data_guru.pdf'
-        return $pdf->stream('data_eksternal_BBGP.pdf');
+        return $pdf->stream('data_eksternal_BBGTK.pdf');
     }
 
     public function exportByUser($id)
@@ -319,7 +319,7 @@ class GuruController extends Controller
 
 
         // Download PDF dengan nama file 'data_guru.pdf'
-        return $pdf->stream('data_eksternal_BBGP.pdf');
+        return $pdf->stream('data_eksternal_BBGTK.pdf');
     }
 
     public function show(string $id)

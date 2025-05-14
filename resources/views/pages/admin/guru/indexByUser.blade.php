@@ -1,4 +1,4 @@
-@extends('layouts.app', ['title' => 'Data Eksternal BBGP'])
+@extends('layouts.app', ['title' => 'Data Eksternal BBGTK'])
 
 @section('content')
     @push('styles')
@@ -9,7 +9,7 @@
     <div class="main-content">
         <section class="section">
             <div class="section-header">
-                <h1>Data Eksternal BBGP</h1>
+                <h1>Data Eksternal BBGTK</h1>
             </div>
 
             <div class="section-body">

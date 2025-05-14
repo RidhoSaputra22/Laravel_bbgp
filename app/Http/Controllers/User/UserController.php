@@ -428,6 +428,13 @@ class UserController extends Controller
         ]);
     }
 
+    public function monitoring()
+    {
+        return view('pages.landing.monitoringKegiatan.index', [
+            'menu' => 'monitoring',
+        ]);
+    }
+
     public function cari(Request $request)
     {
         $search = Guru::query();

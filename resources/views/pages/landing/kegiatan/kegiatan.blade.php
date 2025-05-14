@@ -332,7 +332,7 @@
                                                 if (tipe === 'Peserta') {
                                                     Swal.fire({
                                                         title: "Warning",
-                                                        text: "Anda tidak terdaftar di kegiatan ini. Tapi anda sudah pernah mengikuti kegiatan BBGP sebelumnya. Lanjut ke Registrasi ? \n Form akan terisi otomatis dari data anda sebelumnya",
+                                                        text: "Anda tidak terdaftar di kegiatan ini. Tapi anda sudah pernah mengikuti kegiatan BBGTK sebelumnya. Lanjut ke Registrasi ? \n Form akan terisi otomatis dari data anda sebelumnya",
                                                         icon: "warning",
                                                         showCancelButton: true,
                                                         confirmButtonColor: "#4040f5",
@@ -357,7 +357,7 @@
                                                 } else if (tipe === 'Pegawai') {
                                                     Swal.fire({
                                                         title: "Warning",
-                                                        text: "Anda tidak terdaftar di kegiatan ini. Tapi anda ter-data sebagai Pegawai BBGP . Lanjut ke Registrasi ? \n Form akan terisi otomatis dari data anda sebelumnya",
+                                                        text: "Anda tidak terdaftar di kegiatan ini. Tapi anda ter-data sebagai Pegawai BBGTK . Lanjut ke Registrasi ? \n Form akan terisi otomatis dari data anda sebelumnya",
                                                         icon: "warning",
                                                         showCancelButton: true,
                                                         confirmButtonColor: "#4040f5",
@@ -381,7 +381,7 @@
                                                 } else if (tipe === 'Eksternal') {
                                                     Swal.fire({
                                                         title: "Warning",
-                                                        text: "Anda tidak terdaftar di kegiatan ini. Tapi anda ter-data sebagai Eksternal BBGP. Lanjut ke Registrasi ? \n Form akan terisi otomatis dari data anda sebelumnya",
+                                                        text: "Anda tidak terdaftar di kegiatan ini. Tapi anda ter-data sebagai Eksternal BBGTK. Lanjut ke Registrasi ? \n Form akan terisi otomatis dari data anda sebelumnya",
                                                         icon: "warning",
                                                         showCancelButton: true,
                                                         confirmButtonColor: "#4040f5",

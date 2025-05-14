@@ -8,7 +8,7 @@
                 <div class="row">
                     <div class="col-lg-12">
                         <div class="banner-heading">
-                            <h1 class="banner-title">Eksternal BBGP </h1>
+                            <h1 class="banner-title">Eksternal BBGTK </h1>
                             <nav aria-label="breadcrumb">
                                 <ol class="breadcrumb justify-content-center">
                                     <li class="breadcrumb-item"><a href="/">Home</a></li>
@@ -54,7 +54,7 @@
 
         <div class="row mb-2">
             <div class="col-md-6">
-                <h5>Pencarian Data Eksternal BBGP </h5>
+                <h5>Pencarian Data Eksternal BBGTK </h5>
                 <div class="form-group">
                     <input name="nama" id="namaFilter" type="text" value=""
                         placeholder="Cari berdasarkan nama anda" class="form-control">

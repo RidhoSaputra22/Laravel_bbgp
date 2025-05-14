@@ -241,7 +241,7 @@ class KegiatanController extends Controller
         if ($peserta == null) {
             $peserta = Pegawai::where('no_ktp', $nik)->first();
             $title = 'Pegawai';
-            $instansi = 'Kantor BBGP SulSel';
+            $instansi = 'Kantor BBGTK SulSel';
 
             if ($peserta == null) {
 

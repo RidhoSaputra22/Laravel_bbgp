@@ -7,7 +7,7 @@
     <div class="main-content ">
         <section class="section">
             <div class="section-header">
-                <h1 class="text-primary"><u> Kontak BBGP Sulawesi Selatan</u> </h1>
+                <h1 class="text-primary"><u> Kontak BBGTK Sulawesi Selatan</u> </h1>
 
             </div>
 

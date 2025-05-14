@@ -1,4 +1,4 @@
-@extends('layouts.user.app', ['title' => 'Bank Data BBGP Sulawesi Selatan'])
+@extends('layouts.user.app', ['title' => 'Bank Data BBGTK Sulawesi Selatan'])
 
 @section('content')
     @push('styles')
@@ -7,7 +7,7 @@
     <div class="main-content ">
         <section class="section">
             <div class="section-header">
-                <h1 class="text-primary"><u> Sejarah BBGP Sulawesi Selatan</u> </h1>
+                <h1 class="text-primary"><u> Sejarah BBGTK Sulawesi Selatan</u> </h1>
 
             </div>
 
@@ -19,12 +19,12 @@
                     <div class="card-body">
                         <div class="text-center">
 
-                            <img src="https://bbgpsulsel.kemdikbud.go.id/assets/berita/DSC02734.jpg" class="img-fluid m-3"
+                            <img src="https://BBGTKsulsel.kemdikbud.go.id/assets/berita/DSC02734.jpg" class="img-fluid m-3"
                                 alt="">
                         </div>
                         <div class="text-justify">
                             <p>
-                                Sejarah lahirnya Balai Besar Guru Penggerak (BBGP) Sulawesi Selatan berasal dari Bidang
+                                Sejarah lahirnya Balai Besar Guru Penggerak (BBGTK) Sulawesi Selatan berasal dari Bidang
                                 Pendidikan Masyarakat (Penmas) yang merupakan salah satu bidang di Kanwil Depdikbud Propinsi
                                 Sulawesi Selatan. Bidang Penmas dipimpin oleh seorang kepala bidang (kepala bidang dikmas)
                                 yang membawahi empat kelompok kerja yaitu:
@@ -72,11 +72,11 @@
                             </p>
 
                             <p>
-                                Di Tahun 2022, Berdasarkan Permendikbud Ristek RI Nomor 14 tahun 2022 tentang Organisasi dan Tata Kerja Balai Besar Guru Penggerak dan Balai Guru Penggerak, terjadi perubahan nomenklatur terhadap Balai Pengembangan Pendidikan Anak Usia Dini dan Pendidikan Masyarakat (BP PAUD dan Dikmas) Provinsi Sulawesi Selatan, yang bertanggung jawab kepada Direktorat Jenderal Pendidikan Anak Usia Dini, Pendidikan Dasar, dan Pendidikan Menengah (Ditjen PAUD, Dikdas, dan Dikmen) beralih menjadi Balai Besar Guru Penggerak (BBGP) Provinsi Sulawesi Selatan, yang bertanggung jawab kepada Direktorat Jenderal Guru dan Tenaga Kependidikan Kemendikbudristek.
+                                Di Tahun 2022, Berdasarkan Permendikbud Ristek RI Nomor 14 tahun 2022 tentang Organisasi dan Tata Kerja Balai Besar Guru Penggerak dan Balai Guru Penggerak, terjadi perubahan nomenklatur terhadap Balai Pengembangan Pendidikan Anak Usia Dini dan Pendidikan Masyarakat (BP PAUD dan Dikmas) Provinsi Sulawesi Selatan, yang bertanggung jawab kepada Direktorat Jenderal Pendidikan Anak Usia Dini, Pendidikan Dasar, dan Pendidikan Menengah (Ditjen PAUD, Dikdas, dan Dikmen) beralih menjadi Balai Besar Guru Penggerak (BBGTK) Provinsi Sulawesi Selatan, yang bertanggung jawab kepada Direktorat Jenderal Guru dan Tenaga Kependidikan Kemendikbudristek.
                             </p>
 
                             <p>
-                                BBGP menjadi rumah yang baru serta tanggungjawabnya akan berbeda dengan sebelumnya. Namun posisi BBGP tetap sama sebagai UPT atau Unit Pelaksana Teknis, yakni penghubung antara Kemedikbudristek di Jakarta dengan pemerintah daerah. 
+                                BBGTK menjadi rumah yang baru serta tanggungjawabnya akan berbeda dengan sebelumnya. Namun posisi BBGTK tetap sama sebagai UPT atau Unit Pelaksana Teknis, yakni penghubung antara Kemedikbudristek di Jakarta dengan pemerintah daerah. 
                             </p>
 
                         </div>

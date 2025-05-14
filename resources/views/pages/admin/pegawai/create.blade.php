@@ -46,7 +46,7 @@
                                                     <label>Status Kepegawaian</label>
                                                     <select required name="jenis_pegawai" class="form-control selectric">
                                                         <option value="">-- Pilih status kepegawaian --</option>
-                                                        <option value="BBGP">Pegawai BBGP</option>
+                                                        <option value="BBGP">Pegawai BBGTK</option>
                                                         <option value="PPNPN">Pegawai PPNPN</option>
                                                         {{-- @foreach ($datas['s_kepegawaian'] as $v)
                                                             <option value="{{ $v->name }}">{{ $v->name }}</option>

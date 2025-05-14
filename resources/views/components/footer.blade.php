@@ -1,6 +1,6 @@
 <footer class="main-footer">
     <div class="footer-left">
-        Copyright &copy; <div class="bullet"></div> BBGP Sulsel
+        Copyright &copy; <div class="bullet"></div> BBGTK Sulsel
         {{-- <a href="https://nauv.al/">
             Muhamad
             Nauval Azhar</a> --}}

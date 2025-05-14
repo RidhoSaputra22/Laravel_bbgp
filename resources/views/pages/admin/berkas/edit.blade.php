@@ -80,7 +80,7 @@
                                                     <option {{ $datas->role == 'stakeholder' ? 'selected' : '' }}
                                                         value="stakeholder">stakeholder</option>
                                                     <option {{ $datas->role == 'pegawai' ? 'selected' : '' }}
-                                                        value="pegawai">Pegawai BBGP</option>
+                                                        value="pegawai">Pegawai BBGTK</option>
                                                     <option {{ $datas->role == 'superadmin' ? 'selected' : '' }}
                                                         value="superadmin">superadmin</option>
                                                 </select>

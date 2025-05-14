@@ -57,7 +57,7 @@
     <div class="main-content">
         <section class="section">
             <div class="section-header">
-                <h1>Data Internal BBGP</h1>
+                <h1>Data Internal BBGTK</h1>
             </div>
 
             <div class="section-body">
@@ -72,8 +72,8 @@
                                         <div class="d-flex mt-3 mb-5">
                                             <div class="row mx-2">
                                                 <div class="">
-                                                    <a href="#" id="pegawaiBBGP" class="btn btn-warning btn-lg p-2">
-                                                        <i class="fas fa-layer-group mr-1"></i>Penugasan Pegawai BBGP
+                                                    <a href="#" id="pegawaiBBGTK" class="btn btn-warning btn-lg p-2">
+                                                        <i class="fas fa-layer-group mr-1"></i>Penugasan Pegawai BBGTK
                                                     </a>
                                                 </div>
                                                 <div class="">
@@ -85,7 +85,7 @@
                                                 <div class="">
                                                     <a href="#" id="statusPegawai"
                                                         class="btn btn-info btn-lg mr-3 p-2">
-                                                        <i class="fas fa-search mr-1"></i>Lihat Status Pegawai BBGP
+                                                        <i class="fas fa-search mr-1"></i>Lihat Status Pegawai BBGTK
                                                     </a>
                                                 </div>
                                                 <div class="">
@@ -102,7 +102,7 @@
                                 </div>
 
                                 <!-- Filter Section -->
-                                {{-- <h5>Pencarian Data Internal BBGP</h5>
+                                {{-- <h5>Pencarian Data Internal BBGTK</h5>
                                 <div class="row mb-2">
                                     <div class="col-md-8">
                                         <div class="form-group">
@@ -147,7 +147,7 @@
                                                 <select name="filterStatus" class="form-control selectric"
                                                     id="filterStatus">
                                                     <option value="">-- Pilih StatusPegawai --</option>
-                                                    <option value="BBGP">Pegawai BBGP</option>
+                                                    <option value="BBGP">Pegawai BBGTK</option>
                                                     <option value="PPNPN">Pegawai PPNPN</option>
                                                 </select>
                                             </div>
@@ -337,7 +337,7 @@
 
                                 {{-- BBGP --}}
                                 <div class="table-responsive table-internal" id="table-internal-bbgp">
-                                    <!-- Table BBGP -->
+                                    <!-- Table BBGTK -->
                                     <table class="table table-striped" id="table-bbgp">
                                         <thead>
                                             <tr>
@@ -414,7 +414,7 @@
         <div class="modal-dialog modal-dialog-centered" role="document">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title-pegawai">Menu Penugasan Pegawai BBGP</h5>
+                    <h5 class="modal-title-pegawai">Menu Penugasan Pegawai BBGTK</h5>
                     <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true">&times;</span>
                     </button>
@@ -433,7 +433,7 @@
         <div class="modal-dialog modal-dialog-centered" role="document">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title-lokakarya">Menu Pendamping Lokakarya BBGP</h5>
+                    <h5 class="modal-title-lokakarya">Menu Pendamping Lokakarya BBGTK</h5>
                     <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true">&times;</span>
                     </button>
@@ -452,7 +452,7 @@
         <div class="modal-dialog modal-dialog-centered" role="document">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title-ppnpn">Menu Penugasan Pegawai PPNPN BBGP</h5>
+                    <h5 class="modal-title-ppnpn">Menu Penugasan Pegawai PPNPN BBGTK</h5>
                     <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true">&times;</span>
                     </button>
@@ -780,7 +780,7 @@
             $(document).ready(function() {
 
                 var language = {
-                    "sSearch": "Pencarian Data Internal BBGP : ",
+                    "sSearch": "Pencarian Data Internal BBGTK : ",
                 };
                 var tableStatusPegawai = $('#table-status-pegawai').DataTable({
                     paging: true,

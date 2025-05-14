@@ -8,13 +8,13 @@
         </style>
     @endpush
     <div class="banner-carousel banner-carousel-1 mb-0">
-        <div class="banner-carousel-item" style="background-image:url({{ asset('landing/images/slider-main/slide1.png') }})">
+        <div class="banner-carousel-item" style="background-image:url({{ asset('landing/images/banner/bbgtk.jpg') }})">
             <div class="slider-content">
                 <div class="container h-100">
                     <div class="row align-items-center h-100">
                         <div class="col-md-12 text-center">
                             <h2 class="slide-title" data-animation-in="slideInLeft">Selamat Datang di</h2>
-                            <h3 class="slide-sub-title" data-animation-in="slideInRight">BBGP Provinsi <br> Sulawesi Selatan
+                            <h3 class="slide-sub-title" data-animation-in="slideInRight">BBGTK Provinsi <br> Sulawesi Selatan
                             </h3>
                             <p data-animation-in="slideInLeft" data-duration-in="1.2">
                                 {{-- <a href="services.html" class="slider btn btn-primary">Our Services</a>
@@ -34,7 +34,7 @@
                         <div class="col-md-12">
                             <h2 class="slide-title-box" data-animation-in="slideInDown">Siap Melayani Anda</h2>
                             <h3 class="slide-title" data-animation-in="fadeIn">Dedikasi Kami untuk Guru</h3>
-                            <h3 class="slide-sub-title" data-animation-in="slideInLeft">BBGP Provinsi Sulawesi Selatan</h3>
+                            <h3 class="slide-sub-title" data-animation-in="slideInLeft">BBGTK Provinsi Sulawesi Selatan</h3>
                             <p data-animation-in="slideInRight">
                                 {{-- <a href="services.html" class="slider btn btn-primary border">Pelayanan Kami</a> --}}
                             </p>
@@ -99,7 +99,7 @@
                             <i class="fas fa-users fa-lg"></i>
                         </div>
                         <div class="info-my-content">
-                            <a href="https://docs.google.com/forms/d/e/1FAIpQLSeW-_wWr2FSwn1Sb3LSr3sjqchlLyeEHprc4iQtPuTS8fadTw/viewform?usp=dialog" target="_blank">
+                            <a href="{{ route('user.monitoring') }}">
                                 <p>Monitoring dan Evaluasi Kegiatan</p>
                             </a>
                         </div>
@@ -191,9 +191,9 @@
                 <div class="col-lg-6">
                     <div class="ts-intro">
                         <h2 class="into-title">Tentang Kami</h2>
-                        <h3 class="into-sub-title">BBGP Sulawesi Selatan</h3>
+                        <h3 class="into-sub-title">BBGTK Sulawesi Selatan</h3>
                         <p class="my-sub-content">
-                            BBGP Provinsi Sulawesi Selatan adalah Unit Pelaksana Teknis Direktorat Jenderal Guru dan Tenaga
+                            BBGTK Provinsi Sulawesi Selatan adalah Unit Pelaksana Teknis Direktorat Jenderal Guru dan Tenaga
                             Kependidikan Kemendikbudristek dalam Bidang Pengembangan dan Pemberdayaan Guru, Pendidik
                             lainnya, Tenaga Kependidikan, Calon Kepala Sekolah, Kepala Sekolah, Calon Pengawas Sekolah, dan
                             Pengawas Sekolah di Provinsi Sulawesi Selatan.
@@ -211,9 +211,9 @@
                         <!--<iframe width="420" height="315" title="Program Pengembangan keprofesian Guru. Pendidikan Jasmani, olahraga dan kesehatan" src="https://www.youtube.com/embed/gJ3g7xX9O-s"-->
                         <!--    allowfullscreen>-->
                         <!--</iframe>-->
-                        <div class="video-placeholder" data-src="https://www.youtube.com/embed/gJ3g7xX9O-s"
+                        <div class="video-placeholder" data-src="https://www.youtube.com/embed/tSsWpY7uwpA"
                             onclick="loadVideo(this)">
-                            <div class="video-title">Balai Besar Guru Penggerak</div>
+                            <div class="video-title">Balai Besar Guru dan Tenaga Kependidikan Sulawesi Selatan</div>
                         </div>
                         <!--<div class="video-title">Balai Besar Guru Penggerak</div>-->
                     </div>
@@ -294,7 +294,7 @@
                         </div>
                         <div class="text-center">
                             <div class="ts-service-info">
-                                <h3 class="service-box-title"><a href="#">SIM BBGP Sul-Sel</a></h3>
+                                <h3 class="service-box-title"><a href="#">SIM BBGTK Sul-Sel</a></h3>
 
                             </div>
                         </div>
@@ -348,7 +348,7 @@
         <div class="container">
             <div class="row text-center">
                 <div class="col-12">
-                    <h2 class="section-title">BBGP Sul-Sel</h2>
+                    <h2 class="section-title">BBGTK Sul-Sel</h2>
                     <h3 class="section-sub-title">Berita Terkini</h3>
                 </div>
             </div>
@@ -396,7 +396,7 @@
         <div class="container">
             <div class="row text-center">
                 <div class="col-12">
-                    <h2 class="section-title">BBGP Sul-Sel</h2>
+                    <h2 class="section-title">BBGTK Sul-Sel</h2>
                     <h3 class="section-sub-title">Artikel Terkini</h3>
                 </div>
             </div>
@@ -441,7 +441,7 @@
         <div class="container">
             <div class="row text-center">
                 <div class="col-12">
-                    <h2 class="section-title">BBGP Sul-Sel</h2>
+                    <h2 class="section-title">BBGTK Sul-Sel</h2>
                     <h3 class="section-sub-title">Agenda Terkini</h3>
                 </div>
             </div>

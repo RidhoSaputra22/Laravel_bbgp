@@ -14,7 +14,7 @@
     <div class="main-content">
         <section class="section">
             <div class="section-header">
-                <h1>Data Kegiatan BBGP</h1>
+                <h1>Data Kegiatan BBGTK</h1>
             </div>
 
             <div class="section-body">
@@ -82,13 +82,13 @@
                                                     class="fas fa-layer-group mr-1">></i>Absensi
                                                 Stakeholder</button>
                                             <button id="btnPrintPGW" class="btn btn-warning"><i
-                                                    class="fas fa-print mr-2"></i>Absensi Pegawai BBGP</button>
+                                                    class="fas fa-print mr-2"></i>Absensi Pegawai BBGTK</button>
                                         </div>
                                     </div>
                                 </div>
 
                                 <!-- Filter Section -->
-                                {{-- <h5>Pencarian Data Kegiatan BBGP</h5>
+                                {{-- <h5>Pencarian Data Kegiatan BBGTK</h5>
                                 <div class="row mb-2"> 
                                     <div class="col-md-8">
                                         <div class="form-group">
@@ -173,7 +173,7 @@
         <div class="modal-dialog modal-dialog-centered" role="document">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title-pegawai">Menu Penugasan Pegawai BBGP</h5>
+                    <h5 class="modal-title-pegawai">Menu Penugasan Pegawai BBGTK</h5>
                     <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true">&times;</span>
                     </button>
@@ -192,7 +192,7 @@
         <div class="modal-dialog modal-dialog-centered" role="document">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title-lokakarya">Menu Pendamping Lokakarya BBGP</h5>
+                    <h5 class="modal-title-lokakarya">Menu Pendamping Lokakarya BBGTK</h5>
                     <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true">&times;</span>
                     </button>
@@ -211,7 +211,7 @@
         <div class="modal-dialog modal-dialog-centered" role="document">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title-ppnpn">Menu Penugasan Pegawai PPNPN BBGP</h5>
+                    <h5 class="modal-title-ppnpn">Menu Penugasan Pegawai PPNPN BBGTK</h5>
                     <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true">&times;</span>
                     </button>
@@ -238,7 +238,7 @@
             $(document).ready(function() {
                 // Existing DataTable initialization
                 var language = {
-                    "sSearch": "Pencarian Data Kegiatan BBGP : ",
+                    "sSearch": "Pencarian Data Kegiatan BBGTK : ",
                 };
                 var tableKegiatan = $('#table-kegiatan').DataTable({
                     paging: true,

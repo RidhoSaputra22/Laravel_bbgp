@@ -52,7 +52,7 @@ class AdminSeeder extends Seeder
                 'role' => 'stakeholder',
             ],
             [
-                'name' => 'Pegawai Internal BBGP',
+                'name' => 'Pegawai Internal BBGTK',
                 'username' => 'pegawai',
                 'password' => bcrypt('pegawai'),
                 'role' => 'pegawai',

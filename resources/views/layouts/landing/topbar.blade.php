@@ -7,7 +7,7 @@
                     <div class="logo col-lg-3 text-center text-lg-left mb-3 mb-md-5 mb-lg-0">
                         <a class="d-block" href="/">
                             <img style="width:auto; height:80px" 
-                                src="{{ asset('landing/images/header/icon.png') }}" alt="BBGP SulSel">
+                                src="{{ asset('landing/images/header/icon.png') }}" alt="BBGTK SulSel">
                         </a>
                     </div><!-- logo end -->
 
@@ -33,7 +33,7 @@
                                 <div class="info-box">
                                     <div class="info-box-content">
                                         <p class="info-box-title">Email Kami</p>
-                                        <p class="info-box-subtitle">bbgpsulsel@kemdikbud.go.id </p>
+                                        <p class="info-box-subtitle">bbgtksulsel@kemdikbud.go.id </p>
                                     </div>
                                 </div>
                             </li>

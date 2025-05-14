@@ -10,7 +10,7 @@
                 <div class="row">
                     <div class="col-lg-12">
                         <div class="banner-heading">
-                            <h1 class="banner-title">Internal BBGP </h1>
+                            <h1 class="banner-title">Internal BBGTK </h1>
                             <nav aria-label="breadcrumb">
                                 <ol class="breadcrumb justify-content-center">
                                     <li class="breadcrumb-item"><a href="/">Home</a></li>
@@ -37,7 +37,7 @@
                         </div>
 
                         <!-- Filter Section -->
-                        <h5>Pencarian Data Internal BBGP</h5>
+                        <h5>Pencarian Data Internal BBGTK</h5>
                         <div class="row mb-2">
                             <div class="col-md-8">
                                 <div class="form-group">

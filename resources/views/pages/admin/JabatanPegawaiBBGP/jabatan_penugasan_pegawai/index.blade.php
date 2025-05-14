@@ -14,7 +14,7 @@
     <div class="main-content">
         <section class="section">
             <div class="section-header">
-                <h1>Data Jabatan Pegawai BBGP</h1>
+                <h1>Data Jabatan Pegawai BBGTK</h1>
             </div>
 
             <div class="section-body">
@@ -23,7 +23,7 @@
                         <div class="card">
                             <div class="card-body">
                                 <!-- Navigation Buttons -->
-                                <a href="{{ route('jabatan_penugasan_pegawai.create') }}" class="btn btn-primary text-white my-3">+ Tambah Data Jabatan Pegawai BBGP</a>
+                                <a href="{{ route('jabatan_penugasan_pegawai.create') }}" class="btn btn-primary text-white my-3">+ Tambah Data Jabatan Pegawai BBGTK</a>
                                 <!-- <h6>Print Absensi</h6> -->
 
                                 <!-- Tables Section -->
@@ -32,7 +32,7 @@
                                         <thead>
                                             <tr>
                                                 <th >#</th>
-                                                <th>Nama Data Jabatan Pegawai BBGP</th>
+                                                <th>Nama Data Jabatan Pegawai BBGTK</th>
                                                 <th>Action</th>
                                             </tr>
                                         </thead>
@@ -67,7 +67,7 @@
         <div class="modal-dialog modal-dialog-centered" role="document">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title-pegawai">Menu Penugasan Pegawai BBGP</h5>
+                    <h5 class="modal-title-pegawai">Menu Penugasan Pegawai BBGTK</h5>
                     <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true">&times;</span>
                     </button>
@@ -86,7 +86,7 @@
         <div class="modal-dialog modal-dialog-centered" role="document">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title-lokakarya">Menu Pendamping Lokakarya BBGP</h5>
+                    <h5 class="modal-title-lokakarya">Menu Pendamping Lokakarya BBGTK</h5>
                     <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true">&times;</span>
                     </button>
@@ -105,7 +105,7 @@
         <div class="modal-dialog modal-dialog-centered" role="document">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title-ppnpn">Menu Penugasan Pegawai PPNPN BBGP</h5>
+                    <h5 class="modal-title-ppnpn">Menu Penugasan Pegawai PPNPN BBGTK</h5>
                     <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true">&times;</span>
                     </button>
@@ -128,7 +128,7 @@
         <script type="text/javascript">
             $(document).ready(function() {
                 var language = {
-                    "sSearch": "Pencarian Data Jabatan Pegawai BBGP : ",
+                    "sSearch": "Pencarian Data Jabatan Pegawai BBGTK : ",
                 };
                 var tableKegiatan = $('#table-kegiatan').DataTable({
                     paging: true,

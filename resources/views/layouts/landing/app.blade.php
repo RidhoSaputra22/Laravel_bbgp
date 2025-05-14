@@ -6,15 +6,15 @@
     <!-- Basic Page Needs
 ================================================== -->
     <meta charset="utf-8">
-    <title>BBGP Provinsi Sulawesi Selatan - Rumah Belajar Insan Pendidikan</title>
+    <title>BBGTK Provinsi Sulawesi Selatan - Rumah Belajar Insan Pendidikan</title>
 
     <!-- Mobile Specific Metas
 ================================================== -->
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="description" content="BBGP Provinsi Sulawesi Selatan">
+    <meta name="description" content="BBGTK Provinsi Sulawesi Selatan">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
-    <meta name=author content="BBGP Sul-Sel">
-    <meta name=generator content="BBGP Provinsi Sulawesi Selatan">
+    <meta name=author content="BBGTK Sul-Sel">
+    <meta name=generator content="BBGTK Provinsi Sulawesi Selatan">
 
     <!-- Favicon
 ================================================== -->
@@ -179,7 +179,7 @@
 
         @if (session('message') == 'user daftar')
             <script>
-                Swal.fire("Berhasil", "Berhasil registrasi sebagai eksternal BBGP SulSel", "success");
+                Swal.fire("Berhasil", "Berhasil registrasi sebagai eksternal BBGTK SulSel", "success");
             </script>
         @endif
 

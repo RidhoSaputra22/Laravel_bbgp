@@ -14,7 +14,7 @@
     <div class="main-content">
         <section class="section">
             <div class="section-header">
-                <h1>Data Honor Kegiatan BBGP</h1>
+                <h1>Data Honor Kegiatan BBGTK</h1>
             </div>
 
             <div class="section-body">

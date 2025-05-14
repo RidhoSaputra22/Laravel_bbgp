@@ -9,10 +9,10 @@
     <div class="main-content ">
         <section class="section">
             <div class="section-header d-flex justify-content-between">
-                <h1 class="text-primary"><u> Data Eksternal BBGP Sulawesi Selatan</u> </h1>
+                <h1 class="text-primary"><u> Data Eksternal BBGTK Sulawesi Selatan</u> </h1>
                 <div class=" mt-3">
                     {{-- <a href="{{ route('user.form_guru') }}" target="_blank" class="btn btn-primary"><i class="fas fa-users mr-2"></i> Daftar
-                        Eksternal BBGP</a> --}}
+                        Eksternal BBGTK</a> --}}
 
                 </div>
 
@@ -63,7 +63,7 @@
                         <div class="row mb-2">
                             <div class="col-md-8">
                                 <div class="form-group">
-                                    <h5>Pencarian Data Eksternal BBGP </h5>
+                                    <h5>Pencarian Data Eksternal BBGTK </h5>
                                     <input name="nama" id="namaFilter" type="text" value=""
                                         placeholder="Masukkan nama anda" class="form-control">
                                 </div>

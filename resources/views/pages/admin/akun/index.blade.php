@@ -69,15 +69,15 @@
                                                                 <select name="role" required placeholder="Masukkan Akun"
                                                                     class="form-control selectric">
                                                                     <option value="">-- Pilih Role Akun --</option>
-                                                                    <option value="kepala">Kepala Balai</option>
-                                                                    <option value="keuangan">Keuangan</option>
-                                                                    <option value="kepegawaian">Kepegawaian</option>
-                                                                    <option value="kegiatan">Kegiatan</option>
+                                                                    {{-- <option value="kepala">Kepala Balai</option> --}}
+                                                                    {{-- <option value="keuangan">Keuangan</option> --}}
+                                                                    {{-- <option value="kepegawaian">Kepegawaian</option> --}}
+                                                                    {{-- <option value="kegiatan">Kegiatan</option> --}}
                                                                     <option value="tenaga pendidik">Tenaga Pendidik</option>
                                                                     <option value="tenaga kependidikan">Tenaga Kependidikan</option>
                                                                     <option value="stakeholder">Stakeholder</option>
-                                                                    <option value="pegawai">Pegawai BBGP</option>
-                                                                    <option value="database">Database</option>
+                                                                    <option value="pegawai">Pegawai BBGTK</option>
+                                                                    {{-- <option value="database">Database</option> --}}
                                                                     <option value="superadmin">Super Admin</option>
                                                                 </select>
                                                             </div>

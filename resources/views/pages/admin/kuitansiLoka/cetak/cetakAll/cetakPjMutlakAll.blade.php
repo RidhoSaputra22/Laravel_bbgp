@@ -124,7 +124,7 @@
                     <h2 style="margin-bottom: -15px">SULAWESI SELATAN</h2>
                     <p style="margin-bottom: -15px">Jalan Adhyaksa No. 2 Panakkukang Makassar </p>
                     <p style="margin-bottom: -15px"> Telepon : (0411) 440065, No. Fax. (0411) 421460 Kode Pos 90231 </p>
-                    <p> Laman: bbgp-sulsel.id email: bppauddikmassulsel@kemdikbud.go.id</p>
+                    <p> Laman: bbgtk-sulsel.id email: bppauddikmassulsel@kemdikbud.go.id</p>
                 </div>
                 <hr>
 

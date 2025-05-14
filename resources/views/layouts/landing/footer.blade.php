@@ -6,15 +6,15 @@
                     <h3 class="widget-title">Tentang Kami</h3>
                     <img loading="lazy" width="200px" class="footer-logo"
                         src="{{ asset('landing/images/footer/footer-img.png') }}" alt="Constra">
-                    <p>BBGP Provinsi Sulawesi Selatan - Kementerian Pendidikan, Kebudayaan, Riset dan Teknologi</p>
+                    <p>BBGTK Provinsi Sulawesi Selatan - Kementerian Pendidikan, Kebudayaan, Riset dan Teknologi</p>
                     <div class="footer-social">
                         <ul>
-                            <li><a href="https://www.facebook.com/bbgpsulsel/" aria-label="Facebook"><i
+                            <li><a href="https://www.facebook.com/bbgtksulsel/" aria-label="Facebook"><i
                                         class="fab fa-facebook-f"></i></a></li>
                             {{-- <li><a href="https://twitter.com/themefisher" aria-label="Twitter"><i
                                         class="fab fa-twitter"></i></a>
                             </li> --}}
-                            <li><a href="https://www.instagram.com/bbgpsulsel/" aria-label="Instagram"><i
+                            <li><a href="https://www.instagram.com/bbgtksulsel/" aria-label="Instagram"><i
                                         class="fab fa-instagram"></i></a></li>
                         </ul>
                     </div><!-- Footer social end -->
@@ -28,7 +28,7 @@
                                 Jl. Adiyaksa No.2, Pandang, Kec. Panakkukang, Kota Makassar, Sulawesi Selatan
                             </li>
                             <li>(0411) 440065, 421460 </li>
-                            <li>bbgpsulsel@kemdikbud.go.id </li>
+                            <li>bbgtksulsel@kemdikbud.go.id </li>
                         </ul>
                     </div>
                 </div><!-- Col end -->
@@ -69,7 +69,7 @@
                         <span style="color:#fff">Copyright &copy;
                             <script>
                                 document.write(new Date().getFullYear())
-                            </script>, BBGP Provinsi Sulawesi Selatan
+                            </script>, BBGTK Provinsi Sulawesi Selatan
                         </span>
                     </div>
                 </div>

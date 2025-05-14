@@ -14,7 +14,7 @@
     <div class="main-content">
         <section class="section">
             <div class="section-header">
-                <h1>Data Kuitansi BBGP</h1>
+                <h1>Data Kuitansi BBGTK</h1>
             </div>
 
             <div class="section-body">

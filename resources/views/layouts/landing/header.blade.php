@@ -15,13 +15,13 @@
             <div class="col-lg-4 col-md-4 top-social text-center text-md-right">
                 <ul class="list-unstyled">
                     <li>
-                        <a title="Facebook" href="https://www.facebook.com/bbgpsulsel/">
+                        <a title="Facebook" href="https://www.facebook.com/bbgtksulsel/">
                             <span class="social-icon"><i class="fab fa-facebook-f"></i></span>
                         </a>
                         {{-- <a title="Twitter" href="https://twitter.com/themefisher.com">
                             <span class="social-icon"><i class="fab fa-twitter"></i></span>
                         </a> --}}
-                        <a title="Instagram" href="https://www.instagram.com/bbgpsulsel/">
+                        <a title="Instagram" href="https://www.instagram.com/bbgtksulsel/">
                             <span class="social-icon"><i class="fab fa-instagram"></i></span>
                         </a>
                     </li>

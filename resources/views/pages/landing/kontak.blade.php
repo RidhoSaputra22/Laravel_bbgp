@@ -52,7 +52,7 @@
                         </span>
                         <div class="ts-service-box-content">
                             <h4>Email Kami</h4>
-                            <p>bbgpsulsel@kemdikbud.go.id </p>
+                            <p>bbgtksulsel@kemdikbud.go.id </p>
                         </div>
                     </div>
                 </div><!-- Col 2 end -->

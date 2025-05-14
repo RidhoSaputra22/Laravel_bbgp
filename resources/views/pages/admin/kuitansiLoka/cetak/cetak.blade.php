@@ -155,7 +155,7 @@
                 <tr>
                     <td class="text-title"><strong>Sudah Terima Dari</strong></td>
                     <td>
-                        <p>: Kuasa Pengguna Anggaran BBGP Prop Sulawesi Selatan</p>
+                        <p>: Kuasa Pengguna Anggaran BBGTK Prop Sulawesi Selatan</p>
                     </td>
                 </tr>
                 <tr>

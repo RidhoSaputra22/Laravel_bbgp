@@ -7,11 +7,11 @@
     <div class="main-content ">
         <section class="section">
             <div class="section-header d-flex justify-content-between">
-                <h1 class="text-primary"><u> Data Internal BBGP Sulawesi Selatan</u> </h1>
+                <h1 class="text-primary"><u> Data Internal BBGTK Sulawesi Selatan</u> </h1>
                 {{-- <div class=" mt-3">
                     <a href="{{ route('user.form_pegawai') }}" target="_blank" class="btn btn-primary"><i
                             class="fas fa-users mr-2"></i> Daftar
-                        Internal BBGP</a>
+                        Internal BBGTK</a>
                 </div> --}}
 
             </div>
@@ -51,7 +51,7 @@
                                 </div>
 
                                 <!-- Filter Section -->
-                                <h5>Pencarian Data Internal BBGP</h5>
+                                <h5>Pencarian Data Internal BBGTK</h5>
                                 <div class="row mb-2">
                                     <div class="col-md-8">
                                         <div class="form-group">

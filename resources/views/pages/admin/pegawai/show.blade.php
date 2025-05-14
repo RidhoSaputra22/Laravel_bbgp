@@ -9,7 +9,7 @@
     <div class="main-content">
         <section class="section">
             <div class="section-header">
-                <h1>Data Internal BBGP</h1>
+                <h1>Data Internal BBGTK</h1>
             </div>
 
             <div class="section-body">
@@ -56,7 +56,7 @@
                                 </div>
 
                                 <!-- Filter Section -->
-                                {{-- <h5>Pencarian Data Internal BBGP</h5>
+                                {{-- <h5>Pencarian Data Internal BBGTK</h5>
                                 <div class="row mb-2">
                                     <div class="col-md-8">
                                         <div class="form-group">
@@ -104,7 +104,7 @@
                                 <div class="table-responsive">
 
 
-                                    <!-- Table BBGP -->
+                                    <!-- Table BBGTK -->
                                     <table class="table table-striped mb-5" id="">
                                         <thead>
                                             <tr>

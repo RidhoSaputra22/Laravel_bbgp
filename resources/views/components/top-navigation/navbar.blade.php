@@ -1,6 +1,6 @@
 <div class="navbar-bg"></div>
 <nav class="navbar navbar-expand-lg main-navbar">
-    <a href="/" class="navbar-brand sidebar-gone-hide">BBGP Sulsel</a>
+    <a href="/" class="navbar-brand sidebar-gone-hide">BBGTK Sulsel</a>
     <a href="#" class="nav-link sidebar-gone-show" data-toggle="sidebar"><i class="fas fa-bars"></i></a>
     <div class="nav-collapse">
         <!--<a class="sidebar-gone-show nav-collapse-toggle nav-link" href="#">-->
@@ -238,8 +238,8 @@
             <li class="nav-item dropdown {{ $menu == 'guru' || $menu == 'pegawai' ? 'active' : '' }}">
                 <a href="#" data-toggle="dropdown" class="nav-link has-dropdown"><i class="fas fa-layer-group"></i><span>Data</span></a>
                 <ul class="dropdown-menu">
-                    <li class="nav-item {{ $menu == 'pegawai' ? 'active' : '' }}"><a href="{{  route('user.pegawai') }}" class="nav-link">Data Internal BBGP</a></li>
-                    <li class="nav-item {{ $menu == 'guru' ? 'active' : '' }}"><a href="{{  route('user.guru') }}" class="nav-link">Data Eksternal BBGP</a></li>
+                    <li class="nav-item {{ $menu == 'pegawai' ? 'active' : '' }}"><a href="{{  route('user.pegawai') }}" class="nav-link">Data Internal BBGTK</a></li>
+                    <li class="nav-item {{ $menu == 'guru' ? 'active' : '' }}"><a href="{{  route('user.guru') }}" class="nav-link">Data Eksternal BBGTK</a></li>
                 </ul>
             </li>
 

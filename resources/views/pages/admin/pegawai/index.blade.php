@@ -1,4 +1,4 @@
-@extends('layouts.app', ['title' => 'Data Pegawai BBGP'])
+@extends('layouts.app', ['title' => 'Data Pegawai BBGTK'])
 
 @section('content')
     @push('styles')
@@ -9,7 +9,7 @@
     <div class="main-content">
         <section class="section">
             <div class="section-header">
-                <h1>Data Pegawai BBGP</h1>
+                <h1>Data Pegawai BBGTK</h1>
             </div>
 
 
@@ -22,7 +22,7 @@
                             <div class="card-body">
                                 <a href="{{ route('pegawai.create') }}" class="btn btn-primary my-4">
                                     <i class="fas fa-plus"></i>
-                                    Tambah Data Pegawai BBGP
+                                    Tambah Data Pegawai BBGTK
                                 </a>
                                 <div class="table-responsive">
                                     <table class="table table-striped" id="table-temp1">
