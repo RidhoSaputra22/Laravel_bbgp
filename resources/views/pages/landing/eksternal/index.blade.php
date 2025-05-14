@@ -246,13 +246,13 @@
                 // Initialize DataTable
                 let table = $('#table-guru').DataTable({
                     processing: true,
-                    serverSide: true, // pastikan ini diset ke true jika kamu ingin menggunakan server-side processing
+                    serverSide: true, // Pastikan ini true untuk server-side processing
                     ajax: {
-                        url: '{{ route('user.guru.data') }}', // Pastikan rute ini benar dan aktif
+                        url: '{{ route('user.guru.data') }}',
                         type: 'GET',
                         data: function(d) {
-                            d.kabupaten = $('#kabupaten').val(); // Kirimkan data filter jika ada
-                            d.nik = $('#nik').val(); // Kirimkan data filter jika ada
+                            d.kabupaten = $('#kabupaten').val(); // Kirimkan parameter kabupaten
+                            d.nik = $('#nik').val(); // Kirimkan parameter nik
                         },
                         error: function(xhr, status, error) {
                             console.error("AJAX error:", error);
@@ -303,6 +303,7 @@
                         }
                     ]
                 });
+
 
 
 
