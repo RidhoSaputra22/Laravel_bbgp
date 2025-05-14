@@ -82,10 +82,31 @@ class UserController extends Controller
     }
 
 
-    public function guru()
+    public function guru(Request $request)
     {
+        if ($request->ajax()) {
+            $data = Guru::select('npsn_sekolah', 'nama_lengkap', 'status_kepegawaian', 'eksternal_jabatan', 'kategori_jabatan', 'jenis_jabatan', 'tugas_jabatan', 'latar_jabatan')
+                ->when($request->kabupaten, function ($query) use ($request) {
+                    return $query->where('kabupaten', $request->kabupaten);
+                })
+                ->when($request->nik, function ($query) use ($request) {
+                    return $query->where('nik', 'like', '%' . $request->nik . '%');
+                });
 
-        $status = array(
+            $totalRecords = $data->count();
+            $filteredRecords = $data->count();
+
+            $data = $data->skip($request->start)->take($request->length)->get();
+
+            return response()->json([
+                'draw' => $request->get('draw'),
+                'recordsTotal' => $totalRecords,
+                'recordsFiltered' => $filteredRecords,
+                'data' => $data
+            ]);
+        }
+
+        $status = [
             's_jabPendidik' => JabatanPendidik::get(),
             's_jabKependidikan' => JabatanKependidikan::get(),
             's_jabStakeholder' => JabatanStakeHolder::get(),
@@ -94,17 +115,19 @@ class UserController extends Controller
             's_jabKategoriPengawas' => ['Sertifikat GP (Guru Penggerak)', 'Diklat Cawas', 'Lainnya'],
             's_jabKategoriKepsek' => ['Sertifikat GP (Guru Penggerak)', 'Diklat Cakep', 'Lainnya'],
             's_jabTugas' => ['GP (Guru Penggerak)', 'PP (Pengajar Praktik)', 'Fasil (Fasilitator)', 'Instruktur'],
-        );
-        return view('pages.landing.eksternal.index', ['menu' => 'data',  'status' => $status]);
-        // return view('pages.user.guru', ['menu' => 'guru', 'datas' => $datas, 'status' => $status]);
+        ];
+
+        return view('pages.landing.eksternal.index', ['menu' => 'data', 'status' => $status]);
     }
+
 
     public function dataguru(Request $request)
     {
+        // Mulai query dengan eager loading 'sekolah' dan filter status verifikasi
         $query = Guru::with('sekolah')  // Eager load sekolah relation
             ->where('is_verif', 'sudah');
 
-        // Handle search parameters
+        // Handle search parameters (filter berdasarkan kabupaten atau nik)
         if ($request->kabupaten) {
             $query->where('kabupaten', $request->kabupaten);
         }
@@ -113,12 +136,26 @@ class UserController extends Controller
             $query->where('no_ktp', 'like', '%' . $request->nik . '%');
         }
 
-        $data = $query->orderBy('id', 'DESC')->get();
+        // Hitung total records (untuk total data yang ada)
+        $totalRecords = $query->count();
 
+        // Ambil data sesuai dengan parameter 'start' dan 'length' dari DataTables untuk paging
+        $data = $query->orderBy('id', 'DESC')
+            ->skip($request->start)    // Offset (skip) data yang sudah ditampilkan
+            ->take($request->length)   // Batasi jumlah data yang dikembalikan
+            ->get();
+
+        // Hitung jumlah data setelah filter diterapkan
+        $filteredRecords = $data->count();
+
+        // Format data yang dikembalikan ke DataTables
         return response()->json([
+            'draw' => (int)$request->get('draw'),
+            'recordsTotal' => $totalRecords,  // Total data yang ada tanpa filter
+            'recordsFiltered' => $filteredRecords,  // Total data yang ada setelah filter
             'data' => $data->map(function ($item, $index) {
                 return [
-                    'DT_RowIndex' => $index + 1,
+                    'DT_RowIndex' => $index + 1,  // Menyediakan index untuk DataTables
                     'npsn_sekolah' => $item->npsn_sekolah . '<br>' . ($item->sekolah->nama_sekolah ?? ''),
                     'nama_lengkap' => $item->nama_lengkap,
                     'status_kepegawaian' => $item->status_kepegawaian,
@@ -132,6 +169,7 @@ class UserController extends Controller
             })
         ]);
     }
+
 
     public function pegawai()
     {
