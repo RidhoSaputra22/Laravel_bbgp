@@ -30,7 +30,7 @@ Route::group(
         Route::get('/cari', 'UserController@cari')->name('user.cari.guru');
 
         Route::get('/detail/{jenis}/{id}', 'UserController@detail')->name('user.detail.post');
-        
+
         // analisis kebutuhan pelatihan
         Route::get('/analisis-kebutuhan-pelatihan', 'UserController@analisisPelatihan')->name('user.analisisPelatihan');
         Route::get('/analisis-kebutuhan-slb', 'UserController@analisisSLB')->name('user.analisisSLB');
@@ -44,7 +44,7 @@ Route::group(
         Route::get('/pegawai/detail', 'UserController@getPenugasanDetail')->name('user.pegawai.detail');
         Route::get('/pegawai/detailLoka', 'UserController@getPenugasanDetailLoka')->name('user.pegawai.detail.loka');
         Route::get('/pegawai/detailEksternal', 'UserController@getPenugasanDetailEksternal')->name('user.pegawai.detail.eksternal');
-        
+
         Route::get('/statistik', 'UserController@statistik')->name('user.statistik');
         Route::get('/api/statistics/month/{month}', 'UserController@getMonthStatistics')->name('user.statistik.month');
         Route::get('/api/statistics/activities/{month}', 'UserController@getActivitiesByMonth')->name('user.statistik.month');
@@ -73,7 +73,7 @@ Route::group(
         Route::get('/print/registrasi-peserta', 'KegiatanController@printRegistrasiPeserta')->name('print.registrasi.peserta');
         Route::get('/print/absensi-panitia', 'KegiatanController@printAbsensiPanitia')->name('print.absensi.panitia');
         Route::get('/print/absensi-narasumber', 'KegiatanController@printAbsensiNarasumber')->name('print.absensi.narasumber');
-        
+
         Route::get('/print/absensi-tp', 'KegiatanController@printAbsensiTp')->name('print.absensi.tp');
         Route::get('/print/absensi-tkp', 'KegiatanController@printAbsensiTkp')->name('print.absensi.tkp');
         Route::get('/print/absensi-stk', 'KegiatanController@printAbsensiStk')->name('print.absensi.stk');
@@ -93,7 +93,7 @@ Route::group(
             Route::get('/', 'AdminController@index')->name('dashboard');
             Route::get('/jadwalKegiatan', 'AdminController@jadwal')->name('dashboard.jadwal');
             Route::get('/jadwalKegiatan/{nik}', 'AdminController@getJadwalByPegawai')->name('dashboard.jadwal.getByPegawai');
-            
+
             Route::get('/getByKegiatan', 'AdminController@getByKegiatan')->name('dashboard.jadwal.getByKegiatan')->withoutMiddleware(['ValidasiUser']);
             Route::get('/getByKegiatanUser', 'AdminController@getByKegiatanUser')->name('dashboard.jadwal.getByKegiatanUser')->withoutMiddleware(['ValidasiUser']);
 
@@ -103,7 +103,7 @@ Route::group(
 
             Route::get('/fetch-sekolah', ['GuruController@index', 'fetchSekolah'])->name('fetchSekolah');
 
-            
+
             // Guru / Eksternal
             Route::prefix('eksternal')->group(function () {
                 Route::get('/', 'GuruController@index')->name('guru.index');
@@ -159,7 +159,6 @@ Route::group(
                 Route::put('/update', 'BerkasController@update')->name('berkas.update');
                 Route::post('/hapus/{id}', 'BerkasController@destroy')->name('berkas.hapus');
                 Route::get('/verify/{id}', 'BerkasController@verify')->name('berkas.verify');
-                
             });
 
             // Kepegawaian
@@ -206,7 +205,7 @@ Route::group(
                 Route::post('/updateLokakaryaJS', 'InternalController@updateLokakaryaJS')->name('internal.update.lokakaryaJS');
                 Route::get('/jadwalLokakarya/{id}', 'InternalController@jadwalLokakarya')->name('internal.jadwal.lokakarya');
                 Route::post('/cariLokakarya', 'InternalController@cariLokakarya')->name('internal.cari.lokakarya');
-                
+
                 Route::post('/hapusLoka/{id}', 'InternalController@hapusLoka')->name('internal.hapus.loka');
 
                 // Penugasan PEgawai BBGP
@@ -258,6 +257,8 @@ Route::group(
             // Akun
             Route::prefix('akun')->group(function () {
                 Route::get('/', 'AkunController@index')->name('akun.index');
+                Route::get('/akun/data', 'AkunController@getAkunData')->name('akun.data');
+
                 Route::get('/create', 'AkunController@create')->name('akun.create');
                 Route::post('/store', 'AkunController@store')->name('akun.store');
                 Route::post('/regis', 'AkunController@regis')->name('akun.regis');
@@ -266,7 +267,7 @@ Route::group(
                 Route::post('/hapus/{id}', 'AkunController@destroy')->name('akun.hapus');
             });
 
-            
+
 
 
             // Kegiatan
@@ -290,7 +291,6 @@ Route::group(
                 Route::get('/cetak/{id}', 'PesertaKegiatanController@cetak')->name('peserta.cetak');
                 Route::get('/cetakByUser/{id}', 'PesertaKegiatanController@cetakByUser')->name('peserta.cetakByUser')->withoutMiddleware(['ValidasiUser']);
                 Route::get('/export/{id_kegiatan}', 'PesertaKegiatanController@export')->name('peserta.export');
-
             });
 
             // Honor
@@ -350,8 +350,8 @@ Route::group(
                 Route::get('/penomoran', 'KuitansiController@Penomoran')->name('honor.penomoran');
             });
 
-             //kuitansiLoka
-             Route::prefix('kuitansiLoka')->group(function () {
+            //kuitansiLoka
+            Route::prefix('kuitansiLoka')->group(function () {
                 Route::get('/', 'KuitansiLokaController@index')->name('kuitansiLoka.index');
                 Route::get('/create', 'KuitansiLokaController@create')->name('kuitansiLoka.create');
                 Route::post('/store', 'KuitansiLokaController@store')->name('kuitansiLoka.store');
@@ -439,7 +439,6 @@ Route::group(
                 Route::put('/update', 'ArtikelController@update')->name('artikel.update');
                 Route::post('/hapus/{id}', 'ArtikelController@destroy')->name('artikel.hapus');
             });
-
         });
     }
 );

@@ -853,7 +853,7 @@
                 });
 
                 // Show appropriate table based on button click
-                $('#pegawaiBBGP').on('click', function(event) {
+                $('#pegawaiBBGTK').on('click', function(event) {
                     event.preventDefault();
                     $('.table-internal').hide();
                     $('#kegiatan-lokakarya').hide();

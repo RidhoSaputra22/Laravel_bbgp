@@ -14,16 +14,54 @@ class AkunController extends Controller
     public function index()
     {
         // $data = Admin::orderByDesc('id')->get();
-        $d = [];
-        Admin::chunk(100, function ($chunk) use (&$d) {
-            foreach ($chunk as $item) {
-                $d[] = $item;
-            }
-        });
-        $data = $d;
+        $data = Admin::select('id', 'name', 'username', 'role')
+            ->orderByDesc('id')
+            ->get();
 
-        return view('pages.admin.akun.index', ['menu' => 'akun', 'datas' => $data]);
+
+        return view('pages.admin.akun.index', [
+            'menu' => 'akun',
+            'datas' => $data
+        ]);
     }
+
+    public function getAkunData(Request $request)
+    {
+        $query = Admin::select('id', 'name', 'username', 'role');
+
+        // DataTables server-side processing
+        if ($request->has('draw')) {
+            $start = $request->get('start', 0);
+            $length = $request->get('length', 10);
+            $search = $request->get('search')['value'] ?? '';
+
+            if ($search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('name', 'like', "%{$search}%")
+                        ->orWhere('username', 'like', "%{$search}%")
+                        ->orWhere('role', 'like', "%{$search}%");
+                });
+            }
+
+            $total = Admin::count();
+            $filtered = $query->count();
+            $data = $query->orderByDesc('id')
+                ->skip($start)
+                ->take($length)
+                ->get();
+
+            return response()->json([
+                'draw' => intval($request->get('draw')),
+                'recordsTotal' => $total,
+                'recordsFiltered' => $filtered,
+                'data' => $data
+            ]);
+        }
+
+        // Simple AJAX request
+        return response()->json($query->orderByDesc('id')->get());
+    }
+
 
 
 
