@@ -30,6 +30,36 @@
     <div class="container my-4">
         <div class="row">
             <div class="col-md-12 col-lg-12">
+                @if (session('success'))
+                    <div class="alert alert-success alert-dismissible fade show" role="alert">
+                        {{ session('success') }}
+                        <button type="button" class="close" data-dismiss="alert">&times;</button>
+                    </div>
+                @endif
+
+                @if (session('error'))
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        {{ session('error') }}
+                        <button type="button" class="close" data-dismiss="alert">&times;</button>
+                    </div>
+                @endif
+
+                @if (session('info'))
+                    <div class="alert alert-info alert-dismissible fade show" role="alert">
+                        {{ session('info') }}
+                        <button type="button" class="close" data-dismiss="alert">&times;</button>
+                    </div>
+                @endif
+
+                @if ($errors->any())
+                    <div class="alert alert-danger">
+                        <ul class="mb-0">
+                            @foreach ($errors->all() as $error)
+                                <li>{{ $error }}</li>
+                            @endforeach
+                        </ul>
+                    </div>
+                @endif
                 {{-- <form action="{{ route('user.kegiatan_store') }}" method="POST" enctype="multipart/form-data"> --}}
                 <form action="{{ route('user.store.data-sekolah') }}" method="POST" enctype="multipart/form-data">
                     @csrf
@@ -37,6 +67,9 @@
                     <div class="card-body">
 
                         <div class="h3">Identitas Sekolah</div>
+                        <small>
+                            <li>yang memiliki tanda bintang (*) wajib anda isi</li>
+                        </small>
                         <hr>
                         <div class="row">
 
@@ -51,8 +84,8 @@
                             <div class="col-md-6">
                                 <div class="form-group">
                                     <label>* NPSN</label>
-                                    <input name="npsn" id="npsn" type="text" class="form-control" required
-                                        placeholder="">
+                                    <input name="npsn" id="npsn" type="number" min="0" class="form-control"
+                                        required placeholder="">
                                 </div>
                             </div>
 
@@ -103,7 +136,7 @@
                             <div class="col-md-4">
                                 <div class="form-group">
                                     <label>* Alamat Sekolah</label>
-                                    <input required ="alamat" id="alamat" type="text"
+                                    <input required name="alamat" id="alamat" type="text"
                                         placeholder="alamat lengkap sekolah" class="form-control">
                                 </div>
                             </div>
@@ -120,7 +153,8 @@
                             <div class="col-md-3">
                                 <div class="form-group">
                                     <label>Kabupaten</label>
-                                    <select required name="kabupaten" id="kabupaten" class="form-control select2" disabled>
+                                    <select required name="kabupaten" id="kabupaten" class="form-control select2"
+                                        disabled>
                                         <option value="">-- pilih kabupaten --</option>
                                     </select>
                                 </div>
@@ -129,7 +163,8 @@
                             <div class="col-md-2">
                                 <div class="form-group">
                                     <label>Kecamatan</label>
-                                    <select required name="kecamatan" id="kecamatan" class="form-control select2" disabled>
+                                    <select required name="kecamatan" id="kecamatan" class="form-control select2"
+                                        disabled>
                                         <option value="">-- pilih kecamatan --</option>
                                     </select>
                                 </div>
@@ -151,8 +186,8 @@
                             <div class="col-md-4">
                                 <div class="form-group">
                                     <label>* No. Telepon/WA</label>
-                                    <input name="no_telepon" id="no_telepon" type="text" class="form-control"
-                                        placeholder="Kontak resmi sekolah" required>
+                                    <input name="no_telepon" id="no_telepon" type="number" min="1"
+                                        class="form-control" placeholder="Kontak resmi sekolah" required>
                                 </div>
                             </div>
 
@@ -202,7 +237,7 @@
                             <div class="col-md-4">
                                 <div class="form-group">
                                     <label>* Nama Lengkap</label>
-                                    <input name="no_surat_tugas" id="no_surat_tugas" type="text" class="form-control"
+                                    <input name="nama_kepsek" id="nama_kepsek" type="text" class="form-control"
                                         placeholder="sesuai SK" required>
                                 </div>
                             </div>
@@ -220,8 +255,9 @@
 
                             <div class="col-md-6" id="nip_opsi" style="display:  none;">
                                 <div class="form-group">
-                                    <label>NIP</label>
-                                    <input name="nip" id="nip" type="text" class="form-control" required>
+                                    <label>* NIP</label>
+                                    <input name="nip" id="nip" type="text" placeholder=""
+                                        class="form-control">
                                 </div>
                             </div>
                         </div>
@@ -239,8 +275,8 @@
                             <div class="col-md-4">
                                 <div class="form-group">
                                     <label>* No Telepon/WA</label>
-                                    <input name="no_telp_kepsek" id="no_telp_kepsek" type="text" class="form-control"
-                                        required placeholder="">
+                                    <input name="no_telp_kepsek" id="no_telp_kepsek" type="number" min="1"
+                                        class="form-control" required placeholder="">
                                 </div>
                             </div>
 
@@ -525,13 +561,13 @@
 
                     </div>
 
-            </div>
 
-            <div class="card-footer text-right">
-                <button class="btn btn-primary" type="submit">Submit</button>
-                <a href="{{ route('user.kegiatan') }}" class="btn btn-warning">Kembali</a>
+                    <div class="card-footer text-right">
+                        <a href="{{ route('user.index') }}" class="btn btn-danger mx-5">Kembali</a>
+                        <button class="btn btn-primary" type="submit">Submit</button>
+                    </div>
+                </form>
             </div>
-            </form>
         </div>
     </div>
     </div>
@@ -559,8 +595,7 @@
 
                 // Event listener untuk Provinsi
                 $('#provinsi').on('change', function() {
-                    const provinsiId = $(this).val();
-
+                    const provinsiId = $(this).find(':selected').data('id');
                     // Reset dropdown kabupaten, kecamatan, kelurahan
                     resetDropdown('#kabupaten');
                     resetDropdown('#kecamatan');
@@ -573,7 +608,7 @@
 
                 // Event listener untuk Kabupaten
                 $('#kabupaten').on('change', function() {
-                    const kabupatenId = $(this).val();
+                    const kabupatenId = $(this).find(':selected').data('id');
 
                     // Reset dropdown kecamatan dan kelurahan
                     resetDropdown('#kecamatan');
@@ -587,13 +622,12 @@
                 // Event listener untuk Kecamatan
                 $('#kecamatan').on('change', function() {
                     const kecamatanId = $(this).val();
-
                     // Reset dropdown kelurahan
                     resetDropdown('#kelurahan');
 
-                    if (kecamatanId) {
-                        loadKelurahan(kecamatanId);
-                    }
+                    // if (kecamatanId) {
+                    //     loadKelurahan(kecamatanId);
+                    // }
                 });
 
                 // Fungsi untuk load Provinsi
@@ -606,7 +640,7 @@
                             let options = '<option value="">-- pilih provinsi --</option>';
                             data.forEach(function(provinsi) {
                                 options +=
-                                    `<option value="${provinsi.id}">${provinsi.name}</option>`;
+                                    `<option value="${provinsi.name}" data-id="${provinsi.id}">${provinsi.name}</option>`;
                             });
                             $('#provinsi').html(options);
                             $('#provinsi').prop('disabled', false);
@@ -628,7 +662,7 @@
                             let options = '<option value="">-- pilih kabupaten --</option>';
                             data.forEach(function(kabupaten) {
                                 options +=
-                                    `<option value="${kabupaten.id}">${kabupaten.name}</option>`;
+                                    `<option value="${kabupaten.name}" data-id="${kabupaten.id}">${kabupaten.name}</option>`;
                             });
                             $('#kabupaten').html(options);
                             $('#kabupaten').prop('disabled', false);
@@ -650,7 +684,7 @@
                             let options = '<option value="">-- pilih kecamatan --</option>';
                             data.forEach(function(kecamatan) {
                                 options +=
-                                    `<option value="${kecamatan.id}">${kecamatan.name}</option>`;
+                                    `<option value="${kecamatan.name}" data-id="${kecamatan.id}">${kecamatan.name}</option>`;
                             });
                             $('#kecamatan').html(options);
                             $('#kecamatan').prop('disabled', false);
