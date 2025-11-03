@@ -210,7 +210,7 @@
                         id: pegawaiId
                     },
                     success: function(response) {
-                        console.log(response)
+                        // console.log(response)
                         const dateLahir = new Date(response.data.tgl_lahir);
                         const dayLahir = String(dateLahir.getDate()).padStart(2, '0');
                         const monthLahir = String(dateLahir.getMonth() + 1).padStart(2,

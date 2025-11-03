@@ -49,6 +49,10 @@ Route::group(
         Route::get('/api/statistics/month/{month}', 'UserController@getMonthStatistics')->name('user.statistik.month');
         Route::get('/api/statistics/activities/{month}', 'UserController@getActivitiesByMonth')->name('user.statistik.month');
         Route::get('/api/statistics/activity/{activityId}/{participantType}', 'UserController@getActivityStatistics')->name('user.statistik.activity');
+        
+        // Menu Sekolah
+        Route::get('/data-sekolah', 'SekolahController@index')->name('user.data-sekolah');
+        Route::post('/data-sekolah', 'SekolahController@store')->name('user.store.data-sekolah');
 
         Route::get('/eksternal', 'UserController@guru')->name('user.guru');
         Route::get('/eksternal/form/{jenis}', 'UserController@form_guru')->name('user.form_guru');
