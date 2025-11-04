@@ -13,7 +13,15 @@ class Sekolah extends Model
         'npsn_sekolah',
         'bp_sekolah',
         'status_sekolah',
+        'provinsi',
         'kecamatan',
         'kabupaten',
+        'alamat',
+        'akreditasi',
+        'no_telepon',
+        'email',
+        'website_url',
+        'tahun_berdiri',
+        'koordinat',
     ];
 }

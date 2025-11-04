@@ -84,7 +84,7 @@
                             <div class="col-md-6">
                                 <div class="form-group">
                                     <label>* NPSN</label>
-                                    <input name="npsn" id="npsn" type="number" min="0" class="form-control"
+                                    <input name="npsn_sekolah" id="npsn_sekolah" type="number" min="0" class="form-control"
                                         required placeholder="">
                                 </div>
                             </div>
@@ -95,7 +95,7 @@
                             <div class="col-md-4">
                                 <div class="form-group">
                                     <label>* Jenjang Sekolah</label>
-                                    <select required name="jenjang" id="jenjang" class="form-control">
+                                    <select required name="bp_sekolah" id="bp_sekolah" class="form-control">
                                         <option value="">-- pilih jenjang sekolah --</option>
                                         <option value="TK">TK</option>
                                         <option value="SD">SD</option>
@@ -108,7 +108,7 @@
                             <div class="col-md-4">
                                 <div class="form-group">
                                     <label>* Status Sekolah</label>
-                                    <select required name="status" id="status" class="form-control">
+                                    <select required name="status_sekolah" id="status_sekolah" class="form-control">
                                         <option value="">-- pilih status sekolah --</option>
                                         <option value="Negeri">Negeri</option>
                                         <option value="Swasta">Swasta</option>
@@ -450,7 +450,7 @@
                                 </div>
                             </div>
 
-                            <div class="col-md-3">
+                            <div class="col-md-5">
                                 <label>Fasilitas IT</label>
                                 <div class="form-group">
                                     <div class="form-check">
@@ -474,7 +474,7 @@
                                         <label class="form-check-label" for="it_lainnya">Lainnya</label>
                                     </div>
                                     <input type="text" name="fasilitas_it_tambahan" class="form-control mt-2"
-                                        placeholder="Tambahan (opsional)">
+                                        placeholder="Tambahan (opsional), pakai koma (,) untuk pemisah">
                                 </div>
                             </div>
 
