@@ -16,6 +16,7 @@ use App\Models\SatuanPendidikan;
 use App\Models\Sekolah;
 use Illuminate\Http\Request;
 use Barryvdh\DomPDF\Facade\Pdf as PDF;
+use Illuminate\Support\Facades\Session;
 
 class GuruController extends Controller
 {
@@ -189,15 +190,20 @@ class GuruController extends Controller
 
     public function getDetail(Request $request)
     {
-        $pesertaId = $request->input('id');
-        $peserta = Guru::find($pesertaId);
-
-        return response()->json([
-            'data' => $peserta,
-            'nama_sekolah' => $peserta->sekolah->nama_sekolah || '',
-            'kecamatan_sekolah' => $peserta->sekolah->kecamatan || '',
-            'kabupaten_sekolah' => $peserta->sekolah->kabupaten || '',
-        ]);
+        try {
+            //code...
+            $pesertaId = $request->input('id');
+            $peserta = Guru::find(id: $pesertaId);
+    
+            return response()->json([
+                'data' => $peserta,
+                'nama_sekolah' => $peserta->sekolah->nama_sekolah ?? '',
+                'kecamatan_sekolah' => $peserta->sekolah->kecamatan ?? '',
+                'kabupaten_sekolah' => $peserta->sekolah->kabupaten ?? '',
+            ]);
+        } catch (\Exception $e) {
+            return response()->json($e->getMessage());
+        }
     }
 
     /**
@@ -325,35 +331,44 @@ class GuruController extends Controller
     public function show(string $id)
     {
         // dd($id);
-
-        $sekolahs = [];
-        Sekolah::select('npsn_sekolah', 'nama_sekolah', 'kecamatan', 'kabupaten')
-            ->chunk(500, function ($sekolahChunk) use (&$sekolahs) {
-                foreach ($sekolahChunk as $sekolah) {
-                    $sekolahs[] = $sekolah;
-                }
-            });
-        $datas = array(
-            's_kepegawaian' => Kepegawaian::get(),
-            's_kependidikan' => SatuanPendidikan::get(),
-            's_gelar' => Pendidikan::get(),
-            's_jabatan' => Jabatan::get(),
-            's_kabupaten' => Kabupaten::get(),
-            's_kecamatan' => Kecamatan::get(),
-            // 's_sekolah' => Sekolah::select('npsn_sekolah', 'nama_sekolah', 'kecamatan', 'kabupaten')->get(),
-            's_sekolah' => $sekolahs,
-            's_jabPendidik' => JabatanPendidik::get(),
-            's_jabKependidikan' => JabatanKependidikan::get(),
-            's_jabStakeholder' => JabatanStakeHolder::get(),
-            's_jabKategori' => ['GP (Guru Penggerak)', 'NoN GP (Guru Penggerak)'],
-            's_jabTugas' => ['GP (Guru Penggerak)', 'PP (Pengajar Praktik)', 'Fasil (Fasilitator)', 'Instruktur'],
-
-        );
-        // $data = Guru::orderBy('id','DESC')->get();
-        $data = Guru::where('no_ktp', session('no_ktp'))->first();
-        // $data = Guru::find($id);
-        // dd($data);
-        return view('pages.admin.guru.indexByUser', ['menu' => 'guru', 'datas' => $data, 'status' => $datas]);
+        try {
+            $sekolahs = [];
+            Sekolah::select('npsn_sekolah', 'nama_sekolah', 'kecamatan', 'kabupaten')
+                ->chunk(500, function ($sekolahChunk) use (&$sekolahs) {
+                    foreach ($sekolahChunk as $sekolah) {
+                        $sekolahs[] = $sekolah;
+                    }
+                });
+            $datas = array(
+                's_kepegawaian' => Kepegawaian::get(),
+                's_kependidikan' => SatuanPendidikan::get(),
+                's_gelar' => Pendidikan::get(),
+                's_jabatan' => Jabatan::get(),
+                's_kabupaten' => Kabupaten::get(),
+                's_kecamatan' => Kecamatan::get(),
+                // 's_sekolah' => Sekolah::select('npsn_sekolah', 'nama_sekolah', 'kecamatan', 'kabupaten')->get(),
+                's_sekolah' => $sekolahs,
+                's_jabPendidik' => JabatanPendidik::get(),
+                's_jabKependidikan' => JabatanKependidikan::get(),
+                's_jabStakeholder' => JabatanStakeHolder::get(),
+                's_jabKategori' => ['GP (Guru Penggerak)', 'NoN GP (Guru Penggerak)'],
+                's_jabTugas' => ['GP (Guru Penggerak)', 'PP (Pengajar Praktik)', 'Fasil (Fasilitator)', 'Instruktur'],
+    
+            );
+            // $data = Guru::orderBy('id','DESC')->get();
+            $data = Guru::where('id', session('guru_id'))->first();
+            // dd($data);
+            // $data = Guru::find($id);
+            // dd($data);
+            if (!$data) {
+                Session::flush();
+                return redirect()->route('login');
+            }
+    
+            return view('pages.admin.guru.indexByUser', ['menu' => 'guru', 'datas' => $data, 'status' => $datas]);
+        } catch (\Exception $e) {
+            return response()->json($e->getMessage());
+        }
     }
 
 

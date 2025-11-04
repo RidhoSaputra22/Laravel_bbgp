@@ -189,6 +189,12 @@
             </script>
         @endif
 
+        @if (session('message') == 'sukses daftar sekolah')
+            <script>
+                Swal.fire("Success", "Sekolah berhasil didaftarkan, silahkan login dengan nama yang telah anda input dengan password 12345(bisa diubah ketika login). untuk meliha data sekolah yang telah anda daftarkan", "success");
+            </script>
+        @endif
+
         @if (session('message') == 'sukses daftar')
             <script>
                 // Swal.fire("Berhasil", "Berhasil registrasi Kegiatan", "success");

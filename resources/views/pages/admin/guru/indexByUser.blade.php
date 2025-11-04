@@ -544,7 +544,7 @@
                 });
             });
 
-            function showDetail(pegawaiId) {
+            function                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           (pegawaiId) {
                 console.log('get detail');
                 $.ajax({
                     url: '{{ route('admin.eksternal.detail') }}',
@@ -565,7 +565,7 @@
                         <p><strong>NIP:</strong> ${response.data.nip ?? ''}</p>
                         <p><strong>NPWP:</strong> ${response.data.npwp ?? ''}</p>
                         <p><strong>NUPTK:</strong> ${response.data.nuptk ?? ''}</p>
-                        <p><strong>Tempat, Tanggal lahir:</strong> ${response.data.tempat_lahir ?? ''}, ${response.data.tgl_lahir}</p>
+                        <p><strong>Tempat, Tanggal lahir:</strong> ${response.data.tempat_lahir ?? ''}, ${response.data.tgl_lahir ?? ''}</p>
                         <p><strong>Agama:</strong> ${response.data.agama ?? ''}</p>
                         <p><strong>Asal Kabupaten:</strong> ${response.data.kabupaten ?? ''}</p>
                         <p><strong>Pendidikan Terakhir:</strong> ${response.data.pendidikan ?? ''}</p>

@@ -84,8 +84,8 @@
                             <div class="col-md-6">
                                 <div class="form-group">
                                     <label>* NPSN</label>
-                                    <input name="npsn_sekolah" id="npsn_sekolah" type="number" min="0" class="form-control"
-                                        required placeholder="">
+                                    <input name="npsn_sekolah" id="npsn_sekolah" type="number" min="0"
+                                        class="form-control" required placeholder="">
                                 </div>
                             </div>
 
@@ -202,7 +202,7 @@
                             <div class="col-md-4">
                                 <div class="form-group">
                                     <label>Website Sekolah (jika ada)</label>
-                                    <input name="wesbite_url" id="wesbite_url" type="text" class="form-control"
+                                    <input name="website_url" id="website_url" type="text" class="form-control"
                                         placeholder="">
                                 </div>
                             </div>
@@ -253,10 +253,18 @@
                                 </div>
                             </div>
 
-                            <div class="col-md-6" id="nip_opsi" style="display:  none;">
+                            <div class="col-md-3" id="nip_opsi" style="display:  none;">
                                 <div class="form-group">
                                     <label>* NIP</label>
-                                    <input name="nip" id="nip" type="text" placeholder=""
+                                    <input name="nip_kepsek" id="nip_kepsek" type="text" placeholder=""
+                                        class="form-control">
+                                </div>
+                            </div>
+
+                            <div class="col-md-3" >
+                                <div class="form-group">
+                                    <label>* NIK</label>
+                                    <input required name="nik_kepsek" id="nik_kepsek" type="text" placeholder=""
                                         class="form-control">
                                 </div>
                             </div>
@@ -305,7 +313,7 @@
                             <div class="col-md-2">
                                 <div class="form-group">
                                     <label>Jumlah Guru PNS</label>
-                                    <input name="jumlah_guru" id="jumlah_guru" type="number" min="0"
+                                    <input name="jumlah_guru_pns" id="jumlah_guru_pns" type="number" min="0"
                                         class="form-control" placeholder="total" value="0" required>
                                 </div>
                             </div>
@@ -321,7 +329,7 @@
                             <div class="col-md-3">
                                 <div class="form-group">
                                     <label>Jumlah Tenaga Kependidikan</label>
-                                    <input name="jumlah_kependiidkan" id="jumlah_kependiidkan" type="number"
+                                    <input name="jumlah_kependidikan" id="jumlah_kependidikan" type="number"
                                         min="0" class="form-control" value="0"
                                         placeholder="total TU, Pustakawan, Dll" required>
                                 </div>
@@ -468,13 +476,15 @@
                                             value="proyektor" id="it_proyektor">
                                         <label class="form-check-label" for="it_proyektor">Proyektor</label>
                                     </div>
-                                    <div class="form-check">
+                                    {{-- <div class="form-check">
                                         <input class="form-check-input" type="checkbox" name="fasilitas_it[]"
                                             value="lainnya" id="it_lainnya">
                                         <label class="form-check-label" for="it_lainnya">Lainnya</label>
-                                    </div>
+                                    </div> --}}
                                     <input type="text" name="fasilitas_it_tambahan" class="form-control mt-2"
                                         placeholder="Tambahan (opsional), pakai koma (,) untuk pemisah">
+                                    <small class="text-muted">Contoh: Smart TV, Tablet, Laptop</small>
+
                                 </div>
                             </div>
 
@@ -724,6 +734,7 @@
                     $(selector).html(`<option value="">${label}</option>`);
                     $(selector).prop('disabled', true);
                 }
+
             });
         </script>
     @endpush

@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\SekolahController;
+use App\Http\Controllers\User\SekolahController as UserSekolahController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Session;
 
@@ -49,10 +50,13 @@ Route::group(
         Route::get('/api/statistics/month/{month}', 'UserController@getMonthStatistics')->name('user.statistik.month');
         Route::get('/api/statistics/activities/{month}', 'UserController@getActivitiesByMonth')->name('user.statistik.month');
         Route::get('/api/statistics/activity/{activityId}/{participantType}', 'UserController@getActivityStatistics')->name('user.statistik.activity');
-        
+
         // Menu Sekolah
         Route::get('/data-sekolah', 'SekolahController@index')->name('user.data-sekolah');
         Route::post('/data-sekolah', 'SekolahController@store')->name('user.store.data-sekolah');
+        Route::get('/data-sekolah/{id}', 'SekolahController@show')->name('show.data-sekolah');
+        Route::get('/data-sekolah/{id}/edit', 'SekolahController@edit')->name('edit.data-sekolah');
+        Route::put('/data-sekolah/{id}', 'SekolahController@update')->name('update.data-sekolah');
 
         Route::get('/eksternal', 'UserController@guru')->name('user.guru');
         Route::get('/eksternal/form/{jenis}', 'UserController@form_guru')->name('user.form_guru');
@@ -128,7 +132,13 @@ Route::group(
                 Route::get('/editByUser/{id}', 'GuruController@editByUser')->name('guru.edit.user');
                 Route::put('/updateByUser', 'GuruController@updateByUser')->name('guru.update.user');
                 Route::get('/cari', 'GuruController@cari')->name('guru.cari');
+
+                Route::get('/data-sekolah/{id}', [UserSekolahController::class, 'show'])->name('show.data-sekolah');
+                Route::get('/data-sekolah/{id}/edit', [UserSekolahController::class, 'edit'])->name('edit.data-sekolah');
+                Route::put('/data-sekolah/{id}', [UserSekolahController::class, 'update'])->name('update.data-sekolah');
             });
+
+
 
             // Pegawai
             Route::prefix('pegawai')->group(function () {

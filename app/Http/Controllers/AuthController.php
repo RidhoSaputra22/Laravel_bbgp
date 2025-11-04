@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Admin;
+use App\Models\Guru;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -39,7 +40,10 @@ class AuthController extends Controller
 
         $cek = Auth::attempt(['no_ktp' => $request->nik, 'password' => $request->password, 'role' => $request->role]);
         if ($cek) {
+            $guru = Guru::where('no_ktp', $user->no_ktp)->first();
+
             Session::put('user_id', $user->id);
+            Session::put('guru_id', $guru->id);
             Session::put('name', $user->name);
             Session::put('nip', $user->nip);
             Session::put('no_ktp', $user->no_ktp);

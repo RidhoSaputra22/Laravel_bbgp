@@ -49,7 +49,6 @@
 
                 @include('components.default.sidebar')
             @endif
-
             <!-- Main Content -->
             @yield('content')
 
@@ -142,6 +141,12 @@
             //     position: 'topRight'
             // });
             swal("Berhasil", "Berhasil update data", "success");
+        </script>
+    @endif
+
+    @if (session('message') == 'sukses update data sekolah')
+        <script>
+            swal("Success", "Berhasil update data sekolah", "success");
         </script>
     @endif
 

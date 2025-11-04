@@ -258,6 +258,43 @@
                         <i class="fas fa-chalkboard-teacher"></i> <span>Data Eksternal</span>
                     </a>
                 </li>
+                @php
+                    // Cek apakah user ini adalah kepala sekolah yang sudah punya data sekolah
+                    $sekolah = \App\Models\Sekolah::where('user_id', session('guru_id'))->first();
+                @endphp
+
+                @if ($sekolah && session('role') == 'tenaga kependidikan')
+                    <li class="menu-header">Data Sekolah</li>
+
+                    <li class="{{ $menu == 'data-sekolah' ? 'active' : '' }}">
+                        <a class="nav-link" href="{{ route('show.data-sekolah', $sekolah->id) }}">
+                            <i class="fas fa-school"></i> <span>Detail Sekolah</span>
+                        </a>
+                    </li>
+
+                    {{-- <li class="{{ $menu == 'sekolah-detail' ? 'active' : '' }}">
+                        <a class="nav-link" href="{{ route('user.show.data-sekolah', $sekolah->id) }}">
+                            <i class="fas fa-eye"></i> <span>Detail Sekolah</span>
+                        </a>
+                    </li>
+
+                    <li class="{{ $menu == 'sekolah-edit' ? 'active' : '' }}">
+                        <a class="nav-link" href="{{ route('user.edit.data-sekolah', $sekolah->id) }}">
+                            <i class="fas fa-edit"></i> <span>Edit Data Sekolah</span>
+                        </a>
+                    </li>
+
+                    <li>
+                        <div class="card bg-light mx-3 my-2">
+                            <div class="card-body p-2">
+                                <small class="text-muted d-block">Sekolah Anda:</small>
+                                <p class="mb-0 font-weight-bold small">{{ Str::limit($sekolah->nama_sekolah, 30) }}
+                                </p>
+                                <small class="text-muted">NPSN: {{ $sekolah->npsn }}</small>
+                            </div>
+                        </div>
+                    </li> --}}
+                @endif
             @endif
 
             @if (Session('role') == 'database')

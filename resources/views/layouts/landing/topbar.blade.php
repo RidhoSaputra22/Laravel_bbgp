@@ -77,7 +77,7 @@
 
                                 <li class="nav-item {{ $menu == 'kegiatan' ? 'active' : '' }}"><a class="nav-link" href="{{ route('user.kegiatan') }}">Kegiatan</a></li>
 
-                                <li class="nav-item {{ $menu == 'sekolah' ? 'active' : '' }}"><a class="nav-link" href="{{ route('user.data-sekolah') }}">Input Data Sekolah</a></li>
+                                {{-- <li class="nav-item {{ $menu == 'sekolah' ? 'active' : '' }}"><a class="nav-link" href="{{ route('user.data-sekolah') }}">Input Data Sekolah</a></li> --}}
                                 
                                 {{-- <li class="nav-item {{ $menu == 'statistik' ? 'active' : '' }}"><a class="nav-link" href="{{ route('user.statistik') }}">Statistik</a></li> --}}
                                 
