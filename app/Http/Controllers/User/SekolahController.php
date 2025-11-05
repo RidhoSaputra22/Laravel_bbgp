@@ -219,11 +219,15 @@ class SekolahController extends Controller
         if ($request->hasFile('foto_depan')) {
             $ext = $foto_depan->getClientOriginalExtension();
             $nameFoto = date('Y-m-d_H-i-s_') . "." . $ext;
-            $destinationPath = public_path('upload/sekolah/foto_depan/');
+            $destinationPath = public_path('../../public_html/upload/sekolah/foto_depan/');
+
+            if (!file_exists($destinationPath)) {
+                mkdir($destinationPath, 0755, true);
+            }
 
             $foto_depan->move($destinationPath, $nameFoto);
 
-            $fileUrl = asset('upload/sekolah/foto_depan/' . $nameFoto);
+            $fileUrl = asset('../../public_html/upload/sekolah/foto_depan/' . $nameFoto);
             $validated['foto_depan'] = $nameFoto;
         }
 
@@ -232,11 +236,15 @@ class SekolahController extends Controller
         if ($request->hasFile('logo_sekolah')) {
             $ext = $logo_sekolah->getClientOriginalExtension();
             $nameFoto = date('Y-m-d_H-i-s_') . "." . $ext;
-            $destinationPath = public_path('upload/sekolah/logo_sekolah/');
+            $destinationPath = public_path('../../public_html/upload/sekolah/logo_sekolah/');
+
+            if (!file_exists($destinationPath)) {
+                mkdir($destinationPath, 0755, true);
+            }
 
             $logo_sekolah->move($destinationPath, $nameFoto);
 
-            $fileUrl = asset('upload/sekolah/logo_sekolah/' . $nameFoto);
+            $fileUrl = asset('../../public_html/upload/sekolah/logo_sekolah/' . $nameFoto);
             $validated['logo_sekolah'] = $nameFoto;
         }
 
@@ -245,11 +253,15 @@ class SekolahController extends Controller
         if ($request->hasFile('denah_lokasi')) {
             $ext = $denah_lokasi->getClientOriginalExtension();
             $nameFoto = date('Y-m-d_H-i-s_') . "." . $ext;
-            $destinationPath = public_path('upload/sekolah/denah_lokasi/');
+            $destinationPath = public_path('../../public_html/upload/sekolah/denah_lokasi/');
+
+            if (!file_exists($destinationPath)) {
+                mkdir($destinationPath, 0755, true);
+            }
 
             $denah_lokasi->move($destinationPath, $nameFoto);
 
-            $fileUrl = asset('upload/sekolah/denah_lokasi/' . $nameFoto);
+            $fileUrl = asset('../../public_html/upload/sekolah/denah_lokasi/' . $nameFoto);
             $validated['denah_lokasi'] = $nameFoto;
         }
 
@@ -258,11 +270,15 @@ class SekolahController extends Controller
         if ($request->hasFile('struktur_organisasi')) {
             $ext = $struktur_organisasi->getClientOriginalExtension();
             $nameFoto = date('Y-m-d_H-i-s_') . "." . $ext;
-            $destinationPath = public_path('upload/sekolah/struktur_organisasi/');
+            $destinationPath = public_path('../../public_html/upload/sekolah/struktur_organisasi/');
+
+            if (!file_exists($destinationPath)) {
+                mkdir($destinationPath, 0755, true);
+            }
 
             $struktur_organisasi->move($destinationPath, $nameFoto);
 
-            $fileUrl = asset('upload/sekolah/struktur_organisasi/' . $nameFoto);
+            $fileUrl = asset('../../public_html/upload/sekolah/struktur_organisasi/' . $nameFoto);
             $validated['struktur_organisasi'] = $nameFoto;
         }
 

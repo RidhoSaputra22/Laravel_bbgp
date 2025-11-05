@@ -610,7 +610,7 @@
                                             <div class="mt-2">
                                                 @if (isset($sekolah->foto_depan) && $sekolah->foto_depan)
                                                     <img id="preview_foto_depan"
-                                                        src="{{ asset('storage/' . $sekolah->foto_depan) }}"
+                                                        src="{{ asset('upload/sekolah/foto_depan/' . $sekolah->foto_depan) }}"
                                                         class="img-thumbnail"
                                                         style="max-width: 200px; max-height: 200px;">
                                                 @else
@@ -632,7 +632,7 @@
                                             <div class="mt-2">
                                                 @if (isset($sekolah->logo_sekolah) && $sekolah->logo_sekolah)
                                                     <img id="preview_logo_sekolah"
-                                                        src="{{ asset('storage/' . $sekolah->logo_sekolah) }}"
+                                                        src="{{ asset('upload/sekolah/logo_sekolah/' . $sekolah->logo_sekolah) }}"
                                                         class="img-thumbnail"
                                                         style="max-width: 200px; max-height: 200px;">
                                                 @else
@@ -656,12 +656,12 @@
                                             <div class="mt-2" id="preview_denah_lokasi">
                                                 @if (isset($sekolah->denah_lokasi) && $sekolah->denah_lokasi)
                                                     @if (Str::endsWith($sekolah->denah_lokasi, '.pdf'))
-                                                        <a href="{{ asset('storage/' . $sekolah->denah_lokasi) }}"
+                                                        <a href="{{ asset('upload/sekolah/denah_lokasi/' . $sekolah->denah_lokasi) }}"
                                                             target="_blank" class="btn btn-sm btn-info">
                                                             <i class="fas fa-file-pdf"></i> Lihat PDF
                                                         </a>
                                                     @else
-                                                        <img src="{{ asset('storage/' . $sekolah->denah_lokasi) }}"
+                                                        <img src="{{ asset('upload/sekolah/denah_lokasi/' . $sekolah->denah_lokasi) }}"
                                                             class="img-thumbnail"
                                                             style="max-width: 200px; max-height: 200px;">
                                                     @endif
@@ -680,12 +680,12 @@
                                             <div class="mt-2" id="preview_struktur_organisasi">
                                                 @if (isset($sekolah->struktur_organisasi) && $sekolah->struktur_organisasi)
                                                     @if (Str::endsWith($sekolah->struktur_organisasi, '.pdf'))
-                                                        <a href="{{ asset('storage/' . $sekolah->struktur_organisasi) }}"
+                                                        <a href="{{ asset('upload/sekolah/struktur_organisasi/' . $sekolah->struktur_organisasi) }}"
                                                             target="_blank" class="btn btn-sm btn-info">
                                                             <i class="fas fa-file-pdf"></i> Lihat PDF
                                                         </a>
                                                     @else
-                                                        <img src="{{ asset('storage/' . $sekolah->struktur_organisasi) }}"
+                                                        <img src="{{ asset('upload/sekolah/struktur_organisasi/' . $sekolah->struktur_organisasi) }}"
                                                             class="img-thumbnail"
                                                             style="max-width: 200px; max-height: 200px;">
                                                     @endif

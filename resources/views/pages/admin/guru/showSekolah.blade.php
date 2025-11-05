@@ -122,7 +122,7 @@
                                     <table class="table table-bordered">
                                         <tr>
                                             <th width="30%">Jumlah Guru</th>
-                                            <td>{{ $sekolah->jumlah_guru }} orang (PNS: {{ $sekolah->jumlah_guru_pns }},
+                                            <td>{{ $sekolah->jumlah_guru_pns + $sekolah->jumlah_guru_honorer }} orang (PNS: {{ $sekolah->jumlah_guru_pns }},
                                                 Honorer: {{ $sekolah->jumlah_honorer }})</td>
                                         </tr>
                                         <tr>
@@ -131,7 +131,7 @@
                                         </tr>
                                         <tr>
                                             <th>Jumlah Siswa</th>
-                                            <td>{{ $sekolah->jumlah_siswa }} siswa (L: {{ $sekolah->jumlah_siswa_pria }},
+                                            <td>{{ $sekolah->jumlah_siswa_pria + $sekolah->jumlah_pria_perempuan }} siswa (L: {{ $sekolah->jumlah_siswa_pria }},
                                                 P: {{ $sekolah->jumlah_siswa_perempuan }})</td>
                                         </tr>
                                     </table>
@@ -143,14 +143,30 @@
                                             @if ($sekolah->foto_depan)
                                                 <div class="col-md-6 mb-3">
                                                     <p><strong>Foto Depan Sekolah</strong></p>
-                                                    <img src="{{ asset('storage/' . $sekolah->foto_depan) }}"
+                                                    <img src="{{ asset('upload/sekolah/foto_depan/' . $sekolah->foto_depan) }}"
                                                         class="img-fluid rounded border" alt="Foto Depan Sekolah">
                                                 </div>
                                             @endif
                                             @if ($sekolah->logo_sekolah)
                                                 <div class="col-md-6 mb-3">
                                                     <p><strong>Logo Sekolah</strong></p>
-                                                    <img src="{{ asset('storage/' . $sekolah->logo_sekolah) }}"
+                                                    <img src="{{ asset('upload/sekolah/logo_sekolah/' . $sekolah->logo_sekolah) }}"
+                                                        class="img-fluid rounded border" alt="Logo Sekolah"
+                                                        style="max-width: 300px">
+                                                </div>
+                                            @endif
+                                            @if ($sekolah->denah_lokasi)
+                                                <div class="col-md-6 mb-3">
+                                                    <p><strong>Logo Sekolah</strong></p>
+                                                    <img src="{{ asset('upload/sekolah/denah_lokasi/' . $sekolah->denah_lokasi) }}"
+                                                        class="img-fluid rounded border" alt="Logo Sekolah"
+                                                        style="max-width: 300px">
+                                                </div>
+                                            @endif
+                                            @if ($sekolah->stuktur_organisasi)
+                                                <div class="col-md-6 mb-3">
+                                                    <p><strong>Logo Sekolah</strong></p>
+                                                    <img src="{{ asset('upload/sekolah/stuktur_organisasi/' . $sekolah->stuktur_organisasi) }}"
                                                         class="img-fluid rounded border" alt="Logo Sekolah"
                                                         style="max-width: 300px">
                                                 </div>
