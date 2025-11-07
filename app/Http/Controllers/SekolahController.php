@@ -7,6 +7,11 @@ use Illuminate\Http\Request;
 
 class SekolahController extends Controller
 {
+    private $menu;
+    public function __construct()
+    {
+        $this->menu = 'sekolah';
+    }
     public function getSekolahs(Request $request)
     {
         $perPage = $request->input('per_page', 500); // Items per page, default to 500
@@ -22,5 +27,29 @@ class SekolahController extends Controller
         $sekolahs = $query->paginate($perPage, ['*'], 'page', $page);
 
         return response()->json($sekolahs);
+    }
+
+    public function index()
+    {
+        try {
+            $datas = Sekolah::where('nama_kepsek', '<>', '-')->get();
+            $provinsiList = Sekolah::distinct()->where('provinsi', '<>', '-')->pluck('provinsi');
+            $menu = $this->menu;
+            
+            return view('pages.admin.sekolah.index', compact('menu', 'datas', 'provinsiList'));
+        } catch (\Exception $e) {
+            return response()->json($e->getMessage());
+        }
+    }
+    
+    public function edit($id)
+    {
+        try {
+            $sekolah = Sekolah::findOrFail($id);
+            $menu = $this->menu;
+            return view('pages.admin.sekolah.edit', compact('sekolah', 'menu'));
+        } catch (\Exception $e) {
+            return response()->json($e->getMessage());
+        }
     }
 }

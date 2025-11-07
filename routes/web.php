@@ -1,6 +1,6 @@
 <?php
 
-use App\Http\Controllers\SekolahController;
+use App\Http\Controllers\SekolahController as AdminSekolahController;
 use App\Http\Controllers\User\SekolahController as UserSekolahController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Session;
@@ -136,6 +136,11 @@ Route::group(
                 Route::get('/data-sekolah/{id}', [UserSekolahController::class, 'show'])->name('show.data-sekolah');
                 Route::get('/data-sekolah/{id}/edit', [UserSekolahController::class, 'edit'])->name('edit.data-sekolah');
                 Route::put('/data-sekolah/{id}', [UserSekolahController::class, 'update'])->name('update.data-sekolah');
+                
+                Route::get('/sekolah', [AdminSekolahController::class, 'index'])->name('admin.data-sekolah.index');
+                Route::get('/sekolah/{id}', [AdminSekolahController::class, 'edit'])->name('admin.data-sekolah.edit');
+
+
             });
 
 
@@ -459,7 +464,7 @@ Route::group(
 
 
 // handle route sekolah
-Route::get('/get-sekolahs', [SekolahController::class, 'getSekolahs'])->name('getSekolahs');
+Route::get('/get-sekolahs', [AdminSekolahController::class, 'getSekolahs'])->name('getSekolahs');
 
 
 // Auth

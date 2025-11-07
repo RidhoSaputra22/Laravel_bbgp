@@ -225,10 +225,8 @@
                                             </div>
                                         </div>
                                         
-                                        <div class="col-md-4 mb-4">
+                                        {{-- <div class="col-md-4 mb-4">
                                             <label>Jenis Jabatan Eksternal</label>
-                                            {{-- <input type="text" readonly name="jenisJabatan" class="form-control"
-                                                value="{{ $jenis }}"> --}}
                                             <select required name="jenisJabatan" class="form-control " readonly id="jabEksternal">
                                                 <option value="">-- Pilih Jabatan Eksternal --</option>
                                                 <option {{ $jenis == 'Tenaga Pendidik' ? 'selected' : 'disabled' }}
@@ -238,12 +236,12 @@
                                                 <option {{ $jenis == 'Stakeholder' ? 'selected' : 'disabled' }}
                                                     value="Stakeholder">Stakeholder</option>
                                             </select>
-                                        </div>
+                                        </div> --}}
 
                                     </div>
 
 
-                                    <div class="row">
+                                    {{-- <div class="row">
 
 
                                         <div class="col-md-4">
@@ -251,7 +249,6 @@
                                                 <label>Jabatan (Pilih Eksternal dulu)</label>
                                                 <select name="jabJenis" class="form-control " id="jabJenis">
                                                     <option value="">-- Pilih Jenis Jabatan --</option>
-                                                    {{-- <option id="valJabJenis" value="">-- Pilih Jabatan</option> --}}
                                                 </select>
                                             </div>
                                         </div>
@@ -260,8 +257,6 @@
                                             <label>Kategori Jabatan (Pilih Eksternal dulu) </label>
                                             <select name="jabKategori" class="form-control " id="jabKategori">
                                                 <option value="">-- Pilih Kategori --</option>
-                                                {{-- <option value="GP (Guru Penggerak)">GP (Guru Penggerak)</option>
-                                                <option value="NoN GP (Guru Penggerak)">NoN GP (Guru Penggerak)</option> --}}
 
                                             </select>
                                         </div>
@@ -277,7 +272,7 @@
                                         </div>
 
 
-                                    </div>
+                                    </div> --}}
 
                                     <div class="row">
                                         <div class="col-md-4 mb-4">

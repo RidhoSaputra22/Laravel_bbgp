@@ -107,6 +107,12 @@
 
 
 
+                <li class="{{ $menu == 'sekolah' ? 'active' : '' }}">
+                    <a class="nav-link" href="{{ route('admin.data-sekolah.index') }}">
+                        <i class="fas fa-school"></i> <span>Data Sekolah</span>
+                    </a>
+                </li>
+
                 <li class="{{ $menu == 'akun' ? 'active' : '' }}">
                     <a class="nav-link" href="{{ route('akun.index') }}">
                         <i class="fas fa-user"></i> <span>Data Akun</span>

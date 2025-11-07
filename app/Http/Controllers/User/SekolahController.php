@@ -66,6 +66,8 @@ class SekolahController extends Controller
             'ruang_guru' => 'required|string',
             'jumlah_toilet' => 'required|integer|min:0',
             'lapangan_olahraga' => 'required|string',
+            'ekstrakurikuler' => 'string',
+            'program_unggulan' => 'string',
             'fasilitas_it' => 'nullable|array',
             'akses_internet' => 'required|string',
             'jam_belajar' => 'required|string',
@@ -165,7 +167,6 @@ class SekolahController extends Controller
     {
         $sekolah = Sekolah::where('id', $id)
             ->firstOrFail();
-
         // Validasi (NPSN unique kecuali milik sendiri)
         $validated = $request->validate([
             'nama_sekolah' => 'required|string|max:255',
@@ -210,6 +211,8 @@ class SekolahController extends Controller
             'logo_sekolah' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
             'denah_lokasi' => 'nullable|file|mimes:jpeg,png,jpg,pdf|max:2048',
             'struktur_organisasi' => 'nullable|file|mimes:jpeg,png,jpg,pdf|max:2048',
+            'ekstrakurikuler' => 'string',
+            'program_unggulan' => 'string',
         ]);
 
         // Handle file uploads (hapus file lama jika ada)
@@ -281,10 +284,16 @@ class SekolahController extends Controller
             $fileUrl = asset('../../public_html/upload/sekolah/struktur_organisasi/' . $nameFoto);
             $validated['struktur_organisasi'] = $nameFoto;
         }
+        $user = User::where('id', Auth::id())->first();
+
 
         // Update data
         $sekolah->update($validated);
 
+        if ($user->role == 'admin' || $user->role == 'superadmin' || $user->role == 'kepala') {
+            return redirect()->route('admin.data-sekolah.index')
+                ->with('message', 'update');
+        }
         return redirect()->route('show.data-sekolah', $sekolah->id)
             ->with('message', 'sukses update data sekolah');
     }

@@ -247,6 +247,12 @@
                             </div>
                         </div>
 
+                        
+                    </div>
+                    
+                    
+                    <div class="row">
+                        
                         <div class="col-md-4 mb-4">
                             <label>Jenis Jabatan Eksternal</label>
                             {{-- <input type="text" readonly name="jenisJabatan" class="form-control"
@@ -261,12 +267,6 @@
                                     Stakeholder</option>
                             </select>
                         </div>
-
-                    </div>
-
-
-                    <div class="row">
-
 
                         <div class="col-md-4">
                             <div class="form-group">
@@ -290,17 +290,14 @@
                             </div>
                         </div>
 
-                        <div class="col-md-4 mb-4">
+                        {{-- <div class="col-md-4 mb-4">
                             <label>Kategori Jabatan (Pilih Eksternal dulu) </label>
                             <select name="jabKategori" class="form-control " id="jabKategori">
                                 <option value="">-- Pilih Kategori --</option>
-                                {{-- <option value="GP (Guru Penggerak)">GP (Guru Penggerak)</option>
-                                    <option value="NoN GP (Guru Penggerak)">NoN GP (Guru Penggerak)</option> --}}
-
                             </select>
-                        </div>
+                        </div> 
 
-                        @if ($jenis == 'Tenaga Kependidikan')
+                         @if ($jenis == 'Tenaga Kependidikan')
                             <div class="col-md-4">
                                 <div class="form-group">
                                     <label>
@@ -323,7 +320,7 @@
 
                                 </select>
                             </div>
-                        </div>
+                        </div> --}}
 
 
                     </div>
