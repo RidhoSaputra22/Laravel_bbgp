@@ -253,19 +253,21 @@
                 </div><!-- Col 1 end -->
 
                 <div class="col-lg col-md ">
-                    <div class="ts-service-box">
-                        <div class="ts-service-image-wrapper">
-                            <img loading="lazy" class="w-100"
-                                src="{{ asset('landing/images/icon-slider/slider2/icon-web-pengaduan.png') }}"
-                                alt="icon web pengaduan">
-                        </div>
-                        <div class="text-center">
-                            <div class="ts-service-info">
-                                <h3 class="service-box-title"><a href="#">Pengaduan</a></h3>
-
+                    <a href="{{ route('user.pengaduan') }}">
+                        <div class="ts-service-box">
+                            <div class="ts-service-image-wrapper">
+                                <img loading="lazy" class="w-100"
+                                    src="{{ asset('landing/images/icon-slider/slider2/icon-web-pengaduan.png') }}"
+                                    alt="icon web pengaduan">
                             </div>
-                        </div>
-                    </div><!-- Service1 end -->
+                            <div class="text-center">
+                                <div class="ts-service-info">
+                                    <h3 class="service-box-title"><a href="#">Standar pelayanan di lingukngan BGTK Sulsel</a></h3>
+    
+                                </div>
+                            </div>
+                        </div><!-- Service1 end -->
+                    </a>
                 </div><!-- Col 1 end -->
 
                 <div class="col-lg col-md ">

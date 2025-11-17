@@ -435,6 +435,13 @@ class UserController extends Controller
         ]);
     }
 
+    public function pengaduan()
+    {
+        return view('pages.landing.pengaduan.index', [
+            'menu' => 'pengaduan',
+        ]);
+    }
+
     public function cari(Request $request)
     {
         $search = Guru::query();

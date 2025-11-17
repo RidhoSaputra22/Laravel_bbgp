@@ -36,6 +36,7 @@ Route::group(
         Route::get('/analisis-kebutuhan-pelatihan', 'UserController@analisisPelatihan')->name('user.analisisPelatihan');
         Route::get('/analisis-kebutuhan-slb', 'UserController@analisisSLB')->name('user.analisisSLB');
         Route::get('/monitoring-evaluasi-kegiatan', 'UserController@monitoring')->name('user.monitoring');
+        Route::get('/pengaduan', 'UserController@pengaduan')->name('user.pengaduan');
 
 
         Route::get('/pegawai', 'UserController@pegawai')->name('user.pegawai');
