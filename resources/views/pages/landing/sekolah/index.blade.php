@@ -261,7 +261,7 @@
                                 </div>
                             </div>
 
-                            <div class="col-md-3" >
+                            <div class="col-md-3">
                                 <div class="form-group">
                                     <label>* NIK</label>
                                     <input required name="nik_kepsek" id="nik_kepsek" type="text" placeholder=""
@@ -734,6 +734,8 @@
                     $(selector).html(`<option value="">${label}</option>`);
                     $(selector).prop('disabled', true);
                 }
+
+                
 
             });
         </script>

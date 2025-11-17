@@ -138,6 +138,7 @@ Route::group(
                 Route::put('/data-sekolah/{id}', [UserSekolahController::class, 'update'])->name('update.data-sekolah');
                 
                 Route::get('/sekolah', [AdminSekolahController::class, 'index'])->name('admin.data-sekolah.index');
+                Route::get('/sekolah/export', [AdminSekolahController::class, 'export'])->name('admin.data-sekolah.export');
                 Route::get('/sekolah/{id}', [AdminSekolahController::class, 'edit'])->name('admin.data-sekolah.edit');
 
 

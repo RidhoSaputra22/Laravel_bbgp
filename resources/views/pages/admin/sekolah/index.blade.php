@@ -21,6 +21,8 @@
                                     <i class="fas fa-plus mr-2"></i>Tambah Sekolah
                                 </a> --}}
                                 <!-- Filter Section -->
+
+
                                 <div class="row mb-3">
                                     <div class="col-md-3">
                                         <select class="form-control" id="filterProvinsi">
@@ -44,6 +46,14 @@
                                             <option value="B">B</option>
                                             <option value="C">C</option>
                                         </select>
+                                    </div>
+                                    <div class="col-md-3">
+                                        {{-- <button type="button" class="btn btn-success" id="btnExportFiltered">
+                                        <i class="fas fa-file-excel mr-2"></i>Export Data (Filter)
+                                    </button> --}}
+                                        <a href="{{ route('admin.data-sekolah.export') }}" class="btn btn-info">
+                                            <i class="fas fa-download mr-2"></i>Export Data
+                                        </a>
                                     </div>
                                 </div>
 
@@ -116,7 +126,8 @@
                                                             {{-- <a href="#" class="btn btn-sm btn-info" title="Detail">
                                                                 <i class="fas fa-eye"></i>
                                                             </a> --}}
-                                                            <a href="{{ route('admin.data-sekolah.edit', $sekolah->id) }}" class="btn btn-sm btn-warning mx-1" title="Edit">
+                                                            <a href="{{ route('admin.data-sekolah.edit', $sekolah->id) }}"
+                                                                class="btn btn-sm btn-warning mx-1" title="Edit">
                                                                 <i class="fas fa-edit"></i>
                                                             </a>
                                                             {{-- <button onclick="deleteData({{ $sekolah->id }}, 'sekolah')"
@@ -185,6 +196,25 @@
                     });
                 }
             }
+
+            // Export dengan filter
+            $('#btnExportFiltered').on('click', function() {
+                const provinsi = $('#filterProvinsi').val();
+                const status = $('#filterStatus').val();
+                const akreditasi = $('#filterAkreditasi').val();
+
+                let url = '{{ route('admin.data-sekolah.export') }}?';
+                const params = [];
+
+                if (provinsi) params.push(`provinsi=${encodeURIComponent(provinsi)}`);
+                if (status) params.push(`status_sekolah=${encodeURIComponent(status)}`);
+                if (akreditasi) params.push(`akreditasi=${encodeURIComponent(akreditasi)}`);
+
+                url += params.join('&');
+
+                // Download file
+                window.location.href = url;
+            });
         </script>
     @endpush
 @endsection
