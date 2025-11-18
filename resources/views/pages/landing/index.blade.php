@@ -338,6 +338,24 @@
                     </a>
                 </div><!-- Col 1 end -->
 
+                <div class="col-lg col-md ">
+                    <a href="#">
+                        <div class="ts-service-box">
+                            <div class="ts-service-image-wrapper">
+                                <img loading="lazy" class="w-100"
+                                    src="{{ asset('landing/images/icon-slider/slider2/icon-sewa-fasilitas.png') }}"
+                                    alt="Sewa Fasilitas">
+                            </div>
+                            <div class="text-center">
+                                <div class="ts-service-info">
+                                    <h3 class="service-box-title"><a href="#">Sewa Fasilitas</a></h3>
+
+                                </div>
+                            </div>
+                        </div><!-- Service1 end -->
+                    </a>
+                </div><!-- Col 1 end -->
+
 
             </div><!-- Main row end -->
 

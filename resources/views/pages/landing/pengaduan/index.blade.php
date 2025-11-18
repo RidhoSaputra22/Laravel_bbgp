@@ -219,8 +219,8 @@
 
             <div class="row text-center">
                 <div class="col-12">
-                    <h2 class="section-title">Galeri Kegiatan</h2>
-                    <h3 class="section-sub-title">Monitoring dan Evaluasi</h3>
+                    <h2 class="section-title">Pengaduan</h2>
+                    <h3 class="section-sub-title">Standar Pelayanan Informasi</h3>
                 </div>
             </div>
 
@@ -285,7 +285,7 @@
                     <div class="thumbnail-item">
                         <img src="{{ asset('landing/images/pengaduan/1.webp') }}" alt="Kegiatan 1">
                         <div style="background-color:#1376bd;" class="thumbnail-caption text-light">
-                            Slide 1
+                            Standar Pelayanan Pengaduan
                         </div>
                     </div>
                 </div>
@@ -293,7 +293,7 @@
                     <div class="thumbnail-item">
                         <img src="{{ asset('landing/images/pengaduan/2.webp') }}" alt="Kegiatan 2">
                         <div style="background-color:#1376bd;" class="thumbnail-caption text-light">
-                            Slide 2
+                            Standar Pelayanan Permohonan Informasi
                         </div>
                     </div>
                 </div>
@@ -301,7 +301,7 @@
                     <div class="thumbnail-item">
                         <img src="{{ asset('landing/images/pengaduan/3.webp') }}" alt="Kegiatan 3">
                         <div style="background-color:#1376bd;" class="thumbnail-caption text-light">
-                            Slide 3
+                            Standar Pelayanan Fasilitasi Narasumber
                         </div>
                     </div>
                 </div>
@@ -309,7 +309,7 @@
                     <div class="thumbnail-item">
                         <img src="{{ asset('landing/images/pengaduan/4.webp') }}" alt="Kegiatan 4">
                         <div style="background-color:#1376bd;" class="thumbnail-caption text-light">
-                            Slide 4
+                            Standar Pelayanan Penggunaan Sarana dan Prasaran
                         </div>
                     </div>
                 </div>
@@ -317,7 +317,7 @@
                     <div class="thumbnail-item">
                         <img src="{{ asset('landing/images/pengaduan/5.webp') }}" alt="Kegiatan 5">
                         <div style="background-color:#1376bd;" class="thumbnail-caption text-light">
-                            Slide 5
+                            Standar Pelayanan Fasilitasi Peningkatan Kompetensi Pendidik dan Tenaga Kependidikan (PTK)
                         </div>
                     </div>
                 </div>
@@ -325,7 +325,7 @@
                     <div class="thumbnail-item">
                         <img src="{{ asset('landing/images/pengaduan/6.webp') }}" alt="Kegiatan 6">
                         <div style="background-color:#1376bd;" class="thumbnail-caption text-light">
-                            Slide 6
+                            Standar Pelayanan Magang dan Praktek Kerja Lapangan
                         </div>
                     </div>
                 </div>
