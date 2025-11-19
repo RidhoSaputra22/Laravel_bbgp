@@ -193,6 +193,16 @@ Route::group(
             });
 
             // Kepegawaian
+            Route::prefix('penyewaan')->group(function () {
+                Route::get('/', 'PenyewaanRuanganController@index')->name('penyewaan.index');
+                Route::get('/create', 'PenyewaanRuanganController@create')->name('penyewaan.create');
+                Route::post('/store', 'PenyewaanRuanganController@store')->name('penyewaan.store');
+                Route::get('/edit/{id}', 'PenyewaanRuanganController@edit')->name('penyewaan.edit');
+                Route::put('/update', 'PenyewaanRuanganController@update')->name('penyewaan.update');
+                Route::post('/hapus/{id}', 'PenyewaanRuanganController@destroy')->name('penyewaan.hapus');
+            });
+
+            // Kepegawaian
             Route::prefix('kependidikan')->group(function () {
                 Route::get('/', 'KependidikanController@index')->name('kependidikan.index');
                 Route::get('/create', 'KependidikanController@create')->name('kependidikan.create');
