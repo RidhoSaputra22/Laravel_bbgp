@@ -137,7 +137,7 @@
                 </li>
                 <li class="nav-item  {{ $menu == 'penyewaan' ? 'active' : '' }}">
                     <a href="{{ route('penyewaan.index') }}" class="nav-link "><i class="fas fa-money-check"></i>
-                        <span>Data Penyewaan Fasilitas</span>
+                        <span>Penyewaan Fasilitas</span>
                     </a>
                 </li>
             @endif

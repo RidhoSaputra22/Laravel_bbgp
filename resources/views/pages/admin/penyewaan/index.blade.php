@@ -8,6 +8,7 @@
             .table-internal {
                 display: none;
             }
+
             .badge-tipe {
                 padding: 6px 12px;
                 font-size: 12px;
@@ -52,19 +53,19 @@
                                                 <tr>
                                                     <td class="text-center">{{ ++$i }}</td>
                                                     <td>
-                                                        @if($data->foto_utama)
+                                                        @if ($data->foto_utama)
                                                             <img class="img img-fluid rounded" width="120"
                                                                 src="{{ asset('upload/penyewaan/' . $data->foto_utama) }}"
                                                                 alt="Foto Ruangan">
                                                         @else
-                                                            <div class="bg-secondary rounded d-flex align-items-center justify-content-center" 
-                                                                 style="width: 120px; height: 80px;">
+                                                            <div class="bg-secondary rounded d-flex align-items-center justify-content-center"
+                                                                style="width: 120px; height: 80px;">
                                                                 <i class="fas fa-image fa-2x text-white"></i>
                                                             </div>
                                                         @endif
                                                     </td>
                                                     <td>
-                                                        @if($data->tipe_ruangan == 'asrama')
+                                                        @if ($data->tipe_ruangan == 'asrama')
                                                             <span class="badge badge-tipe badge-primary">
                                                                 <i class="fas fa-bed mr-1"></i>Asrama
                                                             </span>
@@ -84,7 +85,7 @@
                                                     </td>
                                                     <td><strong>{{ $data->nama_ruangan ?? '-' }}</strong></td>
                                                     <td>
-                                                        @if($data->harga_per_malam)
+                                                        @if ($data->harga_per_malam)
                                                             <span class="text-primary font-weight-bold">
                                                                 Rp {{ number_format($data->harga_per_malam, 0, ',', '.') }}
                                                             </span>
@@ -92,7 +93,14 @@
                                                             <span class="text-muted">-</span>
                                                         @endif
                                                     </td>
-                                                    <td>{{ Str::limit($data->rincian_harga ?? '-', 50) }}</td>
+                                                    {{-- <td>{!! Str::limit($data->rincian_harga ?? '-', 50) !!}</td> --}}
+                                                    <td>
+                                                        @if ($data->tipe_ruangan == 'asrama')
+                                                            {!! $data->rincian_harga !!}
+                                                        @else
+                                                            -
+                                                        @endif
+                                                    </td>
                                                     <td>
                                                         @if ($data->status == 'tersedia')
                                                             <span class="badge badge-success">
@@ -107,8 +115,8 @@
                                                                 <i class="fas fa-times-circle mr-1"></i>Tidak Tersedia
                                                             </span>
                                                         @endif
-                                                        
-                                                        @if(!$data->is_active)
+
+                                                        @if (!$data->is_active)
                                                             <br><span class="badge badge-secondary mt-1">Non-Aktif</span>
                                                         @endif
                                                     </td>
@@ -155,7 +163,9 @@
                         url: 'https://cdn.datatables.net/plug-ins/2.1.0/i18n/id.json',
                         "sSearch": "Pencarian Data Ruangan : ",
                     },
-                    order: [[0, 'asc']]
+                    order: [
+                        [0, 'asc']
+                    ]
                 });
             });
 

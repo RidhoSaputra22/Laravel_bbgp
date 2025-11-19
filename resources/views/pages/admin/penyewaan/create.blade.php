@@ -2,6 +2,8 @@
 
 @section('content')
     @push('styles')
+        <link rel="stylesheet" href="{{ asset('library/summernote/dist/summernote-bs4.css') }}">
+
         <style>
             .form-section {
                 background: #f8f9fa;
@@ -147,8 +149,11 @@
                                             <div class="col-md-12">
                                                 <div class="form-group">
                                                     <label>Rincian Harga</label>
-                                                    <textarea name="rincian_harga" rows="4" class="form-control @error('rincian_harga') is-invalid @enderror"
-                                                        placeholder="Contoh: &#10;- Harga sudah termasuk listrik&#10;- Tidak termasuk makan&#10;- Deposit Rp 100.000">{{ old('rincian_harga') }}</textarea>
+                                                    <textarea name="rincian_harga" rows="4"
+                                                        class="form-control summernote @error('rincian_harga') is-invalid @enderror"
+                                                        placeholder="Contoh: &#10;- Harga sudah termasuk listrik&#10;- Tidak termasuk makan&#10;- Deposit Rp 100.000">
+                                                      <p>Contoh (sesuai format dibawah) :&nbsp;</p><p><b>Rp. 175.000</b></p><p>2 bed/kamar/malam</p><p><span style="font-weight: bolder;">Rp. 200.000</span></p><p>1 bed/kamar/malam</p>
+                                                      </textarea>
                                                     @error('rincian_harga')
                                                         <div class="invalid-feedback">{{ $message }}</div>
                                                     @enderror
@@ -197,6 +202,7 @@
     </div>
 
     @push('scripts')
+        <script src="{{ asset('library/summernote/dist/summernote-bs4.js') }}"></script>
         <script>
             // Show/Hide Asrama Fields
             $(document).ready(function() {

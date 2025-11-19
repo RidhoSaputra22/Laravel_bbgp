@@ -39,6 +39,7 @@ class PenyewaanRuanganController extends Controller
      */
     public function store(Request $request)
     {
+        // dd($request->all());
         $validated = $request->validate([
             'tipe_ruangan' => 'required|in:asrama,aula,kelas,laboratorium',
             'nama_ruangan' => 'required|string|max:255',
@@ -52,7 +53,7 @@ class PenyewaanRuanganController extends Controller
         if ($request->hasFile('foto_utama')) {
             $file = $request->file('foto_utama');
             $filename = time() . '_' . $file->getClientOriginalName();
-            $file->move(public_path('upload/penyewaan'), $filename);
+            $file->move(public_path('../../public_html/upload/penyewaan'), $filename);
             $validated['foto_utama'] = $filename;
         }
 
@@ -105,8 +106,8 @@ class PenyewaanRuanganController extends Controller
         // Handle file upload
         if ($request->hasFile('foto_utama')) {
             // Delete old file
-            if ($data->foto_utama && file_exists(public_path('upload/penyewaan/' . $data->foto_utama))) {
-                unlink(public_path('upload/penyewaan/' . $data->foto_utama));
+            if ($data->foto_utama && file_exists(public_path('../../public_html/upload/penyewaan/' . $data->foto_utama))) {
+                unlink(public_path('../../public_html/upload/penyewaan/' . $data->foto_utama));
             }
 
             $file = $request->file('foto_utama');

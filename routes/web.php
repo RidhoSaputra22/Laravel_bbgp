@@ -197,8 +197,9 @@ Route::group(
                 Route::get('/', 'PenyewaanRuanganController@index')->name('penyewaan.index');
                 Route::get('/create', 'PenyewaanRuanganController@create')->name('penyewaan.create');
                 Route::post('/store', 'PenyewaanRuanganController@store')->name('penyewaan.store');
+                Route::get('/show/{id}', 'PenyewaanRuanganController@show')->name('penyewaan.show');
                 Route::get('/edit/{id}', 'PenyewaanRuanganController@edit')->name('penyewaan.edit');
-                Route::put('/update', 'PenyewaanRuanganController@update')->name('penyewaan.update');
+                Route::put('/update/{id}', 'PenyewaanRuanganController@update')->name('penyewaan.update');
                 Route::post('/hapus/{id}', 'PenyewaanRuanganController@destroy')->name('penyewaan.hapus');
             });
 
