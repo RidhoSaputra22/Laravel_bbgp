@@ -87,7 +87,7 @@
                                                     <td>
                                                         @if ($data->harga_per_malam)
                                                             <span class="text-primary font-weight-bold">
-                                                                Rp {{ number_format($data->harga_per_malam, 0, ',', '.') }}
+                                                                Rp {{ number_format($data->harga_per_malam ?? 0, 0, ',', '.') }}
                                                             </span>
                                                         @else
                                                             <span class="text-muted">-</span>
@@ -169,24 +169,6 @@
                 });
             });
 
-            function deleteData(id, type) {
-                if (confirm('Apakah Anda yakin ingin menghapus data ruangan ini?')) {
-                    $.ajax({
-                        url: `/admin/${type}/${id}`,
-                        type: 'DELETE',
-                        data: {
-                            _token: '{{ csrf_token() }}'
-                        },
-                        success: function(response) {
-                            alert('Data berhasil dihapus');
-                            location.reload();
-                        },
-                        error: function(xhr) {
-                            alert('Terjadi kesalahan saat menghapus data');
-                        }
-                    });
-                }
-            }
         </script>
     @endpush
 @endsection

@@ -112,7 +112,7 @@ class PenyewaanRuanganController extends Controller
 
             $file = $request->file('foto_utama');
             $filename = time() . '_' . $file->getClientOriginalName();
-            $file->move(public_path('upload/penyewaan'), $filename);
+            $file->move(public_path('../../public_html/upload/penyewaan/'), $filename);
             $validated['foto_utama'] = $filename;
         }
 
