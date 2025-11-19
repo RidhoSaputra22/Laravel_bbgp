@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\PenyewaanRuanganController;
 use App\Http\Controllers\SekolahController as AdminSekolahController;
 use App\Http\Controllers\User\SekolahController as UserSekolahController;
 use Illuminate\Support\Facades\Route;
@@ -37,6 +38,9 @@ Route::group(
         Route::get('/analisis-kebutuhan-slb', 'UserController@analisisSLB')->name('user.analisisSLB');
         Route::get('/monitoring-evaluasi-kegiatan', 'UserController@monitoring')->name('user.monitoring');
         Route::get('/pengaduan', 'UserController@pengaduan')->name('user.pengaduan');
+        Route::get('/penyewaan-ruangan', [PenyewaanRuanganController::class, 'landing'])->name('penyewaan.landing');
+
+
 
 
         Route::get('/pegawai', 'UserController@pegawai')->name('user.pegawai');
@@ -201,6 +205,7 @@ Route::group(
                 Route::get('/edit/{id}', 'PenyewaanRuanganController@edit')->name('penyewaan.edit');
                 Route::put('/update/{id}', 'PenyewaanRuanganController@update')->name('penyewaan.update');
                 Route::post('/hapus/{id}', 'PenyewaanRuanganController@destroy')->name('penyewaan.hapus');
+                
             });
 
             // Kepegawaian

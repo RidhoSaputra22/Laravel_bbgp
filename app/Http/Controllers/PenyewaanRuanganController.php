@@ -143,4 +143,44 @@ class PenyewaanRuanganController extends Controller
             'message' => 'Data ruangan berhasil dihapus'
         ]);
     }
+
+    /**
+     * Public view for landing page
+     */
+    public function landing()
+    {
+        $menu = $this->menu;
+
+        $asramas = PenyewaanRuangan::where('tipe_ruangan', 'asrama')
+            ->where('is_active', 1)
+            ->where('status', 'tersedia')
+            ->orderBy('nama_ruangan', 'asc')
+            ->get();
+
+        $aulas = PenyewaanRuangan::where('tipe_ruangan', 'aula')
+            ->where('is_active', 1)
+            ->where('status', 'tersedia')
+            ->orderBy('nama_ruangan', 'asc')
+            ->get();
+
+        $kelas = PenyewaanRuangan::where('tipe_ruangan', 'kelas')
+            ->where('is_active', 1)
+            ->where('status', 'tersedia')
+            ->orderBy('nama_ruangan', 'asc')
+            ->get();
+
+        $laboratoriums = PenyewaanRuangan::where('tipe_ruangan', 'laboratorium')
+            ->where('is_active', 1)
+            ->where('status', 'tersedia')
+            ->orderBy('nama_ruangan', 'asc')
+            ->get();
+
+        return view('pages.landing.penyewaan-fasilitas.index', compact(
+            'asramas',
+            'aulas',
+            'kelas',
+            'laboratoriums',
+            'menu'
+        ));
+    }
 }

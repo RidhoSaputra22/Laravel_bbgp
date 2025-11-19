@@ -339,7 +339,7 @@
                 </div><!-- Col 1 end -->
 
                 <div class="col-lg col-md ">
-                    <a href="#">
+                    <a href="{{ route('penyewaan.landing') }}">
                         <div class="ts-service-box">
                             <div class="ts-service-image-wrapper">
                                 <img loading="lazy" class="w-100"
