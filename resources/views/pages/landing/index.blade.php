@@ -735,57 +735,78 @@
                 </div>
             </div>
 
-            <div class="row">
-                <div class="col-lg-4 col-md-6 mb-4">
+            <div class="row justify-content-center">
+                <div class="col-lg-3 col-md-6 col-sm-6 mb-4">
                     <div class="gdrive-card">
-                        <div class="gdrive-icon">
-                            <i class="fas fa-play-circle"></i>
+                        <div class="gdrive-icon" style="color: #ff6b6b;">
+                            <i class="fas fa-baby"></i>
                         </div>
-                        <h4 class="gdrive-title">Video Pembelajaran Guru</h4>
+                        <h4 class="gdrive-title">PAUD</h4>
                         <p class="gdrive-description">
-                            Koleksi video pembelajaran untuk meningkatkan kompetensi guru dalam proses belajar mengajar
+                            Video pembelajaran untuk jenjang Pendidikan Anak Usia Dini
                         </p>
-                        <a href="https://drive.google.com/drive/folders/YOUR_FOLDER_ID_1" target="_blank"
-                            class="gdrive-btn">
-                            <i class="fab fa-google-drive mr-2"></i>Akses Video
+                        <a href="https://drive.google.com/drive/folders/YOUR_FOLDER_PAUD" 
+                           target="_blank" 
+                           class="gdrive-btn">
+                            <i class="fab fa-google-drive mr-1"></i>Akses
                         </a>
                     </div>
                 </div>
 
-                <div class="col-lg-4 col-md-6 mb-4">
+                <div class="col-lg-3 col-md-6 col-sm-6 mb-4">
                     <div class="gdrive-card">
-                        <div class="gdrive-icon">
-                            <i class="fas fa-video"></i>
+                        <div class="gdrive-icon" style="color: #4ecdc4;">
+                            <i class="fas fa-school"></i>
                         </div>
-                        <h4 class="gdrive-title">Tutorial Kepala Sekolah</h4>
+                        <h4 class="gdrive-title">SD</h4>
                         <p class="gdrive-description">
-                            Video tutorial untuk kepala sekolah dalam mengelola dan memimpin institusi pendidikan
+                            Video pembelajaran untuk jenjang Sekolah Dasar
                         </p>
-                        <a href="https://drive.google.com/drive/folders/YOUR_FOLDER_ID_2" target="_blank"
-                            class="gdrive-btn">
-                            <i class="fab fa-google-drive mr-2"></i>Akses Video
+                        <a href="https://drive.google.com/drive/folders/YOUR_FOLDER_SD" 
+                           target="_blank" 
+                           class="gdrive-btn mt-4">
+                            <i class="fab fa-google-drive mr-1"></i>Akses
                         </a>
                     </div>
                 </div>
 
-                <div class="col-lg-4 col-md-6 mb-4">
+                <div class="col-lg-3 col-md-6 col-sm-6 mb-4">
                     <div class="gdrive-card">
-                        <div class="gdrive-icon">
-                            <i class="fas fa-film"></i>
+                        <div class="gdrive-icon" style="color: #ffd93d;">
+                            <i class="fas fa-book-reader"></i>
                         </div>
-                        <h4 class="gdrive-title">Rekaman Webinar</h4>
+                        <h4 class="gdrive-title">SMP</h4>
                         <p class="gdrive-description">
-                            Rekaman webinar dan workshop yang telah dilaksanakan oleh BBGTK Sulawesi Selatan
+                            Video pembelajaran untuk jenjang Sekolah Menengah Pertama
                         </p>
-                        <a href="https://drive.google.com/drive/folders/YOUR_FOLDER_ID_3" target="_blank"
-                            class="gdrive-btn">
-                            <i class="fab fa-google-drive mr-2"></i>Akses Video
+                        <a href="https://drive.google.com/drive/folders/YOUR_FOLDER_SMP" 
+                           target="_blank" 
+                           class="gdrive-btn">
+                            <i class="fab fa-google-drive mr-1"></i>Akses
+                        </a>
+                    </div>
+                </div>
+
+                <div class="col-lg-3 col-md-6 col-sm-6 mb-4">
+                    <div class="gdrive-card">
+                        <div class="gdrive-icon" style="color: #6c5ce7;">
+                            <i class="fas fa-graduation-cap"></i>
+                        </div>
+                        <h4 class="gdrive-title">SMA</h4>
+                        <p class="gdrive-description">
+                            Video pembelajaran untuk jenjang Sekolah Menengah Atas
+                        </p>
+                        <a href="https://drive.google.com/drive/folders/YOUR_FOLDER_SMA" 
+                           target="_blank" 
+                           class="gdrive-btn">
+                            <i class="fab fa-google-drive mr-1"></i>Akses
                         </a>
                     </div>
                 </div>
             </div>
         </div>
     </section>
+
 
     {{-- Buku Digital Google Drive --}}
     <section id="buku-digital" class="ts-service-area pb-0" style="background: #f8f9fa;">
