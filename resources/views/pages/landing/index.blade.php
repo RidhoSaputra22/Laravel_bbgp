@@ -2,8 +2,255 @@
 @section('content')
     @push('styles')
         <style>
-            body {
-                /* background-color: brown; */
+            /* Instagram Feed Styles */
+            .instagram-card {
+                background: white;
+                border-radius: 12px;
+                overflow: hidden;
+                box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+                transition: all 0.3s ease;
+                height: 100%;
+                display: flex;
+                flex-direction: column;
+            }
+
+            .instagram-card:hover {
+                transform: translateY(-5px);
+                box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+            }
+
+            .instagram-header {
+                padding: 15px;
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                border-bottom: 1px solid #efefef;
+            }
+
+            .instagram-avatar {
+                width: 40px;
+                height: 40px;
+                border-radius: 50%;
+                border: 2px solid #e1306c;
+            }
+
+            .instagram-username {
+                font-weight: 600;
+                color: #262626;
+                font-size: 14px;
+            }
+
+            .instagram-image {
+                width: 100%;
+                height: 300px;
+                object-fit: cover;
+            }
+
+            .instagram-caption {
+                padding: 15px;
+                font-size: 14px;
+                color: #262626;
+                line-height: 1.6;
+                flex-grow: 1;
+            }
+
+            .instagram-footer {
+                padding: 15px;
+                border-top: 1px solid #efefef;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+            }
+
+            .instagram-likes {
+                color: #8e8e8e;
+                font-size: 13px;
+            }
+
+            .instagram-date {
+                color: #8e8e8e;
+                font-size: 12px;
+            }
+
+            /* YouTube Video Styles */
+            .youtube-card {
+                background: white;
+                border-radius: 12px;
+                overflow: hidden;
+                box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+                transition: all 0.3s ease;
+                cursor: pointer;
+            }
+
+            .youtube-card:hover {
+                transform: translateY(-5px);
+                box-shadow: 0 8px 25px rgba(255, 0, 0, 0.2);
+            }
+
+            .youtube-thumbnail {
+                position: relative;
+                width: 100%;
+                height: 200px;
+                overflow: hidden;
+            }
+
+            .youtube-thumbnail img {
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+                transition: transform 0.3s;
+            }
+
+            .youtube-card:hover .youtube-thumbnail img {
+                transform: scale(1.05);
+            }
+
+            .youtube-play-btn {
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                background: rgba(255, 0, 0, 0.9);
+                width: 60px;
+                height: 60px;
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                color: white;
+                font-size: 24px;
+            }
+
+            .youtube-duration {
+                position: absolute;
+                bottom: 10px;
+                right: 10px;
+                background: rgba(0, 0, 0, 0.8);
+                color: white;
+                padding: 4px 8px;
+                border-radius: 4px;
+                font-size: 12px;
+                font-weight: 600;
+            }
+
+            .youtube-content {
+                padding: 15px;
+            }
+
+            .youtube-title {
+                font-weight: 600;
+                color: #030303;
+                font-size: 15px;
+                margin-bottom: 8px;
+                display: -webkit-box;
+                -webkit-line-clamp: 2;
+                -webkit-box-orient: vertical;
+                overflow: hidden;
+            }
+
+            .youtube-channel {
+                color: #606060;
+                font-size: 13px;
+                margin-bottom: 5px;
+            }
+
+            .youtube-stats {
+                display: flex;
+                gap: 15px;
+                color: #606060;
+                font-size: 12px;
+            }
+
+            /* Category Tabs */
+            .category-tabs {
+                display: flex;
+                gap: 15px;
+                margin-bottom: 30px;
+                justify-content: center;
+                flex-wrap: wrap;
+            }
+
+            .category-tab {
+                background: white;
+                border: 2px solid #ddd;
+                color: #666;
+                padding: 10px 25px;
+                border-radius: 25px;
+                cursor: pointer;
+                transition: all 0.3s;
+                font-weight: 600;
+            }
+
+            .category-tab.active {
+                background: #ff0000;
+                border-color: #ff0000;
+                color: white;
+            }
+
+            .category-tab:hover {
+                transform: translateY(-2px);
+            }
+
+            /* Google Drive Styles */
+            .gdrive-card {
+                background: white;
+                border-radius: 12px;
+                padding: 25px;
+                box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+                transition: all 0.3s ease;
+                text-align: center;
+                height: 100%;
+            }
+
+            .gdrive-card:hover {
+                transform: translateY(-5px);
+                box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+            }
+
+            .gdrive-icon {
+                font-size: 64px;
+                margin-bottom: 20px;
+                color: #4285f4;
+            }
+
+            .gdrive-title {
+                font-size: 18px;
+                font-weight: 700;
+                color: #333;
+                margin-bottom: 10px;
+            }
+
+            .gdrive-description {
+                color: #666;
+                font-size: 14px;
+                margin-bottom: 20px;
+                line-height: 1.6;
+            }
+
+            .gdrive-btn {
+                background: linear-gradient(135deg, #4285f4 0%, #34a853 100%);
+                color: white;
+                padding: 12px 30px;
+                border-radius: 25px;
+                text-decoration: none;
+                display: inline-block;
+                font-weight: 600;
+                transition: all 0.3s;
+            }
+
+            .gdrive-btn:hover {
+                transform: scale(1.05);
+                color: white;
+                text-decoration: none;
+                box-shadow: 0 4px 15px rgba(66, 133, 244, 0.4);
+            }
+
+            /* Section Divider */
+            .section-divider {
+                width: 60px;
+                height: 4px;
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                margin: 0 auto 30px;
             }
         </style>
     @endpush
@@ -262,8 +509,9 @@
                             </div>
                             <div class="text-center">
                                 <div class="ts-service-info">
-                                    <h3 class="service-box-title"><a href="#">Standar pelayanan di lingukngan BGTK Sulsel</a></h3>
-    
+                                    <h3 class="service-box-title"><a href="#">Standar pelayanan di lingukngan BGTK
+                                            Sulsel</a></h3>
+
                                 </div>
                             </div>
                         </div><!-- Service1 end -->
@@ -411,8 +659,215 @@
         <!--/ Container end -->
     </section><!-- Service end -->
 
+    {{-- Instagram Posts Section --}}
+    <section id="instagram-feed" class="news">
+        <div class="container">
+            <div class="row text-center">
+                <div class="col-12">
+                    <h2 class="section-title">BBGTK Sul-Sel</h2>
+                    <h3 class="section-sub-title">Postingan Instagram Terbaru</h3>
+                    <div class="section-divider"></div>
+                </div>
+            </div>
 
-    <section id="ts-service-area" class="ts-service-area pb-0">
+            <div class="row" id="instagram-container">
+                {{-- Instagram posts akan dimuat via JavaScript --}}
+                <div class="col-12 text-center py-5">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="sr-only">Loading...</span>
+                    </div>
+                    <p class="mt-3">Memuat postingan Instagram...</p>
+                </div>
+            </div>
+
+            <div class="text-center mt-4">
+                <a href="https://www.instagram.com/bbgtksulsel/" target="_blank" class="btn btn-primary">
+                    <i class="fab fa-instagram mr-2"></i>Lihat Semua di Instagram
+                </a>
+            </div>
+        </div>
+    </section>
+
+    {{-- YouTube Videos Section --}}
+    <section id="youtube-videos" class="ts-service-area pb-0" style="background: #f8f9fa;">
+        <div class="container">
+            <div class="row text-center">
+                <div class="col-12">
+                    <h2 class="section-title">BBGTK Sul-Sel</h2>
+                    <h3 class="section-sub-title">Video Kegiatan dan Edukasi Terbaru</h3>
+                    <div class="section-divider"></div>
+                </div>
+            </div>
+
+            {{-- Category Tabs --}}
+            <div class="category-tabs">
+                {{-- <button class="category-tab active" data-category="all">Semua Video</button>
+                <button class="category-tab" data-category="edukasi">Edukasi</button> --}}
+                {{-- <button class="category-tab" data-category="webinar">Webinar</button> --}}
+            </div>
+
+            <div class="row" id="youtube-container">
+                {{-- YouTube videos akan dimuat via JavaScript --}}
+                <div class="col-12 text-center py-5">
+                    <div class="spinner-border text-danger" role="status">
+                        <span class="sr-only">Loading...</span>
+                    </div>
+                    <p class="mt-3">Memuat video YouTube...</p>
+                </div>
+            </div>
+
+            <div class="text-center mt-4">
+                <a href="https://www.youtube.com/@bbgtksulsel/" target="_blank" class="btn btn-danger">
+                    <i class="fab fa-youtube mr-2"></i>Lihat Channel YouTube
+                </a>
+            </div>
+        </div>
+    </section>
+
+    {{-- Video Pembelajaran Google Drive --}}
+    <section id="video-pembelajaran" class="ts-service-area pb-0">
+        <div class="container">
+            <div class="row text-center">
+                <div class="col-12">
+                    <h2 class="section-title">BBGTK Sul-Sel</h2>
+                    <h3 class="section-sub-title">Video Pembelajaran</h3>
+                    <div class="section-divider"></div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-lg-4 col-md-6 mb-4">
+                    <div class="gdrive-card">
+                        <div class="gdrive-icon">
+                            <i class="fas fa-play-circle"></i>
+                        </div>
+                        <h4 class="gdrive-title">Video Pembelajaran Guru</h4>
+                        <p class="gdrive-description">
+                            Koleksi video pembelajaran untuk meningkatkan kompetensi guru dalam proses belajar mengajar
+                        </p>
+                        <a href="https://drive.google.com/drive/folders/YOUR_FOLDER_ID_1" target="_blank"
+                            class="gdrive-btn">
+                            <i class="fab fa-google-drive mr-2"></i>Akses Video
+                        </a>
+                    </div>
+                </div>
+
+                <div class="col-lg-4 col-md-6 mb-4">
+                    <div class="gdrive-card">
+                        <div class="gdrive-icon">
+                            <i class="fas fa-video"></i>
+                        </div>
+                        <h4 class="gdrive-title">Tutorial Kepala Sekolah</h4>
+                        <p class="gdrive-description">
+                            Video tutorial untuk kepala sekolah dalam mengelola dan memimpin institusi pendidikan
+                        </p>
+                        <a href="https://drive.google.com/drive/folders/YOUR_FOLDER_ID_2" target="_blank"
+                            class="gdrive-btn">
+                            <i class="fab fa-google-drive mr-2"></i>Akses Video
+                        </a>
+                    </div>
+                </div>
+
+                <div class="col-lg-4 col-md-6 mb-4">
+                    <div class="gdrive-card">
+                        <div class="gdrive-icon">
+                            <i class="fas fa-film"></i>
+                        </div>
+                        <h4 class="gdrive-title">Rekaman Webinar</h4>
+                        <p class="gdrive-description">
+                            Rekaman webinar dan workshop yang telah dilaksanakan oleh BBGTK Sulawesi Selatan
+                        </p>
+                        <a href="https://drive.google.com/drive/folders/YOUR_FOLDER_ID_3" target="_blank"
+                            class="gdrive-btn">
+                            <i class="fab fa-google-drive mr-2"></i>Akses Video
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    {{-- Buku Digital Google Drive --}}
+    <section id="buku-digital" class="ts-service-area pb-0" style="background: #f8f9fa;">
+        <div class="container">
+            <div class="row text-center">
+                <div class="col-12">
+                    <h2 class="section-title">BBGTK Sul-Sel</h2>
+                    <h3 class="section-sub-title">Buku Digital</h3>
+                    <div class="section-divider"></div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-lg-3 col-md-6 mb-4">
+                    <div class="gdrive-card">
+                        <div class="gdrive-icon" style="color: #ea4335;">
+                            <i class="fas fa-book"></i>
+                        </div>
+                        <h4 class="gdrive-title">Modul Pelatihan</h4>
+                        <p class="gdrive-description">
+                            Modul lengkap untuk berbagai pelatihan guru dan tenaga kependidikan
+                        </p>
+                        <a href="https://drive.google.com/drive/folders/YOUR_FOLDER_ID_4" target="_blank"
+                            class="gdrive-btn">
+                            <i class="fas fa-download mr-2"></i>Download
+                        </a>
+                    </div>
+                </div>
+
+                <div class="col-lg-3 col-md-6 mb-4">
+                    <div class="gdrive-card">
+                        <div class="gdrive-icon" style="color: #fbbc04;">
+                            <i class="fas fa-file-pdf"></i>
+                        </div>
+                        <h4 class="gdrive-title">Buku Panduan</h4>
+                        <p class="gdrive-description">
+                            Panduan teknis dan juknis untuk kepala sekolah dan pengawas
+                        </p>
+                        <a href="https://drive.google.com/drive/folders/YOUR_FOLDER_ID_5" target="_blank"
+                            class="gdrive-btn">
+                            <i class="fas fa-download mr-2"></i>Download
+                        </a>
+                    </div>
+                </div>
+
+                <div class="col-lg-3 col-md-6 mb-4">
+                    <div class="gdrive-card">
+                        <div class="gdrive-icon" style="color: #34a853;">
+                            <i class="fas fa-bookmark"></i>
+                        </div>
+                        <h4 class="gdrive-title">E-Book Pembelajaran</h4>
+                        <p class="gdrive-description">
+                            Koleksi e-book untuk mendukung proses pembelajaran di kelas
+                        </p>
+                        <a href="https://drive.google.com/drive/folders/YOUR_FOLDER_ID_6" target="_blank"
+                            class="gdrive-btn">
+                            <i class="fas fa-download mr-2"></i>Download
+                        </a>
+                    </div>
+                </div>
+
+                <div class="col-lg-3 col-md-6 mb-4">
+                    <div class="gdrive-card">
+                        <div class="gdrive-icon" style="color: #4285f4;">
+                            <i class="fas fa-books"></i>
+                        </div>
+                        <h4 class="gdrive-title">Jurnal & Publikasi</h4>
+                        <p class="gdrive-description">
+                            Jurnal penelitian dan publikasi ilmiah dari kegiatan BBGTK
+                        </p>
+                        <a href="https://drive.google.com/drive/folders/YOUR_FOLDER_ID_7" target="_blank"
+                            class="gdrive-btn">
+                            <i class="fas fa-download mr-2"></i>Download
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+
+    {{-- <section id="ts-service-area" class="ts-service-area pb-0">
         <div class="container">
             <div class="row text-center">
                 <div class="col-12">
@@ -420,7 +875,6 @@
                     <h3 class="section-sub-title">Artikel Terkini</h3>
                 </div>
             </div>
-            <!--/ Title row end -->
 
             <div class="row my-artikel-slider">
                 @foreach ($datas['artikel'] as $v)
@@ -443,21 +897,18 @@
                                         aria-label="service-details"><i class="fa fa-caret-right"></i> Learn more</a>
                                 </div>
                             </div>
-                        </div><!-- Service1 end -->
-                    </div><!-- Col 1 end -->
+                        </div>
+                    </div>
                 @endforeach
 
 
-            </div><!-- Main row end -->
+            </div>
 
 
         </div>
-        <!--/ Container end -->
-    </section><!-- Service end -->
+    </section> --}}
 
-
-
-    <section id="news" class="news">
+    {{-- <section id="news" class="news">
         <div class="container">
             <div class="row text-center">
                 <div class="col-12">
@@ -465,7 +916,6 @@
                     <h3 class="section-sub-title">Agenda Terkini</h3>
                 </div>
             </div>
-            <!--/ Title row end -->
 
             <div class="row my-posts-slider">
                 @foreach ($datas['agenda'] as $v)
@@ -495,22 +945,16 @@
                                     </span>
                                 </div>
                             </div>
-                        </div><!-- Latest post end -->
-                    </div><!-- 1st post col end -->
+                        </div>
+                    </div>
                 @endforeach
 
 
             </div>
-            <!--/ Content row end -->
-
-            {{-- <div class="general-btn text-center mt-4">
-                <a class="btn btn-primary" href="news-left-sidebar.html">See All Posts</a>
-            </div> --}}
 
         </div>
-        <!--/ Container end -->
-    </section>
-    <!--/ News end -->
+    </section> --}}
+
     @push('scripts')
         <script>
             function loadVideo(element) {
@@ -547,6 +991,167 @@
                         loadVideo(video);
                     });
                 }
+            });
+
+            function loadInstagramPosts() {
+                // OPSI 1: Menggunakan Instagram Basic Display API
+                const accessToken = 'YOUR_INSTAGRAM_ACCESS_TOKEN';
+                const userId = 'YOUR_INSTAGRAM_USER_ID';
+                const instagramAPI =
+                    `https://graph.instagram.com/${userId}/media?fields=id,caption,media_type,media_url,permalink,timestamp&access_token=${accessToken}`;
+
+                $.ajax({
+                    url: instagramAPI,
+                    method: 'GET',
+                    success: function(response) {
+                        displayInstagramPosts(response.data);
+                    },
+                    error: function(error) {
+                        console.error('Instagram API Error:', error);
+                        $('#instagram-container').html(`
+                            <div class="col-12 text-center">
+                                <p class="text-muted">Tidak dapat memuat postingan Instagram. Silakan coba lagi nanti.</p>
+                            </div>
+                        `);
+                    }
+                });
+            }
+
+            function displayInstagramPosts(posts) {
+                const container = $('#instagram-container');
+                container.empty();
+
+                // Tampilkan 6 post terbaru
+                posts.slice(0, 6).forEach(post => {
+                    if (post.media_type === 'IMAGE' || post.media_type === 'CAROUSEL_ALBUM') {
+                        const postHTML = `
+                            <div class="col-lg-4 col-md-6 mb-4">
+                                <div class="instagram-card">
+                                    <div class="instagram-header">
+                                        <img src="${'{{ asset('landing/images/fav.png') }}'}" class="instagram-avatar" alt="BBGTK">
+                                        <div class="instagram-username">@bbgtkprov.sulsel</div>
+                                    </div>
+                                    <img src="${post.media_url}" class="instagram-image" alt="Instagram Post">
+                                    <div class="instagram-caption">
+                                        ${post.caption ? post.caption.substring(0, 100) + '...' : ''}
+                                    </div>
+                                    <div class="instagram-footer">
+                                        <div class="instagram-likes">
+                                            <i class="far fa-heart"></i> Lihat di Instagram
+                                        </div>
+                                        <a href="${post.permalink}" target="_blank" class="btn btn-sm btn-outline-primary">
+                                            Buka <i class="fas fa-external-link-alt ml-1"></i>
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                        container.append(postHTML);
+                    }
+                });
+            }
+
+            // ==================== YOUTUBE VIDEOS ====================
+            function loadYouTubeVideos(category = 'all') {
+                const API_KEY = '{{ $datas['api_key'] }}';
+                const CHANNEL_ID = '{{ $datas['channel_id'] }}';
+
+                let playlistId;
+                if (category === 'edukasi') {
+                    playlistId = 'YOUR_TUTORIAL_PLAYLIST_ID';
+                } else if (category === 'webinar') {
+                    playlistId = 'YOUR_WEBINAR_PLAYLIST_ID';
+                } else {
+                    // All videos from channel
+                    playlistId = `UU${CHANNEL_ID.substring(2)}`; // Convert channel ID to uploads playlist
+                }
+
+                const youtubeAPI =
+                    `https://youtube.googleapis.com/youtube/v3/search?key=${API_KEY}&part=snippet&channelId=${CHANNEL_ID}&type=video&maxResults=3&order=date`;
+
+                $.ajax({
+                    url: youtubeAPI,
+                    method: 'GET',
+                    success: function(response) {
+                        displayYouTubeVideos(response.items);
+                    },
+                    error: function(error) {
+                        console.error('YouTube API Error:', error);
+                        $('#youtube-container').html(`
+                            <div class="col-12 text-center">
+                                <p class="text-muted">Tidak dapat memuat video YouTube. Silakan coba lagi nanti.</p>
+                            </div>
+                        `);
+                    }
+                });
+            }
+
+            function displayYouTubeVideos(videos) {
+                const container = $('#youtube-container');
+                container.empty();
+                console.log(videos)
+                videos.forEach(video => {
+                    const snippet = video.snippet;
+                    const videoId = video.id.videoId;
+                    const videoHTML = `
+                        <div class="col-lg-4 col-md-6 mb-4">
+                            <div class="youtube-card" onclick="window.open('https://www.youtube.com/watch?v=${videoId}', '_blank')">
+                                <div class="youtube-thumbnail">
+                                    <img src="${snippet.thumbnails.medium.url}" alt="${snippet.title}">
+                                    <div class="youtube-play-btn">
+                                        <i class="fab fa-youtube"></i>
+                                    </div>
+                                </div>
+                                <div class="youtube-content">
+                                    <h4 class="youtube-title">${snippet.title}</h4>
+                                    <div class="youtube-channel">BBGTK Provinsi Sulsel</div>
+                                    <div class="youtube-stats">
+                                        <span><i class="far fa-clock"></i> ${formatDate(snippet.publishedAt)}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    container.append(videoHTML);
+                });
+            }
+
+            function formatDate(dateString) {
+                const date = new Date(dateString);
+                const now = new Date();
+                const diff = Math.floor((now - date) / (1000 * 60 * 60 * 24));
+
+                if (diff === 0) return 'Hari ini';
+                if (diff === 1) return 'Kemarin';
+                if (diff < 7) return diff + ' hari lalu';
+                if (diff < 30) return Math.floor(diff / 7) + ' minggu lalu';
+                return Math.floor(diff / 30) + ' bulan lalu';
+            }
+
+            // Category tabs handler
+            $('.category-tab').on('click', function() {
+                $('.category-tab').removeClass('active');
+                $(this).addClass('active');
+
+                const category = $(this).data('category');
+                loadYouTubeVideos(category);
+            });
+
+            // Load on page ready
+            $(document).ready(function() {
+                // Uncomment when API keys are configured
+                // loadInstagramPosts();
+                loadYouTubeVideos();
+
+                // Temporary demo data
+                setTimeout(() => {
+                    $('#instagram-container').html(
+                        '<div class="col-12 text-center"><p class="text-muted">Konfigurasi Instagram API untuk menampilkan postingan</p></div>'
+                    );
+                    // $('#youtube-container').html(
+                    //     '<div class="col-12 text-center"><p class="text-muted">Konfigurasi YouTube API untuk menampilkan video</p></div>'
+                    // );
+                }, 1000);
             });
         </script>
     @endpush

@@ -38,10 +38,10 @@ class UserController extends Controller
             'berita' => Berita::orderByDesc('id')->skip(0)->take(10)->get(),
             'agenda' => Agenda::orderByDesc('id')->skip(0)->take(10)->get(),
             'artikel' => Artikel::orderByDesc('id')->skip(0)->take(10)->get(),
-            'no_wa' => '6285255376376'
+            'no_wa' => '6285255376376',
+            'api_key' => env('YOUTUBE_API_KEY', ''),
+            'channel_id' => env('CHANNEL_ID', '')
         );
-
-        // dd($datas);
         // return view('pages.user.index', ['menu' => 'profil']);
         return view('pages.landing.index', ['menu' => 'profil'], compact('datas'));
     }
