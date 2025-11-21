@@ -38,6 +38,7 @@ class UserController extends Controller
             'berita' => Berita::orderByDesc('id')->skip(0)->take(10)->get(),
             'agenda' => Agenda::orderByDesc('id')->skip(0)->take(10)->get(),
             'artikel' => Artikel::orderByDesc('id')->skip(0)->take(10)->get(),
+            'no_wa' => '6285255376376'
         );
 
         // dd($datas);
