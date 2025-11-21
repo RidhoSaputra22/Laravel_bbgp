@@ -443,6 +443,13 @@ class UserController extends Controller
         ]);
     }
 
+    public function buletin()
+    {
+        return view('pages.landing.buletin-diksi.index', [
+            'menu' => 'buletin-diksi',
+        ]);
+    }
+
     public function cari(Request $request)
     {
         $search = Guru::query();

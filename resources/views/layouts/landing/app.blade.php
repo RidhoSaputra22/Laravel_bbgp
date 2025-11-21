@@ -400,7 +400,7 @@
         <!-- WhatsApp Chat Script -->
         <script>
             // KONFIGURASI - Ganti dengan nomor WhatsApp BBGTK
-            const WHATSAPP_NUMBER = {{ $datas['no_wa'] }}; // Format: 62xxx (tanpa +)
+            const WHATSAPP_NUMBER = '6285255376376'; // Format: 62xxx (tanpa +)
 
             $(document).ready(function() {
                 const toggleBtn = $('#wa-toggle-btn');

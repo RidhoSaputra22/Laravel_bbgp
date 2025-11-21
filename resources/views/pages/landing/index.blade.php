@@ -480,7 +480,7 @@
             <div class="row my-icon2-slider">
 
                 <div class="col-lg col-md ">
-                    <a href="{{ route('user.analisisPelatihan') }}">
+                    <a href="{{ route('user.analisisPelatihan') }}" target="_blank">
                         <div class="ts-service-box">
                             <div class="ts-service-image-wrapper">
                                 <img loading="lazy" class="w-100"
@@ -500,7 +500,7 @@
                 </div><!-- Col 1 end -->
 
                 <div class="col-lg col-md ">
-                    <a href="{{ route('user.pengaduan') }}">
+                    <a href="{{ route('user.pengaduan') }}" target="_blank">
                         <div class="ts-service-box">
                             <div class="ts-service-image-wrapper">
                                 <img loading="lazy" class="w-100"
@@ -568,7 +568,7 @@
                 </div><!-- Col 1 end -->
 
                 <div class="col-lg col-md ">
-                    <a href="{{ route('user.analisisSLB') }}">
+                    <a href="{{ route('user.analisisSLB') }}" target="_blank">
                         <div class="ts-service-box">
                             <div class="ts-service-image-wrapper">
                                 <img loading="lazy" class="w-100"
@@ -587,7 +587,7 @@
                 </div><!-- Col 1 end -->
 
                 <div class="col-lg col-md ">
-                    <a href="{{ route('penyewaan.landing') }}">
+                    <a href="{{ route('penyewaan.landing') }}" target="_blank">
                         <div class="ts-service-box">
                             <div class="ts-service-image-wrapper">
                                 <img loading="lazy" class="w-100"
@@ -597,6 +597,24 @@
                             <div class="text-center">
                                 <div class="ts-service-info">
                                     <h3 class="service-box-title"><a href="#">Sewa Fasilitas</a></h3>
+
+                                </div>
+                            </div>
+                        </div><!-- Service1 end -->
+                    </a>
+                </div><!-- Col 1 end -->
+
+                <div class="col-lg col-md ">
+                    <a href="{{ route('user.buletin-diksi') }}" target="_blank">
+                        <div class="ts-service-box">
+                            <div class="ts-service-image-wrapper">
+                                <img loading="lazy" class="w-100"
+                                    src="{{ asset('landing/images/icon-slider/slider2/buletin-diksi.png') }}"
+                                    alt="Buletin Diksi">
+                            </div>
+                            <div class="text-center">
+                                <div class="ts-service-info">
+                                    <h3 class="service-box-title"><a href="#">Buletin Diksi</a></h3>
 
                                 </div>
                             </div>
@@ -745,9 +763,8 @@
                         <p class="gdrive-description">
                             Video pembelajaran untuk jenjang Pendidikan Anak Usia Dini
                         </p>
-                        <a href="https://drive.google.com/drive/folders/YOUR_FOLDER_PAUD" 
-                           target="_blank" 
-                           class="gdrive-btn">
+                        <a href="https://drive.google.com/drive/folders/YOUR_FOLDER_PAUD" target="_blank"
+                            class="gdrive-btn">
                             <i class="fab fa-google-drive mr-1"></i>Akses
                         </a>
                     </div>
@@ -762,9 +779,8 @@
                         <p class="gdrive-description">
                             Video pembelajaran untuk jenjang Sekolah Dasar
                         </p>
-                        <a href="https://drive.google.com/drive/folders/YOUR_FOLDER_SD" 
-                           target="_blank" 
-                           class="gdrive-btn mt-4">
+                        <a href="https://drive.google.com/drive/folders/YOUR_FOLDER_SD" target="_blank"
+                            class="gdrive-btn mt-4">
                             <i class="fab fa-google-drive mr-1"></i>Akses
                         </a>
                     </div>
@@ -779,9 +795,8 @@
                         <p class="gdrive-description">
                             Video pembelajaran untuk jenjang Sekolah Menengah Pertama
                         </p>
-                        <a href="https://drive.google.com/drive/folders/YOUR_FOLDER_SMP" 
-                           target="_blank" 
-                           class="gdrive-btn">
+                        <a href="https://drive.google.com/drive/folders/YOUR_FOLDER_SMP" target="_blank"
+                            class="gdrive-btn">
                             <i class="fab fa-google-drive mr-1"></i>Akses
                         </a>
                     </div>
@@ -796,9 +811,8 @@
                         <p class="gdrive-description">
                             Video pembelajaran untuk jenjang Sekolah Menengah Atas
                         </p>
-                        <a href="https://drive.google.com/drive/folders/YOUR_FOLDER_SMA" 
-                           target="_blank" 
-                           class="gdrive-btn">
+                        <a href="https://drive.google.com/drive/folders/YOUR_FOLDER_SMA" target="_blank"
+                            class="gdrive-btn">
                             <i class="fab fa-google-drive mr-1"></i>Akses
                         </a>
                     </div>
@@ -1090,8 +1104,7 @@
 
             // ==================== YOUTUBE VIDEOS ====================
             function loadYouTubeVideos(category = 'all') {
-                const container = $('#youtube-container');
-                container.empty()
+
                 const API_KEY = '{{ $datas['api_key'] }}';
                 const CHANNEL_ID = '{{ $datas['channel_id'] }}';
 
@@ -1178,6 +1191,8 @@
 
             // Load on page ready
             $(document).ready(function() {
+                const container = $('#youtube-container');
+                container.empty()
                 // Uncomment when API keys are configured
                 // loadInstagramPosts();
                 loadYouTubeVideos();

@@ -39,6 +39,7 @@ Route::group(
         Route::get('/monitoring-evaluasi-kegiatan', 'UserController@monitoring')->name('user.monitoring');
         Route::get('/pengaduan', 'UserController@pengaduan')->name('user.pengaduan');
         Route::get('/penyewaan-ruangan', [PenyewaanRuanganController::class, 'landing'])->name('penyewaan.landing');
+        Route::get('/buletin-diksi', 'UserController@buletin')->name('user.buletin-diksi');
 
 
 
