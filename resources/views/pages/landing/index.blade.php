@@ -1074,6 +1074,8 @@
 
             // ==================== YOUTUBE VIDEOS ====================
             function loadYouTubeVideos(category = 'all') {
+                const container = $('#youtube-container');
+                container.empty()
                 const API_KEY = '{{ $datas['api_key'] }}';
                 const CHANNEL_ID = '{{ $datas['channel_id'] }}';
 
