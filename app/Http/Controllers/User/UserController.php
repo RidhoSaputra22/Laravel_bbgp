@@ -450,6 +450,13 @@ class UserController extends Controller
         ]);
     }
 
+    public function labVirtual()
+    {
+        return view('pages.landing.lab-virtual.index', [
+            'menu' => 'lab-virtual',
+        ]);
+    }
+
     public function cari(Request $request)
     {
         $search = Guru::query();

@@ -40,6 +40,7 @@ Route::group(
         Route::get('/pengaduan', 'UserController@pengaduan')->name('user.pengaduan');
         Route::get('/penyewaan-ruangan', [PenyewaanRuanganController::class, 'landing'])->name('penyewaan.landing');
         Route::get('/buletin-diksi', 'UserController@buletin')->name('user.buletin-diksi');
+        Route::get('/lab-virtual', 'UserController@labVirtual')->name('user.lab-virtual');
 
 
 
