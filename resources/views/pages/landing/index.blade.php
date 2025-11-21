@@ -822,12 +822,12 @@
             <div class="row">
                 <div class="col-lg-3 col-md-6 mb-4">
                     <div class="gdrive-card">
-                        <div class="gdrive-icon" style="color: #ea4335;">
-                            <i class="fas fa-book"></i>
+                        <div class="gdrive-icon" style="color: #ff6b6b;">
+                            <i class="fas fa-baby"></i>
                         </div>
-                        <h4 class="gdrive-title">Modul Pelatihan</h4>
+                        <h4 class="gdrive-title">PAUD</h4>
                         <p class="gdrive-description">
-                            Modul lengkap untuk berbagai pelatihan guru dan tenaga kependidikan
+                            Modul lengkap untuk jenjang Pendidikan Anak Usia Dini
                         </p>
                         <a href="https://drive.google.com/drive/folders/YOUR_FOLDER_ID_4" target="_blank"
                             class="gdrive-btn">
@@ -838,12 +838,12 @@
 
                 <div class="col-lg-3 col-md-6 mb-4">
                     <div class="gdrive-card">
-                        <div class="gdrive-icon" style="color: #fbbc04;">
-                            <i class="fas fa-file-pdf"></i>
+                        <div class="gdrive-icon" style="color: #4ecdc4;">
+                            <i class="fas fa-school"></i>
                         </div>
-                        <h4 class="gdrive-title">Buku Panduan</h4>
+                        <h4 class="gdrive-title">SD</h4>
                         <p class="gdrive-description">
-                            Panduan teknis dan juknis untuk kepala sekolah dan pengawas
+                            Modul pembelajaran untuk jenjang Sekolah Dasar
                         </p>
                         <a href="https://drive.google.com/drive/folders/YOUR_FOLDER_ID_5" target="_blank"
                             class="gdrive-btn">
@@ -854,12 +854,12 @@
 
                 <div class="col-lg-3 col-md-6 mb-4">
                     <div class="gdrive-card">
-                        <div class="gdrive-icon" style="color: #34a853;">
-                            <i class="fas fa-bookmark"></i>
+                        <div class="gdrive-icon" style="color: #ffd93d;">
+                            <i class="fas fa-book-reader"></i>
                         </div>
-                        <h4 class="gdrive-title">E-Book Pembelajaran</h4>
+                        <h4 class="gdrive-title">SMP</h4>
                         <p class="gdrive-description">
-                            Koleksi e-book untuk mendukung proses pembelajaran di kelas
+                            Modul pembelajaran untuk jenjang Sekolah Menengah Pertama
                         </p>
                         <a href="https://drive.google.com/drive/folders/YOUR_FOLDER_ID_6" target="_blank"
                             class="gdrive-btn">
@@ -870,12 +870,28 @@
 
                 <div class="col-lg-3 col-md-6 mb-4">
                     <div class="gdrive-card">
-                        <div class="gdrive-icon" style="color: #4285f4;">
-                            <i class="fas fa-books"></i>
+                        <div class="gdrive-icon" style="color: #6c5ce7;">
+                            <i class="fas fa-graduation-cap"></i>
                         </div>
-                        <h4 class="gdrive-title">Jurnal & Publikasi</h4>
+                        <h4 class="gdrive-title">SMA</h4>
                         <p class="gdrive-description">
-                            Jurnal penelitian dan publikasi ilmiah dari kegiatan BBGTK
+                            Modul pembelajaran untuk jenjang Sekolah Menengah Atas
+                        </p>
+                        <a href="https://drive.google.com/drive/folders/YOUR_FOLDER_ID_7" target="_blank"
+                            class="gdrive-btn">
+                            <i class="fas fa-download mr-2"></i>Download
+                        </a>
+                    </div>
+                </div>
+
+                <div class="col-lg-3 col-md-6 mb-4">
+                    <div class="gdrive-card">
+                        <div class="gdrive-icon" style="color: #5171ff;">
+                            <i class="fas fa-child"></i>
+                        </div>
+                        <h4 class="gdrive-title">SLB</h4>
+                        <p class="gdrive-description">
+                            Modul pembelajaran untuk jenjang Sekolah Luar Biasa
                         </p>
                         <a href="https://drive.google.com/drive/folders/YOUR_FOLDER_ID_7" target="_blank"
                             class="gdrive-btn">
