@@ -736,7 +736,7 @@
                 </div>
             </div>
 
-            <div class="text-center mt-4">
+            <div class="text-center mt-4 pb-4">
                 <a href="https://www.youtube.com/@bbgtksulsel/" target="_blank" class="btn btn-danger">
                     <i class="fab fa-youtube mr-2"></i>Lihat Channel YouTube
                 </a>
