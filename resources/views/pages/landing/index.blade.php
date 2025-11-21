@@ -689,7 +689,6 @@
             </div>
 
             <div class="row" id="instagram-container">
-                {{-- Instagram posts akan dimuat via JavaScript --}}
                 <div class="col-12 text-center py-5">
                     <div class="spinner-border text-primary" role="status">
                         <span class="sr-only">Loading...</span>
@@ -1046,26 +1045,26 @@
 
             function loadInstagramPosts() {
                 // OPSI 1: Menggunakan Instagram Basic Display API
-                const accessToken = 'YOUR_INSTAGRAM_ACCESS_TOKEN';
-                const userId = 'YOUR_INSTAGRAM_USER_ID';
-                const instagramAPI =
-                    `https://graph.instagram.com/${userId}/media?fields=id,caption,media_type,media_url,permalink,timestamp&access_token=${accessToken}`;
+                // const accessToken = 'YOUR_INSTAGRAM_ACCESS_TOKEN';
+                // const userId = 'YOUR_INSTAGRAM_USER_ID';
+                // const instagramAPI =
+                //     `https://graph.instagram.com/${userId}/media?fields=id,caption,media_type,media_url,permalink,timestamp&access_token=${accessToken}`;
 
-                $.ajax({
-                    url: instagramAPI,
-                    method: 'GET',
-                    success: function(response) {
-                        displayInstagramPosts(response.data);
-                    },
-                    error: function(error) {
-                        console.error('Instagram API Error:', error);
-                        $('#instagram-container').html(`
-                            <div class="col-12 text-center">
-                                <p class="text-muted">Tidak dapat memuat postingan Instagram. Silakan coba lagi nanti.</p>
-                            </div>
-                        `);
-                    }
-                });
+                // $.ajax({
+                //     url: instagramAPI,
+                //     method: 'GET',
+                //     success: function(response) {
+                //         displayInstagramPosts(response.data);
+                //     },
+                //     error: function(error) {
+                //         console.error('Instagram API Error:', error);
+                //         $('#instagram-container').html(`
+                //             <div class="col-12 text-center">
+                //                 <p class="text-muted">Tidak dapat memuat postingan Instagram. Silakan coba lagi nanti.</p>
+                //             </div>
+                //         `);
+                //     }
+                // });
             }
 
             function displayInstagramPosts(posts) {
@@ -1141,7 +1140,6 @@
             function displayYouTubeVideos(videos) {
                 const container = $('#youtube-container');
                 container.empty();
-                console.log(videos)
                 videos.forEach(video => {
                     const snippet = video.snippet;
                     const videoId = video.id.videoId;
@@ -1194,14 +1192,14 @@
                 const container = $('#youtube-container');
                 container.empty()
                 // Uncomment when API keys are configured
-                // loadInstagramPosts();
+                loadInstagramPosts();
                 loadYouTubeVideos();
 
                 // Temporary demo data
                 setTimeout(() => {
-                    $('#instagram-container').html(
-                        '<div class="col-12 text-center"><p class="text-muted">Konfigurasi Instagram API untuk menampilkan postingan</p></div>'
-                    );
+                    // $('#instagram-container').html(
+                    //     '<div class="col-12 text-center"><p class="text-muted">Konfigurasi Instagram API untuk menampilkan postingan</p></div>'
+                    // );
                     // $('#youtube-container').html(
                     //     '<div class="col-12 text-center"><p class="text-muted">Konfigurasi YouTube API untuk menampilkan video</p></div>'
                     // );
