@@ -415,7 +415,7 @@
                                             </div>
                                         @endif
 
-                                        <a href="https://wa.me/6281234567890?text=Halo, saya ingin menanyakan tentang {{ $asrama->nama_ruangan }}"
+                                        <a href="https://wa.me/6281356484509?text=Halo, saya ingin menanyakan tentang {{ $asrama->nama_ruangan }}"
                                             target="_blank" class="btn-whatsapp">
                                             <i class="fab fa-whatsapp"></i> Hubungi via WhatsApp
                                         </a>
@@ -461,7 +461,7 @@
 
                                     <div class="simple-card-content">
                                         <h4 class="simple-card-title text-center">{{ $aula->nama_ruangan }}</h4>
-                                        <a href="https://wa.me/6281234567890?text=Halo, saya ingin menanyakan tentang {{ $aula->nama_ruangan }}"
+                                        <a href="https://wa.me/6281356484509?text=Halo, saya ingin menanyakan tentang {{ $aula->nama_ruangan }}"
                                             target="_blank" class="btn-whatsapp">
                                             <i class="fab fa-whatsapp"></i> Hubungi WA
                                         </a>
@@ -491,7 +491,7 @@
 
                                     <div class="simple-card-content">
                                         <h4 class="simple-card-title text-center">{{ $kls->nama_ruangan }}</h4>
-                                        <a href="https://wa.me/6281234567890?text=Halo, saya ingin menanyakan tentang {{ $kls->nama_ruangan }}"
+                                        <a href="https://wa.me/6281356484509?text=Halo, saya ingin menanyakan tentang {{ $kls->nama_ruangan }}"
                                             target="_blank" class="btn-whatsapp">
                                             <i class="fab fa-whatsapp"></i> Hubungi WA
                                         </a>
@@ -536,7 +536,7 @@
 
                                     <div class="simple-card-content">
                                         <h4 class="simple-card-title text-center">{{ $lab->nama_ruangan }}</h4>
-                                        <a href="https://wa.me/6281234567890?text=Halo, saya ingin menanyakan tentang {{ $lab->nama_ruangan }}"
+                                        <a href="https://wa.me/6281356484509?text=Halo, saya ingin menanyakan tentang {{ $lab->nama_ruangan }}"
                                             target="_blank" class="btn-whatsapp">
                                             <i class="fab fa-whatsapp"></i> Hubungi WA
                                         </a>
