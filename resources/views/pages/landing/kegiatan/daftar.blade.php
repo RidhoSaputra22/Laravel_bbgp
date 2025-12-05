@@ -21,267 +21,303 @@
                                 </ol>
                             </nav>
                         </div>
-                    </div><!-- Col end -->
-                </div><!-- Row end -->
-            </div><!-- Container end -->
-        </div><!-- Banner text end -->
-    </div><!-- Banner area end -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <div class="container my-4">
         <div class="row">
             <div class="col-md-12 col-lg-12">
                 <form action="{{ route('user.kegiatan_store') }}" method="POST" enctype="multipart/form-data">
                     @csrf
-                    {{-- {{ dd($_GET['kegiatan_id']) }} --}}
                     <input type="hidden" name="kegiatan_id" id="kegiatan_id"
                         value="{{ $_GET['kegiatan_id'] ?? $kegiatan_id }}">
-                    <div class="">
+
+                    <div class="card">
+                        <div class="card-header">
+                            <h4>Biodata Peserta</h4>
+                        </div>
                         <div class="card-body">
 
+                            <!-- SECTION 1: DATA PRIBADI -->
+                            <h5 class="mb-3">Data Pribadi</h5>
                             <div class="row">
-
-                                {{-- <div class="col-md-5">
-                                <div class="form-group">
-                                    <label>Nama dan NIK</label>
-                                    <input  name="no_ktp" id="no_ktp" type="text"
-                                        class="form-control" required>
-                                    <select required name="id_pegawai" id="id_pegawai"
-                                        class="form-control select2">
-                                        <option value="">-- Pilih pegawai --</option>
-                                        @foreach ($merge as $v)
-                                            <option data-no_ktp="{{ $v->no_ktp }}"
-                                                data-nama="{{ $v->nama_lengkap }}"
-                                                data-golongan="{{ $v->golongan }}"
-                                                data-kabupaten="{{ $v->kabupaten }}"
-                                                data-gender="{{ $v->gender }}"
-                                                data-jabatan="{{ $v->jabatan ?? $v->status_kepegawaian }}"
-                                                data-instansi="{{ $v->instansi }}"
-                                                data-wa="{{ $v->no_wa }}"
-                                                data-hp="{{ $v->no_hp }}"
-                                                data-instansi="{{ $v->instansi }}"
-                                                value="{{ $v->id }}">
-                                                {{ $v->no_ktp }} - {{ $v->nama_lengkap }}
-                                            </option>
-                                        @endforeach
-                                    </select>
-                                </div>
-                            </div> --}}
-
-                                <div class="col-md-4">
+                                <div class="col-md-6">
                                     <div class="form-group">
-                                        <label>Nama Lengkap</label>
-                                        <input name="nama" id="nama" type="nama" class="form-control" required>
+                                        <label>1. Nama Lengkap (dengan gelar) <span class="text-danger">*</span></label>
+                                        <input name="nama" id="nama" type="text" class="form-control" required>
                                     </div>
                                 </div>
 
-                                <div class="col-md-4">
+                                <div class="col-md-3">
                                     <div class="form-group">
-                                        <label>NIK</label>
-                                        <input name="no_ktp" id="no_ktp" type="text" class="form-control" required>
-                                    </div>
-                                </div>
-
-                                <div class="col-md-4">
-                                    <div class="form-group">
-                                        <label>NIP</label>
+                                        <label>2. NIP <span class="text-danger">*</span></label>
                                         <input name="nip" id="nip" type="text" class="form-control" required>
                                     </div>
                                 </div>
 
-
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label>NIK <span class="text-danger">*</span></label>
+                                        <input name="no_ktp" id="no_ktp" type="text" class="form-control" required>
+                                    </div>
+                                </div>
                             </div>
 
                             <div class="row">
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label>3. Pangkat & Golongan</label>
+                                        <select name="jenis_gol" id="jenis_gol" class="form-control">
+                                            <option value="">-- pilih jenis golongan --</option>
+                                            <option value="PNS">PNS</option>
+                                            <option value="P3K">PPPK/P3K</option>
+                                            <option value="Tidak ada golongan">Tidak Ada Golongan</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-3" id="form_golongan_pns" style="display: none;">
+                                    <div class="form-group">
+                                        <label>Golongan PNS</label>
+                                        <select name="golongan_pns" id="golongan_pns" class="form-control select2">
+                                            <option value="">-- pilih golongan --</option>
+                                            @foreach ($status['golongan'] as $v)
+                                                <option value="{{ $v->name }}">{{ $v->name }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-3" id="form_golongan_p3k" style="display: none;">
+                                    <div class="form-group">
+                                        <label>Golongan PPPK/P3K</label>
+                                        <select name="golongan_p3k" id="golongan_p3k" class="form-control select2">
+                                            <option value="">-- pilih golongan --</option>
+                                            @foreach ($status['golongan_p3k'] as $v)
+                                                <option value="{{ $v->name }}">{{ $v->name }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-3" id="form_diluar_gol" style="display: none;">
+                                    <div class="form-group">
+                                        <label>Isi Golongan</label>
+                                        <input name="diluar_gol" id="diluar_gol" placeholder="jika tidak ada ketik tanda -"
+                                            type="text" class="form-control">
+                                    </div>
+                                </div>
+
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label>4. Jabatan <span class="text-danger">*</span></label>
+                                        <input name="jabatan" id="jabatan" type="text" class="form-control" required>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label>5. Mata Pelajaran yang diampu (opsional)</label>
+                                        <input name="mata_pelajaran" type="text" class="form-control">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label>6. Tempat Lahir <span class="text-danger">*</span></label>
+                                        <input name="tempat_lahir" id="tempat_lahir" type="text" class="form-control"
+                                            required>
+                                    </div>
+                                </div>
 
                                 <div class="col-md-4">
                                     <div class="form-group">
-                                        <label>Kabupaten / Kota (jika tidak ada, pilih lainnya)</label>
-                                        <select name="kabupaten" id="kabupaten" class="form-control select2">
-                                            <option id="selectedKab" value="">-- piilih kabupaten --</option>
-                                            @foreach ($status['kabupaten'] as $v)
-                                                <option value=" {{ $v->name }} ">{{ $v->name }}</option>
-                                            @endforeach
-                                            <option id="selectedKabLainnya" value="lainnya">Lainnya</option>
+                                        <label>Tanggal Lahir <span class="text-danger">*</span></label>
+                                        <input name="tgl_lahir" id="tgl_lahir" type="date" class="form-control"
+                                            required>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-2">
+                                    <div class="form-group">
+                                        <label>7. Jenis Kelamin <span class="text-danger">*</span></label>
+                                        <select name="jkl" id="gender" class="form-control" required>
+                                            <option value="">-- pilih --</option>
+                                            <option value="Laki-laki">Laki-laki</option>
+                                            <option value="Perempuan">Perempuan</option>
                                         </select>
-                                        {{-- <input readonly name="kabupaten" id="kabupaten" type="text"
-                                        class="form-control" required> --}}
+                                    </div>
+                                </div>
+
+                                <div class="col-md-2">
+                                    <div class="form-group">
+                                        <label>8. Status <span class="text-danger">*</span></label>
+                                        <select name="status" id="status" class="form-control" required>
+                                            <option value="">-- pilih --</option>
+                                            <option value="Kawin">Kawin</option>
+                                            <option value="Belum Kawin">Belum Kawin</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label>9. Agama <span class="text-danger">*</span></label>
+                                        <select name="agama" id="agama" class="form-control" required>
+                                            <option value="">-- pilih agama --</option>
+                                            <option value="Islam">Islam</option>
+                                            <option value="Kristen">Kristen</option>
+                                            <option value="Katolik">Katolik</option>
+                                            <option value="Hindu">Hindu</option>
+                                            <option value="Buddha">Buddha</option>
+                                            <option value="Konghucu">Konghucu</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label>10. Pendidikan Terakhir <span class="text-danger">*</span></label>
+                                        <select name="pendidikan" id="pendidikan" class="form-control" required>
+                                            <option value="">-- pilih pendidikan --</option>
+                                            <option value="S3">S3</option>
+                                            <option value="S2">S2</option>
+                                            <option value="S1">S1</option>
+                                            <option value="D4">D4</option>
+                                            <option value="D3">D3</option>
+                                            <option value="D2">D2</option>
+                                            <option value="D1">D1</option>
+                                            <option value="SMA/SMK">SMA/SMK</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <hr class="my-4">
+
+                            <!-- SECTION 2: DATA UNIT KERJA -->
+                            <h5 class="mb-3">Data Unit Kerja</h5>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label>11. Nama Unit Kerja / Instansi <span class="text-danger">*</span></label>
+                                        <input name="instansi" id="instansi" type="text" class="form-control"
+                                            required>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label>Nama Satuan Pendidikan</label>
+                                        <input name="satuan_pendidikan" id="satuan_pendidikan" type="text"
+                                            class="form-control">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-8">
+                                    <div class="form-group">
+                                        <label>12. Alamat Unit Kerja</label>
+                                        <input type="text" name="alamat" id="alamat"
+                                            class="form-control" rows="2" />
+                                    </div>
+                                </div>
+
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label>Kabupaten / Kota (Unit Kerja) <span class="text-danger">*</span></label>
+                                        <select name="kabupaten" id="kabupaten" class="form-control select2" required>
+                                            <option value="">-- pilih kabupaten --</option>
+                                            @foreach ($status['kabupaten'] as $v)
+                                                <option value="{{ $v->name }}">{{ $v->name }}</option>
+                                            @endforeach
+                                            <option value="lainnya">Lainnya</option>
+                                        </select>
                                     </div>
                                 </div>
 
                                 <div class="col-md-4" id="formAsal" style="display: none;">
                                     <div class="form-group">
                                         <label>Asal Kabupaten / Kota</label>
-                                        <input  name="asal_kabupaten" id="asal_kabupaten" type="text"
+                                        <input name="asal_kabupaten" id="asal_kabupaten" type="text"
                                             class="form-control">
                                     </div>
                                 </div>
-
-                                <div class="col-md-5">
-                                    <div class="form-group">
-                                        <label>Instansi</label>
-                                        <input name="instansi" id="instansi" type="text" class="form-control" required>
-                                    </div>
-                                </div>
-
-
-
-
                             </div>
 
                             <div class="row">
-                                <div class="col-md-2">
+                                {{-- <div class="col-md-3">
                                     <div class="form-group">
-                                        <label>Jenis Kelamin</label>
-                                        <select name="jkl" id="gender" class="form-control">
-                                            <option value="">-- pilih jenis kelamin --</option>
-                                            <option value="Laki-laki">Laki-laki</option>
-                                            <option value="Perempuan">Perempuan</option>
-                                        </select>
-                                        {{-- <input name="gender" id="gender" type="text" class="form-control"
-                                        required> --}}
-                                    </div>
-                                </div>
-                                @if (session('dataAda'))
-                                    {{-- {{ dump(session('dataAda') ) }} --}}
-
-
-
-                                    {{-- <div class="col-md-3">
-                                    <div class="form-group">
-                                        <label>Golongan</label>
-
-                                        <select name="golongan" id="" class="form-control select2">
-                                        <option value="">-- pilih golongan --</option>
-                                        @foreach ($status['golongan'] as $v)
-                                            <option value="{{ $v->name }}">{{ $v->name }}</option>
-                                        @endforeach
-                                    </select>
-                                        <input name="golongan" id="golongan" type="text"
-                                            class="form-control" required>
+                                        <label>NPSN Sekolah</label>
+                                        <input name="npsn_sekolah" id="npsn_sekolah" type="text"
+                                            class="form-control">
                                     </div>
                                 </div> --}}
 
-                                    <div class="col-md-3">
-                                        <div class="form-group">
-                                            <label>Jenis Golongan</label>
-                                            <select required name="jenis_gol" id="jenis_gol" class="form-control ">
-                                                <option value="">-- pilih jenis golongan --</option>
-                                                <option value="PNS">PNS</option>
-                                                <option value="P3K">PPPK/P3K</option>
-                                                <option value="Tidak ada golongan">Tidak Ada Golongan</option>
-                                            </select>
-                                        </div>
+                                {{-- <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label>NUPTK</label>
+                                        <input name="nuptk" id="nuptk" type="text" class="form-control">
                                     </div>
-
-
-                                    <div class="col-md-3" id="form_diluar_gol">
-                                        <div class="form-group">
-                                            <label>Isi Golongan </label>
-                                            <input name="diluar_gol" id="diluar_gol" placeholder="jika tidak ada ketik tanda -" type="text" class="form-control">
-                                        </div>
-                                    </div>
-
-                                    <div class="col-md-3" id="form_golongan_pns">
-                                        <div class="form-group">
-                                            <label>Golongan PNS</label>
-
-                                            <select name="golongan_pns" id="golongan_pns" class="form-control select2">
-                                                <option id="valPns" value="">-- pilih golongan --</option>
-                                                @foreach ($status['golongan'] as $v)
-                                                    <option value="{{ $v->name }}">{{ $v->name }}</option>
-                                                @endforeach
-                                            </select>
-                                            {{-- <input readonly name="golongan_pns" id="golongan_pns" type="text"
-                                            class="form-control" required> --}}
-                                        </div>
-                                    </div>
-
-                                    <div class="col-md-3" id="form_golongan_p3k">
-                                        <div class="form-group">
-                                            <label>Golongan PPPK/P3K</label>
-
-                                            <select name="golongan_p3k" id="golongan_p3k" class="form-control select2">
-                                                <option id="valP3K" value="">-- pilih golongan --
-                                                </option>
-                                                @foreach ($status['golongan_p3k'] as $v)
-                                                    <option value="{{ $v->name }}">{{ $v->name }}
-                                                    </option>
-                                                @endforeach
-                                            </select>
-                                            {{-- <input readonly name="golongan_p3k" id="golongan_p3k" type="text"
-                                            class="form-control" required> --}}
-                                        </div>
-                                    </div>
-                                @else
-                                    <div class="col-md-3">
-                                        <div class="form-group">
-                                            <label>Jenis Golongan</label>
-                                            <select required name="jenis_gol" id="jenis_gol" class="form-control ">
-                                                <option value="">-- pilih jenis golongan --</option>
-                                                <option value="PNS">PNS</option>
-                                                <option value="P3K">PPPK/P3K</option>
-                                                <option value="Tidak ada golongan">Tidak Ada Golongan</option>
-                                            </select>
-                                        </div>
-                                    </div>
-
-
-                                    <div class="col-md-3" id="form_diluar_gol">
-                                        <div class="form-group">
-                                            <label>Isi Golongan </label>
-                                            <input name="diluar_gol" id="diluar_gol" placeholder="jika tidak ada ketik tanda -" type="text"
-                                                class="form-control">
-                                        </div>
-                                    </div>
-
-                                    <div class="col-md-3" id="form_golongan_pns">
-                                        <div class="form-group">
-                                            <label>Golongan PNS</label>
-
-                                            <select name="golongan_pns" id="golongan_pns" class="form-control select2">
-                                                <option id="valPns" value="">-- pilih golongan --
-                                                </option>
-                                                @foreach ($status['golongan'] as $v)
-                                                    <option value="{{ $v->name }}">{{ $v->name }}
-                                                    </option>
-                                                @endforeach
-                                            </select>
-                                            {{-- <input  name="golongan" id="golongan" type="text"
-                                        class="form-control" required> --}}
-                                        </div>
-                                    </div>
-
-                                    <div class="col-md-3" id="form_golongan_p3k">
-                                        <div class="form-group">
-                                            <label>Golongan PPPK/P3K</label>
-
-                                            <select name="golongan_p3k" id="golongan_p3k" class="form-control select2">
-                                                <option id="valP3K" value="">-- pilih golongan --
-                                                </option>
-                                                @foreach ($status['golongan_p3k'] as $v)
-                                                    <option value="{{ $v->name }}">{{ $v->name }}
-                                                    </option>
-                                                @endforeach
-                                            </select>
-                                            {{-- <input  name="golongan" id="golongan" type="text"
-                                        class="form-control" required> --}}
-                                        </div>
-                                    </div>
-                                @endif
+                                </div> --}}
                             </div>
 
+                            <hr class="my-4">
+
+                            <!-- SECTION 3: DATA ALAMAT & KONTAK -->
+                            <h5 class="mb-3">Data Alamat & Kontak</h5>
+                            <div class="row">
+                                <div class="col-md-8">
+                                    <div class="form-group">
+                                        <label>13. Alamat Rumah <span class="text-danger">*</span></label>
+                                        <input type="text" name="alamat_rumah" id="alamat_rumah" class="form-control"
+                                            rows="2" required />
+                                    </div>
+                                </div>
+
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label>Kabupaten / Kota (Alamat Rumah)</label>
+                                        <select name="kabupaten_rumah" id="kabupaten_rumah" class="form-control select2" required>
+                                            <option value="">-- pilih kabupaten --</option>
+                                            @foreach ($status['kabupaten'] as $v)
+                                                <option value="{{ $v->name }}">{{ $v->name }}</option>
+                                            @endforeach
+                                            <option value="lainnya">Lainnya</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
 
                             <div class="row">
-                                <div class="col-md-4">
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label>14. Nomor HP / WA <span class="text-danger">*</span></label>
+                                        <input name="no_hp" id="no_hp" type="number" class="form-control"
+                                            required>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-3">
                                     <div class="form-group">
                                         <label>Nomor WhatsApp</label>
                                         <input name="no_wa" id="no_wa" type="number" class="form-control">
                                     </div>
                                 </div>
-                                <div class="col-md-4">
+
+                                <div class="col-md-6">
                                     <div class="form-group">
-                                        <label>Nomor Handphone</label>
-                                        <input name="no_hp" id="no_hp" type="number" class="form-control">
+                                        <label>15. Alamat Email / Akun Belajar <span class="text-danger">*</span></label>
+                                        <input name="email" id="email" type="email" class="form-control"
+                                            required>
                                     </div>
                                 </div>
                             </div>
@@ -289,23 +325,62 @@
                             <div class="row">
                                 <div class="col-md-4">
                                     <div class="form-group">
-                                        <label>Nomor Surat Tugas (CONTOH : **/**/**/**)</label>
-                                        <input name="no_surat_tugas" id="no_surat_tugas" type="text"
-                                            class="form-control" required>
+                                        <label>16. NPWP</label>
+                                        <input name="npwp" id="npwp" type="text" class="form-control"
+                                            placeholder="Format: XX.XXX.XXX.X-XXX.XXX">
                                     </div>
                                 </div>
+
+                                {{-- <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label>Jenis Bank</label>
+                                        <select name="jenis_bank" id="jenis_bank" class="form-control select2">
+                                            <option value="">-- pilih bank --</option>
+                                            <option value="BRI">BRI</option>
+                                            <option value="BNI">BNI</option>
+                                            <option value="Mandiri">Mandiri</option>
+                                            <option value="BTN">BTN</option>
+                                            <option value="BCA">BCA</option>
+                                            <option value="BSI">BSI (Bank Syariah Indonesia)</option>
+                                            <option value="Lainnya">Lainnya</option>
+                                        </select>
+                                    </div>
+                                </div>
+
                                 <div class="col-md-4">
                                     <div class="form-group">
-                                        <label>Tanggal Surat Tugas</label>
+                                        <label>Nomor Rekening</label>
+                                        <input name="no_rek" id="no_rek" type="text" class="form-control">
+                                    </div>
+                                </div> --}}
+                            </div>
+
+                            <hr class="my-4">
+
+                            <!-- SECTION 4: DATA SURAT TUGAS -->
+                            <h5 class="mb-3">Data Surat Tugas</h5>
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label>Nomor Surat Tugas <span class="text-danger">*</span></label>
+                                        <input name="no_surat_tugas" id="no_surat_tugas" type="text"
+                                            class="form-control" placeholder="Contoh: **/**/**/**" required>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label>Tanggal Surat Tugas <span class="text-danger">*</span></label>
                                         <input name="tgl_surat_tugas" id="tgl_surat_tugas" type="date"
                                             class="form-control" required>
                                     </div>
                                 </div>
+
                                 <div class="col-md-4">
                                     <div class="form-group">
-                                        <label>Status Keikutpesertaan</label>
-                                        <select required name="status_keikutpesertaan" id="status_keikutpesertaan"
-                                            class="form-control">
+                                        <label>Status Keikutpesertaan <span class="text-danger">*</span></label>
+                                        <select name="status_keikutpesertaan" id="status_keikutpesertaan"
+                                            class="form-control" required>
                                             <option value="">-- Pilih Status --</option>
                                             <option value="peserta">Peserta</option>
                                             <option value="panitia">Panitia</option>
@@ -315,27 +390,26 @@
                                 </div>
                             </div>
 
-
-                            {{-- Signature Section --}}
-                            <div class="row">
-                                <div class="col-md-3">
-                                    {{-- Uncomment if using signature --}}
-                                    {{-- <div class="form-group">
-                                    <label for="signature">Tanda Tangan Digital</label>
-                                    <div id="signature-pad" class="signature-pad">
-                                        <canvas width="600" height="200"></canvas>
+                            {{-- <div class="row">
+                                <div class="col-md-12">
+                                    <div class="form-group">
+                                        <label>Upload Pas Foto (Optional)</label>
+                                        <input name="pas_foto" id="pas_foto" type="file" class="form-control"
+                                            accept="image/*">
+                                        <small class="form-text text-muted">Format: JPG, PNG, JPEG. Max: 2MB</small>
                                     </div>
-                                    <input type="hidden" name="signature" id="signature">
-                                    <button id="clear" class="btn btn-secondary mt-2">Clear</button>
-                                </div> --}}
                                 </div>
-                            </div>
+                            </div> --}}
 
                         </div>
 
                         <div class="card-footer text-right">
-                            <button class="btn btn-primary" type="submit" onclick="submitSignature()">Submit</button>
-                            <a href="{{ route('user.kegiatan') }}" class="btn btn-warning">Kembali</a>
+                            <button class="btn btn-primary" type="submit">
+                                <i class="fas fa-save"></i> Submit
+                            </button>
+                            <a href="{{ route('user.kegiatan') }}" class="btn btn-warning">
+                                <i class="fas fa-arrow-left"></i> Kembali
+                            </a>
                         </div>
                     </div>
                 </form>
@@ -343,11 +417,19 @@
         </div>
     </div>
 
-
     @push('scripts')
-        <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.0.0/dist/signature_pad.umd.min.js"></script>
         <script>
             $(document).ready(function() {
+                // Initialize Select2
+                $('.select2').select2();
+
+                // Hide form sections initially
+                $('#formAsal').hide();
+                $('#form_golongan_pns').hide();
+                $('#form_golongan_p3k').hide();
+                $('#form_diluar_gol').hide();
+
+                // Load existing data if available
                 $.ajax({
                     url: '{{ route('user.peserta.cekData') }}',
                     type: 'GET',
@@ -355,205 +437,124 @@
                         nik: '{{ session('nik') }}'
                     },
                     success: function(response) {
-                        console.log('hai :', response.data);
-                        console.log(response);
-                        let kb = $.trim(response.data.kabupaten);
-                        let jenis_gol = $.trim(response.data.jenis_gol);
-                        console.log(kb.length);
+                        console.log('Data loaded:', response.data);
 
-                        $('#no_ktp').val(response.data.no_ktp);
-                        $('#nip').val(response.data.nip);
-                        $('#nama').val(response.data.nama ?? response.data.nama_lengkap);
-                        $('#jabatan').val(response.data.jabatan);
-                        // $('#gender').val(response.data.jkl);
-                        $(`#gender option[value="${response.data.jkl ?? response.data.gender}"]`).prop(
-                            'selected', true);
+                        if (response.data) {
+                            let data = response.data;
 
-                        // change jenis golongan 
-                        let gol_pns = $('#form_golongan_pns');
-                        let gol_p3k = $('#form_golongan_p3k')
-                        let tdk_gol = $('#form_diluar_gol')
-                        let gol = ''
-                        $(`#jenis_gol option[value="${response.data.jenis_gol}"]`).prop('selected', true);
-                        if (jenis_gol == 'PNS') {
-                            gol_pns.show();
-                            gol = response.data.golongan
-                            $('#golongan_pns').append($("<option>")
-                                .text(gol)
-                                .attr('value', gol)
-                                .removeAttr('disabled')
-                                .prop('selected', true)
-                            );
-                            // $(`#jenis_gol option[value="${golongan}"]`).prop('selected', true);
-                        } else if (jenis_gol == 'P3K') {
-                            gol_p3k.show();
-                            gol = response.data.golongan
-                            $('#golongan_p3k').append($("<option>")
-                                .text(gol)
-                                .attr('value', gol)
-                                .removeAttr('disabled')
-                                .prop('selected', true)
-                            );
-                        } else if (jenis_gol == 'Tidak ada golongan') {
-                            tdk_gol.show();
-                            gol = response.data.golongan
-                            $('#diluar_gol').val(gol)
+                            // Fill form with existing data
+                            $('#no_ktp').val(data.no_ktp);
+                            $('#nip').val(data.nip);
+                            $('#nama').val(data.nama ?? data.nama_lengkap);
+                            $('#email').val(data.email);
+                            $('#tempat_lahir').val(data.tempat_lahir);
+                            $('#tgl_lahir').val(data.tgl_lahir);
+                            $('#agama').val(data.agama);
+                            $('#pendidikan').val(data.pendidikan);
+                            $('#jabatan').val(data.jabatan);
+                            $('#tugas_jabatan').val(data.tugas_jabatan);
+                            $('#status').val(data.status);
+                            $('#instansi').val(data.instansi ?? data.satuan_pendidikan);
+                            $('#satuan_pendidikan').val(data.satuan_pendidikan);
+                            $('#alamat_satuan').val(data.alamat_satuan);
+                            $('#alamat_rumah').val(data.alamat_rumah);
+                            $('#no_hp').val(data.no_hp);
+                            $('#no_wa').val(data.no_wa);
+                            $('#npwp').val(data.npwp);
+                            $('#npsn_sekolah').val(data.npsn_sekolah);
+                            $('#nuptk').val(data.nuptk);
+                            $('#jenis_bank').val(data.jenis_bank);
+                            $('#no_rek').val(data.no_rek);
+
+                            // Set gender
+                            $(`#gender option[value="${data.jkl ?? data.gender}"]`).prop('selected', true);
+
+                            // Set kabupaten
+                            if (data.kabupaten) {
+                                $('#kabupaten').append($("<option>")
+                                    .text(data.kabupaten)
+                                    .attr('value', data.kabupaten)
+                                    .prop('selected', true)
+                                );
+                            }
+
+                            // Set kabupaten
+                            if (data.pendidikan) {
+                                $('#pendidikan').append($("<option>")
+                                    .text(data.pendidikan)
+                                    .attr('value', data.pendidikan)
+                                    .prop('selected', true)
+                                );
+                            }
+
+                            // Handle golongan
+                            let jenis_gol = $.trim(data.jenis_gol);
+                            $(`#jenis_gol option[value="${jenis_gol}"]`).prop('selected', true);
+
+                            if (jenis_gol == 'PNS') {
+                                $('#form_golongan_pns').show();
+                                $('#golongan_pns').append($("<option>")
+                                    .text(data.golongan)
+                                    .attr('value', data.golongan)
+                                    .prop('selected', true)
+                                );
+                            } else if (jenis_gol == 'P3K') {
+                                $('#form_golongan_p3k').show();
+                                $('#golongan_p3k').append($("<option>")
+                                    .text(data.golongan)
+                                    .attr('value', data.golongan)
+                                    .prop('selected', true)
+                                );
+                            } else if (jenis_gol == 'Tidak ada golongan') {
+                                $('#form_diluar_gol').show();
+                                $('#diluar_gol').val(data.golongan);
+                            }
                         }
-
-                        // $(`#kabupaten option[value="${response.data.kabupaten}"]`).prop('selected', true);
-                        // $('#kabupaten').select2();
-                        // $('#kabupaten').val(kb).trigger('change');
-                        let selectedKab = $('#kabupaten')
-
-                        selectedKab.append($("<option>")
-                            .text(response.data.kabupaten)
-                            .attr('value', response.data.kabupaten)
-                            .removeAttr('disabled')
-                            .prop('selected', true)
-                        );
-                        console.log(selectedKab);
-                        // console.log('Selected value:', $('#kabupaten').val());
-
-                        // $('#kabupaten').val(kb);
-
-                        $('#golongan').val(response.data.golongan);
-                        $('#jenis_gol').val(response.data.jenis_gol);
-                        $('#instansi').val(response.data.instansi ?? response.instansi);
-                        $('#no_hp').val(response.data.no_hp);
-                        $('#no_wa').val(response.data.no_wa);
-                        // $('#no_surat_tugas').val(response.data.no_surat_tugas);
-                        // $('#tgl_surat_tugas').val(response.data.tgl_surat_tugas);
-
-                        // console.log($('#no_wa').val(response.data.no_wa));
-
                     },
                     error: function(error) {
-                        console.error(error);
-                        alert('Error fetching detail.');
+                        console.error('Error fetching data:', error);
                     }
                 });
 
-
-                $('.select2').select2();
-                $('#formOpsional').hide();
-                $('#narasumberTime').hide();
-
-                // Handle change event for Kabupaten selection
+                // Handle Kabupaten selection
                 $('#kabupaten').change(function() {
                     let selectedValue = $(this).val();
                     if (selectedValue === 'lainnya') {
-                        $('#formAsal').show(); // Show the input for manual entry
+                        $('#formAsal').show();
                     } else {
-                        $('#formAsal').hide(); // Hide the input
-                        $('#asal_kabupaten').val(''); // Clear the input value if not needed
+                        $('#formAsal').hide();
+                        $('#asal_kabupaten').val('');
                     }
                 });
 
-
-
-                $('#status_keikutpesertaan').change(function() {
-                    let status = $(this).val();
-                    if (status === 'peserta') {
-                        $('#formOpsional').show();
-                    } else if (status === 'panitia') {
-                        $('#formOpsional').hide();
-                    } else if (status === 'narasumber') {
-                        $('#formOpsional').hide();
-
-                    } else {
-                        $('#formOpsional').hide();
-                    }
-                });
-
-
-                // change jenis golongan 
-                let gol_pns = $('#form_golongan_pns');
-                let gol_p3k = $('#form_golongan_p3k')
-                let tdk_gol = $('#form_diluar_gol')
-
-                $('#form_diluar_gol').hide();
-                $('#form_golongan_pns').hide();
-                $('#form_golongan_p3k').hide();
-
-                let valPns = $('#valPns');
-                let valP3K = $('#valP3K')
-
+                // Handle Jenis Golongan change
                 $('#jenis_gol').change(function() {
                     let status = $(this).val();
-                    console.log(status);
+
+                    $('#form_golongan_pns').hide();
+                    $('#form_golongan_p3k').hide();
+                    $('#form_diluar_gol').hide();
+
+                    $('#golongan_pns').val('');
+                    $('#golongan_p3k').val('');
+                    $('#diluar_gol').val('');
+
                     if (status == 'PNS') {
-                        gol_pns.show();
-                        gol_p3k.hide().val('');
-                        tdk_gol.hide().val('');
+                        $('#form_golongan_pns').show();
                     } else if (status == 'P3K') {
-                        gol_p3k.show();
-                        gol_pns.hide().val('');
-                        tdk_gol.hide().val('');
+                        $('#form_golongan_p3k').show();
                     } else if (status == 'Tidak ada golongan') {
-                        gol_pns.hide().val('');
-                        gol_p3k.hide().val('');
-                        tdk_gol.show();
-                    } else {
-                        gol_pns.hide().val('');
-                        gol_p3k.hide().val('');
-                        tdk_gol.hide();
+                        $('#form_diluar_gol').show();
                     }
-
-
-
                 });
 
-                $('#id_pegawai').change(function() {
-                    var selectedOption = $(this).find('option:selected');
-                    // console.log(selectedOption);
-                    var jabatan = selectedOption.data('jabatan');
-                    var nama = selectedOption.data('nama');
-                    var no_ktp = selectedOption.data('no_ktp');
-                    var nip = selectedOption.data('nip');
-                    var kabupaten = selectedOption.data('kabupaten');
-                    var golongan = selectedOption.data('golongan');
-                    var jenis_gol = selectedOption.data('jenis_gol');
-                    var gender = selectedOption.data('gender');
-                    var instansi = selectedOption.data('instansi');
-                    var no_hp = selectedOption.data('hp');
-                    var no_wa = selectedOption.data('wa');
-                    // console.log(kabupaten);
-
-                    // Isi input form dengan data yang sesuai
-                    console.log(gender);
-                    $('#no_ktp').val(no_ktp);
-                    $('#nip').val(nip);
-                    $('#nama').val(`${nama}`);
-                    $('#jabatan').val(jabatan);
-                    $(`#gender option[value="${gender}"]`).attr('selected', 'selected');
-                    $('#golongan').val(golongan);
-                    $('#jenis_gol').val(jenis_gol);
-                    $('#kabupaten').val(kabupaten);
-                    $('#instansi').val(instansi);
-                    $('#no_hp').val(no_hp);
-                    $('#no_wa').val(no_wa);
+                // Auto-fill WA from HP if empty
+                $('#no_hp').blur(function() {
+                    if ($('#no_wa').val() == '') {
+                        $('#no_wa').val($(this).val());
+                    }
                 });
-
-
-
             });
-
-            const canvas = document.querySelector("canvas");
-            const signaturePad = new SignaturePad(canvas);
-
-            document.getElementById('clear').addEventListener('click', function(event) {
-                event.preventDefault();
-                signaturePad.clear();
-            });
-
-            function submitSignature() {
-                if (signaturePad.isEmpty()) {
-                    alert("Please provide a signature first.");
-                } else {
-                    const dataUrl = signaturePad.toDataURL();
-                    document.getElementById('signature').value = dataUrl;
-                }
-            }
         </script>
     @endpush
 @endsection

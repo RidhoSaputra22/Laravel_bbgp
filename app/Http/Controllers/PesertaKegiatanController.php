@@ -31,7 +31,7 @@ class PesertaKegiatanController extends Controller
         $menu = $this->menu;
 
         $datas = PesertaKegiatan::orderBy('id', 'DESC')->get();
-        $kegiatan = Kegiatan::get();
+        $kegiatan = Kegiatan::orderBy('id', 'DESC')->get();
         $kabupaten = Kabupaten::get();
         return view('pages.admin.peserta.index', compact('datas', 'menu', 'kegiatan', 'kabupaten'));
     }

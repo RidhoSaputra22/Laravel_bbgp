@@ -102,11 +102,11 @@ class KegiatanController extends Controller
         $menu = 'kegiatan';
         $kegiatanId = $r->input('kegiatan_id');
         $pegawai = Pegawai::orderBy('id', 'ASC')->get();
-        $guru = Guru::orderBy('id', 'ASC')->get();
+        $guru = Guru::where('no_ktp', $r->nik)->get();
         $kabupaten = Kabupaten::orderBy('id', 'ASC')->get();
         $kabupaten = Kabupaten::orderBy('id', 'ASC')->get();
 
-        // dd($r->all());
+        // dd($guru);
 
         $peserta = PesertaKegiatan::where('id_kegiatan', $kegiatanId)
             ->where('no_ktp', $r->nik)
@@ -134,7 +134,7 @@ class KegiatanController extends Controller
         ];
         // dd($status);
 
-        return view('pages.landing.kegiatan.daftar', compact('kegiatanId', 'status', 'menu', 'peserta'));
+        return view('pages.landing.kegiatan.daftar', compact('kegiatanId', 'status', 'menu', 'peserta', 'guru'));
         // return view('pages.user.kegiatan.create', compact('kegiatanId', 'status', 'menu', 'pegawai', 'merge'));
     }
 
@@ -142,6 +142,7 @@ class KegiatanController extends Controller
     {
         $r = $request->all();
         // dd($r['golongan_pns'] == null && $r['diluar_gol'] == null);
+        // dd($request->all());
         $menu = 'kegiatan';
 
 

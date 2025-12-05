@@ -196,65 +196,97 @@
         ) }}"
         alt="Logo Kanan">
 
-    <div style="margin-top: 20px">
+    <div style="margin-top: 10px">
         <div class="container">
             <table cellspacing="0" cellpadding="0" border="0" style="border: none !important;"
                 class="biodata-table">
                 <tr>
-                    <td>1. Nama</td>
+                    <td width="250">1. Nama Lengkap (dengan gelar)</td>
                     <td>: {{ $peserta->nama }}</td>
                 </tr>
                 <tr>
-                    <td>2. N I P</td>
+                    <td>2. NIP</td>
                     <td>: {{ $peserta->nip }}</td>
                 </tr>
                 <tr>
-                    <td>3. Jenis Kelamin</td>
-                    <td>: {{ $peserta->jkl }}</td>
+                    <td>3. Pangkat & Golongan</td>
+                    <td>: {{ $peserta->golongan ?? '-' }}</td>
                 </tr>
                 <tr>
-                    <td>4. Tempat, Tanggal Lahir</td>
-                    <td>: {{ $getById->tempat_lahir ?? 'Tidak terdata' }}, {{ $tgl_lahir }}</td>
+                    <td>4. Jabatan</td>
+                    <td>: {{ $getById->jenis_jabatan ?? ($peserta->jabatan ?? '-') }}</td>
                 </tr>
                 <tr>
-                    <td>5. Agama</td>
-                    <td>: {{ $getById->agama }}</td>
+                    <td>5. Mata Pelajaran yang diampu</td>
+                    {{-- <td>: {{ $getById->tugas_jabatan ?? ($peserta->mata_pelajaran ?? '-') }}</td> --}}
                 </tr>
                 <tr>
-                    <td>6. Pangkat/Golongan</td>
-                    <td>: {{ $peserta->golongan }}</td>
+                    <td>6. Tempat & Tanggal Lahir</td>
+                    <td>: {{ $getById->tempat_lahir ?? ($peserta->tempat_lahir ?? '-') }}, {{ $tgl_lahir }}</td>
                 </tr>
                 <tr>
-                    <td>7. Asal Kabupaten/Kota</td>
-                    <td>: {{ $peserta->kabupaten }}</td>
+                    <td>7. Jenis Kelamin</td>
+                    <td>: {{ $getById->gender ?? ($peserta->jkl ?? '-') }}</td>
                 </tr>
                 <tr>
-                    <td>8. Instansi</td>
-                    <td>: {{ $peserta->instansi }}</td>
+                    <td>8. Status</td>
+                    <td>: {{ $getById->status ?? ($peserta->status ?? '-') }}</td>
                 </tr>
                 <tr>
-                    <td>9. No. HP dan Whatsapp</td>
-                    <td>: HP : {{ $peserta->no_hp }} <br> <span style="margin-left: 10px;"> WA : {{ $peserta->no_wa }}
-                        </span>
-                    </td>
+                    <td>9. Agama</td>
+                    <td>: {{ $getById->agama ?? ($peserta->agama ?? '-') }}</td>
                 </tr>
                 <tr>
                     <td>10. Pendidikan Terakhir</td>
-                    <td>: {{ $getById->pendidikan }}</td>
+                    <td>: {{ $getById->pendidikan ?? ($peserta->pendidikan ?? '-') }}</td>
                 </tr>
-                @if ($getById->eksternal_jabatan == 'Stakeholder')
-                    <tr>
-                        <td>11. Jabatan</td>
-                        <td>: {{ $getById->jenis_jabatan }}</td>
-                    </tr>
-                @endif
+                <tr>
+                    <td>11. Nama Unit Kerja</td>
+                    <td>: {{ $peserta->instansi ?? '-' }}</td>
+                </tr>
+                <tr>
+                    <td>12. Alamat Unit Kerja</td>
+                    <td>: {{ $peserta->alamat ?? '-' }}</td>
+                </tr>
+                <tr>
+                    <td style="padding-left: 30px;">Kabupaten/Kota</td>
+                    <td>: {{ $peserta->kabupaten ?? '-' }}</td>
+                </tr>
+
+                <tr>
+                    <td>13. Alamat Rumah</td>
+                    <td>: {{ ($getById->alamat_rumah ?? '-') }}</td>
+                </tr>
+                <tr>
+                    <td style="padding-left: 30px;"></td>
+                    <td>Telp : {{ $getById->no_hp ?? '-' }}</td>
+                </tr>
+                <tr>
+                    <td style="padding-left: 30px;">Kabupaten/Kota</td>
+                    <td>: {{ $getById->kabupaten ?? '-' }}</td>
+                </tr>
+                <tr>
+                    <td>14. No. HP / WA</td>
+                    <td>: {{ $peserta->no_hp ?? '-' }} / {{ $peserta->no_wa ?? '-' }}</td>
+                </tr>
+                <tr>
+                    <td>15. Alamat Email/akun belajar</td>
+                    <td>: {{ $peserta->email ?? $getById->email ?? '-' }}</td>
+                </tr>
+                <tr>
+                    <td>16. NPWP</td>
+                    <td>: {{ $getById->npwp ?? ($peserta->npwp ?? '-') }}</td>
+                </tr>
             </table>
             <footer>
-                <div style="font-size: 16px; margin-right:20px" class="signature">
-                    <p>...................., .................... {{ date('Y') }}</p>
-                    <br><br><br><br>
+                <div style="font-size: 16px; margin-right:20px; margin-top: 30px;" class="signature">
+                    <p>Makassar, Desember {{ date('Y') }}</p>
+                    <p style="font-weight: bold; margin-right: 133px;">{{  ucfirst($peserta->status_keikutpesertaan) }},</p>
+                    <br>
+                    <br>
+                    <br>
                     <p>{{ $peserta->nama }}</p>
-                    <p>NIP. {{ $peserta->nip }}</p>
+                    {{-- <p>NIP. {{ $peserta->nip }}</p> --}}
                 </div>
             </footer>
         </div>

@@ -13,7 +13,8 @@ class PesertaKegiatan extends Model
         'nama',
         'no_ktp',
         'nip',
-        'kabupaten',
+        'alamat', // alamat kerja
+        'kabupaten', // kabupaten kerja
         'status_keikutpesertaan',
         'instansi',
         'golongan',
@@ -27,31 +28,37 @@ class PesertaKegiatan extends Model
         'no_surat_tugas',
         'instansi',
         'tgl_surat_tugas',
+        'email',
         // 'gender',
         // 'id_pegawai',
         // 'signature',
         // 'jam_mengajar',
         // 'jam_selesai',
+
     ];
 
-    public function kegiatan() {
+    public function kegiatan()
+    {
         return $this->hasOne(Kegiatan::class, 'id', 'id_kegiatan');
     }
 
-    public function pegawai() {
+    public function pegawai()
+    {
         return $this->belongsTo(Pegawai::class, 'no_ktp', 'no_ktp');
     }
 
-    public function eksternal() {
-        return $this->hasOne(Guru::class, 'no_ktp' , 'no_ktp');
+    public function eksternal()
+    {
+        return $this->hasOne(Guru::class, 'no_ktp', 'no_ktp');
     }
 
-    public function getEksternal() {
-        return $this->hasMany(Guru::class, 'no_ktp' , 'no_ktp');
+    public function getEksternal()
+    {
+        return $this->hasMany(Guru::class, 'no_ktp', 'no_ktp');
     }
 
-    public function getKegiatan() {
+    public function getKegiatan()
+    {
         return $this->hasMany(Kegiatan::class, 'id', 'id_kegiatan');
     }
-
 }
