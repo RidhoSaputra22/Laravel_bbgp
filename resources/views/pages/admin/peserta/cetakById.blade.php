@@ -177,7 +177,7 @@
             <?php
             setlocale(LC_TIME, 'id_ID.UTF-8');
             $tgl_lahir = strftime('%d %B %Y', strtotime($getById->tgl_lahir ?? date('d-m-Y')));
-            // $today = date('d-F-Y'); 
+            // $today = date('d-F-Y');
             ?>
             <div style="margin: 50px 0 0 100px; width:500px">
                 <h2>{{ strtoupper($namaKegiatan) }}</h2>
@@ -202,8 +202,8 @@
             <table cellspacing="0" cellpadding="0" border="0" style="border: none !important;"
                 class="biodata-table">
                 <tr>
-                    <td width="250">1. Nama Lengkap (dengan gelar)</td>
-                    <td>: {{ $peserta->nama }}</td>
+                    <td width="35%">1. Nama Lengkap (dengan gelar)</td>
+                    <td width="65%">: {{ $peserta->nama }}</td>
                 </tr>
                 <tr>
                     <td>2. NIP</td>
@@ -219,7 +219,7 @@
                 </tr>
                 <tr>
                     <td>5. Mata Pelajaran yang diampu</td>
-                    {{-- <td>: {{ $getById->tugas_jabatan ?? ($peserta->mata_pelajaran ?? '-') }}</td> --}}
+                    <td>: {{ $peserta->mata_pelajaran ?? '-' }}</td>
                 </tr>
                 <tr>
                     <td>6. Tempat & Tanggal Lahir</td>
@@ -256,7 +256,7 @@
 
                 <tr>
                     <td>13. Alamat Rumah</td>
-                    <td>: {{ ($getById->alamat_rumah ?? '-') }}</td>
+                    <td>: {{ $getById->alamat_rumah ?? '-' }}</td>
                 </tr>
                 <tr>
                     <td style="padding-left: 30px;"></td>
@@ -272,7 +272,7 @@
                 </tr>
                 <tr>
                     <td>15. Alamat Email/akun belajar</td>
-                    <td>: {{ $peserta->email ?? $getById->email ?? '-' }}</td>
+                    <td>: {{ $peserta->email ?? ($getById->email ?? '-') }}</td>
                 </tr>
                 <tr>
                     <td>16. NPWP</td>
@@ -280,15 +280,19 @@
                 </tr>
             </table>
             <footer>
-                <div style="font-size: 16px; margin-right:20px; margin-top: 30px;" class="signature">
-                    {{-- <p>Makassar, {{ $today }}</p> --}}
-                    <p>Makassar, 08 Desember 2025</p>
-                    <p style="font-weight: bold; margin-right: 156px;">{{  ucfirst($peserta->status_keikutpesertaan) }},</p>
-                    <br>
-                    <br>
-                    <br>
-                    <p>{{ $peserta->nama }}</p>
-                    {{-- <p>NIP. {{ $peserta->nip }}</p> --}}
+                <div style="font-size: 16px; margin-top: 30px;">
+                    <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                        <tr>
+                            <td width="60%"></td>
+                            <td width="40%" style="text-align: left;">
+                                <p>Makassar, 08 Desember {{ date('Y') }}</p>
+                                <p style="font-weight: bold;">Peserta,</p>
+                                <br><br><br>
+                                <p>{{ $peserta->nama }}</p>
+                                {{-- <p>NIP. {{ $peserta->nip }}</p> --}}
+                            </td>
+                        </tr>
+                    </table>
                 </div>
             </footer>
         </div>
@@ -419,7 +423,7 @@
                     </tr>
                     <tr>
                         <td>Alamat</td>
-                        <td>: {{ $getById->alamat ?? '-' }}</td>
+                        <td>: {{ $peserta->alamat ?? '-' }}</td>
                     </tr>
                 </table>
             </div>
@@ -431,12 +435,21 @@
         </div>
 
         <!-- Footer Surat Sehat -->
-        <div class="pakta-footer">
-            <p>.............., ........................ 2025</p>
-            <p>Pembuat pernyataan</p>
-            <br><br><br>
-            <p>{{ $peserta->nama }}</p>
-        </div>
+        <footer class="">
+            <div style="font-size: 13px; margin-top: 30px;">
+                <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                    <tr>
+                        <td width="60%"></td>
+                        <td width="40%" style="text-align: left;">
+                            <p>.............., ........................ 2025</p>
+                            <p>Pembuat pernyataan</p>
+                            <br><br><br>
+                            <p>{{ $peserta->nama }}</p>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </footer>
     </div>
 
 </body>
