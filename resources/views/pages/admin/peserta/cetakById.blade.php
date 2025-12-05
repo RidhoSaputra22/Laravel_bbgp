@@ -177,6 +177,7 @@
             <?php
             setlocale(LC_TIME, 'id_ID.UTF-8');
             $tgl_lahir = strftime('%d %B %Y', strtotime($getById->tgl_lahir ?? date('d-m-Y')));
+            // $today = date('d-F-Y'); 
             ?>
             <div style="margin: 50px 0 0 100px; width:500px">
                 <h2>{{ strtoupper($namaKegiatan) }}</h2>
@@ -280,8 +281,9 @@
             </table>
             <footer>
                 <div style="font-size: 16px; margin-right:20px; margin-top: 30px;" class="signature">
-                    <p>Makassar, Desember {{ date('Y') }}</p>
-                    <p style="font-weight: bold; margin-right: 133px;">{{  ucfirst($peserta->status_keikutpesertaan) }},</p>
+                    {{-- <p>Makassar, {{ $today }}</p> --}}
+                    <p>Makassar, 08 Desember 2025</p>
+                    <p style="font-weight: bold; margin-right: 156px;">{{  ucfirst($peserta->status_keikutpesertaan) }},</p>
                     <br>
                     <br>
                     <br>
