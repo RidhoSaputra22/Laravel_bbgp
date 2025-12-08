@@ -915,6 +915,21 @@
                         </a>
                     </div>
                 </div>
+                <div class="col-lg-3 col-md-6 mb-4">
+                    <div class="gdrive-card">
+                        <div class="gdrive-icon" style="color: #ff4242;">
+                            <i class="fas fa-chalkboard-teacher"></i>
+                        </div>
+                        <h4 class="gdrive-title">Modul BK</h4>
+                        <p class="gdrive-description">
+                            Modul Pembelajaran 7 Jurus BK Hebat
+                        </p>
+                        <a href="https://drive.google.com/drive/folders/1DYxA5Jy25JzXl5huNh7YJpDK_1-RQNpI" target="_blank"
+                            class="gdrive-btn">
+                            <i class="fas fa-download mr-2"></i>Download
+                        </a>
+                    </div>
+                </div>
             </div>
         </div>
     </section>
