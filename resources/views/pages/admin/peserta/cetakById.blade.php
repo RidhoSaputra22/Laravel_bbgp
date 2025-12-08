@@ -171,7 +171,7 @@
 <body>
     <!-- HALAMAN 1: BIODATA PESERTA -->
     <div class="kop-surat" style="position: relative;">
-        <img style="position: absolute; left: 0; width: 110px" src="{{ asset('img_template/iconbbgp.png') }}"
+        <img style="position: absolute; left: 0; width: 90px" src="{{ asset('img_template/iconbbgp.png') }}"
             alt="Logo Kiri">
         <div class="kop-text">
             <?php
@@ -197,7 +197,7 @@
         ) }}"
         alt="Logo Kanan">
 
-    <div style="margin-top: 10px">
+    <div style="margin-top: -20px">
         <div class="container">
             <table cellspacing="0" cellpadding="0" border="0" style="border: none !important;"
                 class="biodata-table">
@@ -280,14 +280,14 @@
                 </tr>
             </table>
             <footer>
-                <div style="font-size: 16px; margin-top: 30px;">
+                <div style="font-size: 14px; margin-top: 15px;">
                     <table width="100%" cellpadding="0" cellspacing="0" border="0">
                         <tr>
                             <td width="60%"></td>
                             <td width="40%" style="text-align: left;">
                                 <p>Makassar, 08 Desember {{ date('Y') }}</p>
                                 <p style="font-weight: bold;">Peserta,</p>
-                                <br><br><br>
+                                <br><br>
                                 <p>{{ $peserta->nama }}</p>
                                 {{-- <p>NIP. {{ $peserta->nip }}</p> --}}
                             </td>
