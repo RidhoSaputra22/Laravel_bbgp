@@ -231,7 +231,7 @@
                 </tr>
                 <tr>
                     <td>8. Status</td>
-                    <td>: {{ $getById->status ?? ($peserta->status ?? '-') }}</td>
+                    <td>: {{ $peserta->status ?? ($getById->status ?? '-') }}</td>
                 </tr>
                 <tr>
                     <td>9. Agama</td>

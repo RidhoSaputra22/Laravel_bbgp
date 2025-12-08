@@ -91,7 +91,7 @@
                                 type="submit" value="CARI">
                         </div>
                         <div class="col-md-2">
-                            <a href="https://forms.gle/DbnABf2sTy6XNQMv5" target="_blank" style="background-color: #1376bd; color: white; " class="form-control btn btn-success">Post Test</a>
+                            <a href="https://forms.gle/DbnABf2sTy6XNQMv5" target="_blank" style="background-color: #1376bd; color: white; " class="form-control btn btn-success">Pretest</a>
                         </div>
                     </div>
                 </form>

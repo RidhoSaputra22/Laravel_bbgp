@@ -121,7 +121,7 @@ class GuruController extends Controller
         // $fileUrl = asset('upload/guru/' . $nameFoto);
 
         $r['pas_foto'] = '';
-        $r['status'] = 'Belum Kawin';
+        // $r['status'] = 'Belum Kawin';
         $r['alamat_satuan'] = '';
         $r['eksternal_jabatan'] = $r['jenisJabatan'];
         $r['jenis_jabatan'] = $r['jabJenis'];
