@@ -184,15 +184,15 @@
 
 
                         {{-- <div class="col-md-3">
-                                <div class="form-group">
-                                    <label>Status</label>
-                                    <select required name="status" class="form-control ">
-                                        <option value="">-- Kawin/Belum Kawin --</option>
-                                        <option value="Kawin">Kawin</option>
-                                        <option value="Belum Kawin">Belum Kawin</option>
-                                    </select>
-                                </div>
-                            </div> --}}
+                            <div class="form-group">
+                                <label>Status</label>
+                                <select required name="status" class="form-control ">
+                                    <option value="">-- Kawin/Belum Kawin --</option>
+                                    <option value="Kawin">Kawin</option>
+                                    <option value="Belum Kawin">Belum Kawin</option>
+                                </select>
+                            </div>
+                        </div> --}}
 
 
 
@@ -247,12 +247,12 @@
                             </div>
                         </div>
 
-                        
+
                     </div>
-                    
-                    
+
+
                     <div class="row">
-                        
+
                         <div class="col-md-4 mb-4">
                             <label>Jenis Jabatan Eksternal</label>
                             {{-- <input type="text" readonly name="jenisJabatan" class="form-control"

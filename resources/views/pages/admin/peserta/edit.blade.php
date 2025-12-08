@@ -106,8 +106,9 @@
                                         <div class="col-md-3">
                                             <div class="form-group">
                                                 <label>Tempat Lahir</label>
-                                                <input name="tempat_lahir" id="tempat_lahir" value="{{ $getById->tempat_lahir }}"
-                                                    type="text" class="form-control" required>
+                                                <input name="tempat_lahir" id="tempat_lahir"
+                                                    value="{{ $getById->tempat_lahir }}" type="text"
+                                                    class="form-control" required>
                                             </div>
                                         </div>
 
@@ -304,6 +305,18 @@
                                                     type="number" class="form-control">
                                             </div>
                                         </div>
+
+                                        <div class="col-md-3">
+                                            <div class="form-group">
+                                                <label>Status</label>
+                                                <select required name="status" class="form-control ">
+                                                    <option value="">-- Kawin/Belum Kawin --</option>
+                                                    <option value="Kawin">Kawin</option>
+                                                    <option value="Belum Kawin">Belum Kawin</option>
+                                                </select>
+                                            </div>
+                                        </div>
+
                                     </div>
 
                                     <div class="row">

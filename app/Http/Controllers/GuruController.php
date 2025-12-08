@@ -231,7 +231,7 @@ class GuruController extends Controller
         //     $r['pas_foto'] = $request->pas_fotoLama;
         // }
         $r['pas_foto'] = '';
-        $r['status'] = 'Belum Kawin';
+        // $r['status'] = 'Belum Kawin';
         $r['alamat_satuan'] = '';
         $r['eksternal_jabatan'] = $r['jenisJabatan'];
 

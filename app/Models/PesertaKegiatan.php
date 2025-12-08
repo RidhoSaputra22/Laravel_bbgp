@@ -30,6 +30,7 @@ class PesertaKegiatan extends Model
         'tgl_surat_tugas',
         'email',
         'mata_pelajaran',
+        'status' 
         // 'id_pegawai',
         // 'signature',
         // 'jam_mengajar',
