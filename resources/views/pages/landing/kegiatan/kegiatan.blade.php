@@ -90,6 +90,9 @@
                             <input style="background-color: #218838; color: white; " class="form-control btn btn-success"
                                 type="submit" value="CARI">
                         </div>
+                        <div class="col-md-2">
+                            <a href="https://forms.gle/DbnABf2sTy6XNQMv5" target="_blank" style="background-color: #1376bd; color: white; " class="form-control btn btn-success">Post Test</a>
+                        </div>
                     </div>
                 </form>
                 <br />
