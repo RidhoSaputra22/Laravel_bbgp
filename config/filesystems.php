@@ -38,8 +38,11 @@ return [
 
         'public' => [
             'driver' => 'local',
-            'root' => storage_path('app/public'),
-            'url' => env('APP_URL').'/storage',
+            // Cek apakah di hosting (ada public_html), jika tidak pakai default
+            'root' => file_exists(base_path('../public_html')) 
+                        ? base_path('../public_html/upload') 
+                        : public_path('upload'),
+            'url' => env('APP_URL').'/upload',
             'visibility' => 'public',
             'throw' => false,
         ],

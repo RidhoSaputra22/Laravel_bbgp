@@ -34,20 +34,18 @@ class AuthController extends Controller
             return redirect()->back()->with('message', 'gagal login');
         }
 
-        $user = Admin::where('no_ktp', $request->nik)->where('role', $request->role)->first();
-        $user1 = User::where('no_ktp', $request->nik)->where('role', $request->role)->first();
-        // dd($request->all());
-
-        $cek = Auth::attempt(['no_ktp' => $request->nik, 'password' => $request->password, 'role' => $request->role]);
-        if ($cek) {
+        $credentials = ['no_ktp' => $request->nik, 'password' => $request->password, 'role' => $request->role];
+        
+        if (Auth::attempt($credentials)) {
+            $user = Auth::user();
             $guru = Guru::where('no_ktp', $user->no_ktp)->first();
 
             Session::put('user_id', $user->id);
-            Session::put('guru_id', $guru->id);
+            Session::put('guru_id', $guru->id ?? null);
             Session::put('name', $user->name);
-            Session::put('nip', $user->nip);
+            Session::put('nip', $user->nip ?? null);
             Session::put('no_ktp', $user->no_ktp);
-            Session::put('nik', $user->nik);
+            Session::put('nik', $user->nik ?? null);
             Session::put('role', $user->role);
             Session::put('cek', true);
 
@@ -67,22 +65,25 @@ class AuthController extends Controller
 
     public function login_action_admin(Request $request)
     {
-        $request['role'] = 'superadmin';
+        $user_found = User::where('username', $request->username)->first();
 
-        if ($request->role == null) {
+        if (!$user_found || !in_array($user_found->role, ['admin', 'superadmin', 'kepala'])) {
             return redirect()->back()->with('message', 'gagal login');
         }
 
-        $user = Admin::where('username', $request->username)->where('role', $request->role)->first();
-        $user1 = User::where('username', $request->username)->where('role', $request->role)->first();
+        $credentials = [
+            'username' => $request->username,
+            'password' => $request->password,
+            'role' => $user_found->role
+        ];
 
-
-        $cek = Auth::attempt(['username' => $request->username, 'password' => $request->password, 'role' => $request->role]);
-        if ($cek) {
+        if (Auth::attempt($credentials)) {
+            $user = Auth::user();
+            
             Session::put('user_id', $user->id);
             Session::put('name', $user->name);
-            Session::put('nip', $user->nip);
-            Session::put('no_ktp', $user->no_ktp);
+            Session::put('nip', $user->nip ?? null);
+            Session::put('no_ktp', $user->no_ktp ?? null);
             Session::put('username', $user->username);
             Session::put('role', $user->role);
             Session::put('cek', true);

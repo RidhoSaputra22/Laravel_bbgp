@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\PenyewaanRuanganController;
+use App\Http\Controllers\RtlController;
 use App\Http\Controllers\SekolahController as AdminSekolahController;
 use App\Http\Controllers\User\SekolahController as UserSekolahController;
 use Illuminate\Support\Facades\Route;
@@ -93,6 +94,14 @@ Route::group(
         Route::get('/print/absensi-tkp', 'KegiatanController@printAbsensiTkp')->name('print.absensi.tkp');
         Route::get('/print/absensi-stk', 'KegiatanController@printAbsensiStk')->name('print.absensi.stk');
         Route::get('/print/absensi-pgw', 'KegiatanController@printAbsensiPgw')->name('print.absensi.pgw');
+
+        // RTL User
+        Route::prefix('rtl')->group(function () {
+            Route::get('/', [RtlController::class, 'index'])->name('user.rtl.index');
+            Route::post('/store', [RtlController::class, 'store'])->name('user.rtl.store');
+            Route::post('/reupload/{id}', [RtlController::class, 'reupload'])->name('user.rtl.reupload');
+            Route::get('/{id}', [RtlController::class, 'show'])->name('user.rtl.show');
+        });
     }
 );
 
@@ -469,7 +478,7 @@ Route::group(
                 Route::post('/hapus/{id}', 'BeritaController@destroy')->name('berita.hapus');
             });
 
-            // Artikel
+            // Artikels
             Route::prefix('artikel')->group(function () {
                 Route::get('/', 'ArtikelController@index')->name('artikel.index');
                 Route::get('/create', 'ArtikelController@create')->name('artikel.create');
@@ -477,6 +486,13 @@ Route::group(
                 Route::get('/edit/{id}', 'ArtikelController@edit')->name('artikel.edit');
                 Route::put('/update', 'ArtikelController@update')->name('artikel.update');
                 Route::post('/hapus/{id}', 'ArtikelController@destroy')->name('artikel.hapus');
+            });
+
+            // RTL Admin
+            Route::prefix('rtl')->group(function () {
+                Route::get('/', [RtlController::class, 'index'])->name('rtl.index');
+                Route::get('/{id}', [RtlController::class, 'show'])->name('rtl.show');
+                Route::post('/update/{id}', [RtlController::class, 'update'])->name('rtl.update');
             });
         });
     }
@@ -501,4 +517,27 @@ Route::group(['prefix' => 'auth', 'namespace' => 'App\Http\Controllers'], functi
             'user.index'
         )->with('message', 'sukses logout');
     })->name('logout');
+});
+// Diagnostic & Repair Route
+Route::get('/repair-link', function () {
+    $target = base_path('storage/app/public');
+    $link = public_path('upload'); // Ganti dari storage ke upload
+    
+    // Hapus jika sudah ada (bisa jadi broken link atau folder asli)
+    if (file_exists($link)) {
+        if (is_link($link)) {
+            unlink($link);
+        } else {
+            // Jika itu folder asli, kita coba rename dulu untuk backup.
+            rename($link, $link . '_old_' . time());
+        }
+    }
+
+    try {
+        // Buat Symbolic Link bernama 'upload'
+        app()->make('files')->link($target, $link);
+        return "Symbolic link 'upload' created successfully!<br>Target: $target <br>Link: $link <br><br>Sekarang file bisa diakses via <b>domain.com/upload/...</b>";
+    } catch (\Exception $e) {
+        return "Failed to create link: " . $e->getMessage();
+    }
 });

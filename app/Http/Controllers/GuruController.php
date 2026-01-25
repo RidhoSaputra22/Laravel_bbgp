@@ -25,15 +25,6 @@ class GuruController extends Controller
      */
     public function index()
     {
-        $sekolahs = [];
-        Sekolah::select('npsn_sekolah', 'nama_sekolah', 'kecamatan', 'kabupaten')
-            ->chunk(100, function ($chunk) use (&$sekolahs) {
-                foreach ($chunk as $item) {
-                    $sekolahs[] = $item;
-                }
-            });
-        $datas['s_sekolah'] = $sekolahs;
-
         $datas = array(
             's_kepegawaian' => Kepegawaian::select('id', 'name')->get(),
             's_kependidikan' => SatuanPendidikan::select('id', 'name')->get(),
@@ -41,8 +32,7 @@ class GuruController extends Controller
             's_jabatan' => Jabatan::select('id', 'name')->get(),
             's_kabupaten' => Kabupaten::select('id', 'name')->get(),
             's_kecamatan' => Kecamatan::select('id', 'name')->get(),
-            // 's_sekolah' => Sekolah::select('npsn_sekolah', 'nama_sekolah', 'kecamatan', 'kabupaten')->select('id', 'name')->get(),
-            's_sekolah' => $sekolahs,
+            's_sekolah' => [], // Loaded via AJAX
             's_jabPendidik' => JabatanPendidik::select('id', 'name')->get(),
             's_jabKependidikan' => JabatanKependidikan::select('id', 'name')->get(),
             's_jabStakeholder' => JabatanStakeHolder::select('id', 'name')->get(),
@@ -50,14 +40,9 @@ class GuruController extends Controller
             's_jabKategoriPengawas' => ['Sertifikat GP (Guru Penggerak)', 'Diklat Cawas', 'Lainnya'],
             's_jabKategoriKepsek' => ['Sertifikat GP (Guru Penggerak)', 'Diklat Cakep', 'Lainnya'],
             's_jabTugas' => ['GP (Guru Penggerak)', 'PP (Pengajar Praktik)', 'Fasil (Fasilitator)', 'Instruktur'],
-
         );
-        // $data = Guru::orderBy('id', 'DESC')->orderBy('is_verif', 'desc')->get();
-        $data = Guru::orderBy('id', 'DESC')
-            ->orderBy('is_verif', 'desc')
-            ->paginate(50);
-        // dd($data);
-        return view('pages.admin.guru.index', ['menu' => 'guru', 'datas' => $data, 'status' => $datas]);
+        
+        return view('pages.admin.guru.index', ['menu' => 'guru', 'status' => $datas]);
     }
 
     // public function fetchSekolah()
@@ -72,15 +57,6 @@ class GuruController extends Controller
      */
     public function create()
     {
-        $sekolahs = [];
-        Sekolah::select('npsn_sekolah', 'nama_sekolah', 'kecamatan', 'kabupaten')
-            ->chunk(100, function ($chunk) use (&$sekolahs) {
-                foreach ($chunk as $item) {
-                    $sekolahs[] = $item;
-                }
-            });
-        $datas['s_sekolah'] = $sekolahs;
-        // dd($sekolahs);
         $datas = array(
             's_kepegawaian' => Kepegawaian::get(),
             's_kependidikan' => SatuanPendidikan::get(),
@@ -88,8 +64,7 @@ class GuruController extends Controller
             's_jabatan' => Jabatan::get(),
             's_kabupaten' => Kabupaten::get(),
             's_kecamatan' => Kecamatan::get(),
-            // 's_sekolah' => Sekolah::select('npsn_sekolah', 'nama_sekolah', 'kecamatan', 'kabupaten')->get(),
-            's_sekolah' => $sekolahs,
+            's_sekolah' => [],
             's_jabPendidik' => JabatanPendidik::get(),
             's_jabKependidikan' => JabatanKependidikan::get(),
             's_jabStakeholder' => JabatanStakeHolder::get(),
@@ -97,8 +72,6 @@ class GuruController extends Controller
             's_jabTugas' => ['GP (Guru Penggerak)', 'PP (Pengajar Praktik)', 'Fasil (Fasilitator)', 'Instruktur'],
 
         );
-        // dd($datas['s_kecamatan']);
-        // dd($datas['s_sekolah'][0]);
         return view('pages.admin.guru.create', ['menu' => 'guru', 'status' => $datas]);
     }
 
@@ -156,14 +129,6 @@ class GuruController extends Controller
      */
     public function edit(string $id)
     {
-        $sekolahs = [];
-        Sekolah::select('npsn_sekolah', 'nama_sekolah', 'kecamatan', 'kabupaten')
-            ->chunk(100, function ($chunk) use (&$sekolahs) {
-                foreach ($chunk as $item) {
-                    $sekolahs[] = $item;
-                }
-            });
-        $datas['s_sekolah'] = $sekolahs;
         $datas = array(
             's_kepegawaian' => Kepegawaian::get(),
             's_kependidikan' => SatuanPendidikan::get(),
@@ -171,8 +136,7 @@ class GuruController extends Controller
             's_jabatan' => Jabatan::get(),
             's_kabupaten' => Kabupaten::get(),
             's_kecamatan' => Kecamatan::get(),
-            // 's_sekolah' => Sekolah::select('npsn_sekolah', 'nama_sekolah', 'kecamatan', 'kabupaten')->get(),
-            's_sekolah' => $sekolahs,
+            's_sekolah' => [],
             's_jabPendidik' => JabatanPendidik::get(),
             's_jabKependidikan' => JabatanKependidikan::get(),
             's_jabStakeholder' => JabatanStakeHolder::get(),
@@ -180,9 +144,7 @@ class GuruController extends Controller
             's_jabKategoriPengawas' => ['Sertifikat GP (Guru Penggerak)', 'Diklat Cawas', 'Lainnya'],
             's_jabKategoriKepsek' => ['Sertifikat GP (Guru Penggerak)', 'Diklat Cakep', 'Lainnya'],
             's_jabTugas' => ['GP (Guru Penggerak)', 'PP (Pengajar Praktik)', 'Fasil (Fasilitator)', 'Instruktur'],
-
         );
-
 
         $data = Guru::find($id);
         return view('pages.admin.guru.edit', ['menu' => 'guru', 'datas' => $data, 'status' => $datas]);
@@ -444,31 +406,47 @@ class GuruController extends Controller
 
     public function cari(Request $request)
     {
-        $search = Guru::query()
+        $query = Guru::query()
             ->leftJoin('sekolahs', 'gurus.npsn_sekolah', '=', 'sekolahs.npsn_sekolah')
             ->select('gurus.*', 'sekolahs.nama_sekolah');
 
+        $totalRecords = Guru::count();
+
         if ($request->nama_sekolah) {
-            $search->where('sekolahs.nama_sekolah', 'like', '%' . $request->nama_sekolah . '%');
+            $query->where('sekolahs.nama_sekolah', 'like', '%' . $request->nama_sekolah . '%');
         }
 
         if ($request->filled('nama_lengkap')) {
-            $search->where('gurus.nama_lengkap', 'like', '%' . $request->nama_lengkap . '%');
+            $query->where('gurus.nama_lengkap', 'like', '%' . $request->nama_lengkap . '%');
         }
 
         if ($request->filled('status_kepegawaian')) {
-            $search->where('gurus.status_kepegawaian', $request->status_kepegawaian);
+            $query->where('gurus.status_kepegawaian', $request->status_kepegawaian);
         }
 
         if ($request->filled('kabupaten')) {
-            $search->where('gurus.kabupaten', $request->kabupaten);
+            $query->where('gurus.kabupaten', $request->kabupaten);
         }
 
-        $search->orderBy('gurus.created_at', 'desc');
+        if ($request->has('search') && !empty($request->search['value'])) {
+            $searchValue = $request->search['value'];
+            $query->where(function($q) use ($searchValue) {
+                $q->where('gurus.nama_lengkap', 'like', '%' . $searchValue . '%')
+                  ->orWhere('gurus.no_ktp', 'like', '%' . $searchValue . '%');
+            });
+        }
 
-        $result = $search->get();
+        $filteredRecords = $query->count();
+
+        $result = $query->orderBy('gurus.created_at', 'desc')
+            ->skip($request->get('start', 0))
+            ->take($request->get('length', 10))
+            ->get();
 
         return response()->json([
+            'draw' => (int)$request->get('draw'),
+            'recordsTotal' => $totalRecords,
+            'recordsFiltered' => $filteredRecords,
             'status' => true,
             'data' => $result->map(function ($item) {
                 return [

@@ -124,11 +124,13 @@ class UserController extends Controller
 
     public function dataguru(Request $request)
     {
-        // Mulai query dengan eager loading 'sekolah' dan filter status verifikasi
-        $query = Guru::with('sekolah')  // Eager load sekolah relation
+        $query = Guru::with('sekolah')
             ->where('is_verif', 'sudah');
 
-        // Handle search parameters (filter berdasarkan kabupaten atau nik)
+        // Total records before filtering
+        $totalRecords = Guru::where('is_verif', 'sudah')->count();
+
+        // Handle specific filters from the form
         if ($request->kabupaten) {
             $query->where('kabupaten', $request->kabupaten);
         }
@@ -137,26 +139,51 @@ class UserController extends Controller
             $query->where('no_ktp', 'like', '%' . $request->nik . '%');
         }
 
-        // Hitung total records (untuk total data yang ada)
-        $totalRecords = $query->count();
+        // Handle DataTables search
+        if ($request->has('search') && !empty($request->search['value'])) {
+            $searchValue = $request->search['value'];
+            $query->where(function($q) use ($searchValue) {
+                $q->where('nama_lengkap', 'like', '%' . $searchValue . '%')
+                  ->orWhere('no_ktp', 'like', '%' . $searchValue . '%')
+                  ->orWhere('npsn_sekolah', 'like', '%' . $searchValue . '%')
+                  ->orWhere('eksternal_jabatan', 'like', '%' . $searchValue . '%')
+                  ->orWhere('jenis_jabatan', 'like', '%' . $searchValue . '%');
+            });
+        }
 
-        // Ambil data sesuai dengan parameter 'start' dan 'length' dari DataTables untuk paging
+        // Handle Column-specific search (from applySearch function)
+        if ($request->has('columns')) {
+            // Column 2: Nama Lengkap
+            if (!empty($request->columns[2]['search']['value'])) {
+                $query->where('nama_lengkap', 'like', '%' . $request->columns[2]['search']['value'] . '%');
+            }
+            // Column 4: Ketenagaan (eksternal_jabatan)
+            if (!empty($request->columns[4]['search']['value'])) {
+                $query->where('eksternal_jabatan', $request->columns[4]['search']['value']);
+            }
+            // Column 6: Jenis Jabatan
+            if (!empty($request->columns[6]['search']['value'])) {
+                $query->where('jenis_jabatan', $request->columns[6]['search']['value']);
+            }
+        }
+
+        // Count filtered records BEFORE paging
+        $filteredRecords = $query->count();
+
+        // Apply paging and ordering
         $data = $query->orderBy('id', 'DESC')
-            ->skip($request->start)    // Offset (skip) data yang sudah ditampilkan
-            ->take($request->length)   // Batasi jumlah data yang dikembalikan
+            ->skip($request->get('start', 0))
+            ->take($request->get('length', 10))
             ->get();
 
-        // Hitung jumlah data setelah filter diterapkan
-        $filteredRecords = $data->count();
-
-        // Format data yang dikembalikan ke DataTables
+        // Format data for DataTables
         return response()->json([
             'draw' => (int)$request->get('draw'),
-            'recordsTotal' => $totalRecords,  // Total data yang ada tanpa filter
-            'recordsFiltered' => $filteredRecords,  // Total data yang ada setelah filter
-            'data' => $data->map(function ($item, $index) {
+            'recordsTotal' => $totalRecords,
+            'recordsFiltered' => $filteredRecords,
+            'data' => $data->map(function ($item, $index) use ($request) {
                 return [
-                    'DT_RowIndex' => $index + 1,  // Menyediakan index untuk DataTables
+                    'DT_RowIndex' => (int)$request->get('start', 0) + $index + 1,
                     'npsn_sekolah' => $item->npsn_sekolah . '<br>' . ($item->sekolah->nama_sekolah ?? ''),
                     'nama_lengkap' => $item->nama_lengkap,
                     'status_kepegawaian' => $item->status_kepegawaian,
@@ -229,15 +256,6 @@ class UserController extends Controller
     }
     public function form_guru($jenis)
     {
-
-        $sekolahs = [];
-        Sekolah::select('npsn_sekolah', 'nama_sekolah', 'kecamatan', 'kabupaten')
-            ->chunk(500, function ($sekolahChunk) use (&$sekolahs) {
-                foreach ($sekolahChunk as $sekolah) {
-                    $sekolahs[] = $sekolah;
-                }
-            });
-
         $datas = array(
             's_kepegawaian' => Kepegawaian::get(),
             's_kependidikan' => SatuanPendidikan::get(),
@@ -245,9 +263,7 @@ class UserController extends Controller
             's_jabatan' => Jabatan::get(),
             's_kabupaten' => Kabupaten::get(),
             's_kecamatan' => Kecamatan::get(),
-            // 's_sekolah' => Sekolah::get(),
-
-            's_sekolah' => $sekolahs,
+            's_sekolah' => [], // Schools are loaded via AJAX in the view
             's_jabPendidik' => JabatanPendidik::get(),
             's_jabKependidikan' => JabatanKependidikan::get(),
             's_jabStakeholder' => JabatanStakeHolder::get(),
