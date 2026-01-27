@@ -104,26 +104,34 @@ class AkunController extends Controller
      */
     public function update(Request $request)
     {
-        //
-        // $cek_username = Admin::where('username', $request->username)->where('role', $request->role)->first();
-        // if($cek_username == null) {
-
         $r = $request->all();
-        $data = Admin::find($r['id']);
-        $dataUser = User::find($r['id']);
-        // dump($r);
-        $r['password'] = bcrypt($r['password']);
+        $admin = Admin::find($r['id']);
 
-        $data->update($r);
-        $dataUser->update($r);
-        // dump($dataUser);
-        // dd($data);
+        if (!$admin) {
+            return redirect()->route('akun.index')->with('message', 'Data tidak ditemukan');
+        }
+
+        // Simpan username lama untuk mencari User yang terkait
+        $oldUsername = $admin->username;
+
+        // Hanya update password jika diisi
+        if ($request->filled('password')) {
+            $r['password'] = bcrypt($r['password']);
+        } else {
+            // Jika password kosong, hapus dari array agar tidak ikut diupdate
+            unset($r['password']);
+        }
+
+        // Update Admin
+        $admin->update($r);
+
+        // Update User yang memiliki username yang sama
+        $user = User::where('username', $oldUsername)->first();
+        if ($user) {
+            $user->update($r);
+        }
+
         return redirect()->route('akun.index')->with('message', 'update');
-        // }
-        // else {
-        //     return redirect()->route('akun.index')->with('message', 'username sudah ada');
-        // }
-
     }
 
     /**
@@ -131,12 +139,15 @@ class AkunController extends Controller
      */
     public function destroy(string $id)
     {
-
-        $data = Admin::find($id);
-        $dataUser = User::find($id);
-        $dataUser->delete();
-        $data->delete();
-        return response()->json($data);
+        $admin = Admin::find($id);
+        if ($admin) {
+            $user = User::where('username', $admin->username)->first();
+            if ($user) {
+                $user->delete();
+            }
+            $admin->delete();
+        }
+        return response()->json($admin);
     }
 
 
