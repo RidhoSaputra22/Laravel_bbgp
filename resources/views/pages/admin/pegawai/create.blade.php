@@ -206,7 +206,7 @@
                               <div class="col-md-4">
                                  <div class="form-group">
                                     <label>Jabatan</label>
-                                    <select required name="jabatan" class="form-control select2">
+                                    <select required name="jabatan" class="form-control select2" data-select2-opts='{"tags": true}'>
                                        <option value="">-- Pilih Jabatan --</option>
                                        @foreach ($datas['jabatan'] as $v)
                                           <option value="{{ $v->name }}">{{ $v->name }}</option>

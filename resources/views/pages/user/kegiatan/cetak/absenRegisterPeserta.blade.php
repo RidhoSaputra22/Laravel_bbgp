@@ -10,16 +10,13 @@
         }
 
         .kop-surat {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            text-align: center;
+            width: 100%;
             margin-bottom: 20px;
             position: relative;
         }
 
-        .kop-surat img {
-            width: 110px;
+        .kop-surat .kop-baru {
+            width: 100%;
             height: auto;
         }
 
@@ -68,24 +65,21 @@
 </head>
 
 <body>
-    <div class="kop-surat" style="position: relative;">
-        <img style="position: absolute; left: 0; top: -20px;" src="{{ asset('img_template/iconbbgp.png') }}"
-            alt="Logo Kiri">
-        <div class="kop-text">
-            <h3 style="margin-left: 80px">DAFTAR REGISTRASI PESERTA</h3>
-            <?php
-            setlocale(LC_TIME, 'id_ID.UTF-8');
-            $tgl_kegiatan = strftime('%d %B', strtotime($kegiatan->tgl_kegiatan));
-            $tgl_selesai = strftime('%d %B %Y', strtotime($kegiatan->tgl_selesai));
-            ?>
-            <div style="margin: 0 0 0 120px; width:500px">
-                <h4>{{ strtoupper($kegiatan->nama_kegiatan) }} <br> {{ strtoupper($kegiatan->tempat_kegiatan) }} <br>
-                    {{ strtoupper($tgl_kegiatan) }} -
-                    {{ strtoupper($tgl_selesai) }} </h4>
-
-            </div>
-        </div>
+    <div class="kop-surat">
+        <img src="{{ public_path('img_template/kop_baru.png') }}" class="kop-baru" alt="Kop Surat">
         <h4 style="position: absolute; top: -20; right: 0; width: 120px">Lembar Registrasi Peserta</h4>
+    </div>
+
+    <div style="text-align: center; margin-top: 10px;">
+        <h3>DAFTAR REGISTRASI PESERTA</h3>
+        <?php
+        setlocale(LC_TIME, 'id_ID.UTF-8');
+        $tgl_kegiatan = strftime('%d %B', strtotime($kegiatan->tgl_kegiatan));
+        $tgl_selesai = strftime('%d %B %Y', strtotime($kegiatan->tgl_selesai));
+        ?>
+        <h4>{{ strtoupper($kegiatan->nama_kegiatan) }} <br> {{ strtoupper($kegiatan->tempat_kegiatan) }} <br>
+            {{ strtoupper($tgl_kegiatan) }} -
+            {{ strtoupper($tgl_selesai) }} </h4>
     </div>
     <table style="margin-top: 50px">
         <thead>

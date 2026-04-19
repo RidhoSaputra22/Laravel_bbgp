@@ -108,23 +108,10 @@
     $tgl_sekarang = strftime('%d %B %Y', strtotime(date('d-m-Y')));
     ?>
     <div class="container">
-        <div class="" style="
-              margin-top: -40px
-            ">
-            <img style="position: absolute; left: 0; top:25px; width: 110px"
-                src="{{ public_path('img_template/iconbbgp.png') }}" alt="Logo Kiri">
-            <div class="header">
-                <h2 style="margin-bottom: -20px">KEMENTRIAN PENDIDKAN DAN KEBUDAYAAN</h2>
-                <h2 style="margin-bottom: -20px">RISET, DAN TEKNOLOGI</h2>
-                <h2 style="margin-bottom: -20px">BALAI BESAR GURU PENGGERAK</h2>
-                <h2 style="margin-bottom: -15px">SULAWESI SELATAN</h2>
-                <p style="margin-bottom: -15px">Jalan Adhyaksa No. 2 Panakkukang Makassar </p>
-                <p style="margin-bottom: -15px"> Telepon : (0411) 440065, No. Fax. (0411) 421460 Kode Pos 90231 </p>
-                <p> Laman: bbgtk-sulsel.id email: bppauddikmassulsel@kemdikbud.go.id</p>
-            </div>
-            <hr>
-
+        <div style="margin-top: -40px">
+            <img src="{{ public_path('img_template/kop_baru.png') }}" style="width: 100%;" alt="Kop Surat">
         </div>
+        <hr>
         <div class="content" style="margin-top:-10px">
             <h2 style="text-align: center;"> DAFTAR PENGELUARAN RILL </h2>
             <table style="margin-top: -10px" cellpadding="0" cellspacing="0">

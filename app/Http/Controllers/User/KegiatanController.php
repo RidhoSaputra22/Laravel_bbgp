@@ -141,6 +141,9 @@ class KegiatanController extends Controller
     public function store(Request $request)
     {
         $r = $request->all();
+        if (isset($r['jabatan'])) {
+            $r['jabatan'] = ucwords(strtolower($r['jabatan']));
+        }
         // dd($r['golongan_pns'] == null && $r['diluar_gol'] == null);
         // dd($request->all());
         $menu = 'kegiatan';

@@ -90,7 +90,7 @@
                      <input style="background-color: #218838; color: white; " class="form-control btn btn-success"
                         type="submit" value="CARI">
                   </div>
-                  <div class="col-md-2">
+{{-- <div class="col-md-2">
                      <a href="https://forms.gle/DbnABf2sTy6XNQMv5" target="_blank"
                         style="background-color: #1376bd; color: white; " class="form-control btn btn-success">Post
                         test</a>
@@ -104,7 +104,7 @@
                      <a href="https://forms.gle/mGNjDQiSLB469nRE7" target="_blank"
                         style="background-color: #1376bd; color: white; " class="form-control btn btn-success">Evaluasi
                         Fasilitator</a>
-                  </div>
+                  </div> --}}
                </div>
             </form>
             <br />
@@ -576,6 +576,11 @@
                                 <p><strong>Jenis Golongan:</strong> ${response.jenis_gol ?? ''}</p>
                                 <p><strong>Golongan:</strong> ${response.golongan ?? ''}</p>
                             </div>    
+                        </div>
+                        <div class="text-right mt-3">
+                            <a href="/dashboard/peserta/cetakByUser/${response.id}" class="btn btn-primary" target="_blank">
+                                <i class="fas fa-print"></i> Cetak Biodata / Pakta / Surat Sehat
+                            </a>
                         </div>
                     `);
                   $('#pesertaDetailModal').modal('show');

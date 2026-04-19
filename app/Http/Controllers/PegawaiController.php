@@ -83,6 +83,16 @@ class PegawaiController extends Controller
         // dd($r['username']);
         $r['is_verif'] = 'belum';
 
+        if (isset($r['jabatan'])) {
+            $r['jabatan'] = ucwords(strtolower($r['jabatan']));
+            JabatanPenugasanPegawai::firstOrCreate(['name' => $r['jabatan']]);
+        }
+
+        if (isset($r['golongan']) && $r['golongan'] != '') {
+            $r['golongan'] = ucwords(strtolower($r['golongan']));
+            JabatanPenugasanGolongan::firstOrCreate(['name' => $r['golongan']]);
+        }
+
         Pegawai::create($r);
 
 
@@ -163,6 +173,16 @@ class PegawaiController extends Controller
         $r['pas_foto'] = '';
         // $r['is_verif'] = 'belum';
         // dd($r);
+        if (isset($r['jabatan'])) {
+            $r['jabatan'] = ucwords(strtolower($r['jabatan']));
+            JabatanPenugasanPegawai::firstOrCreate(['name' => $r['jabatan']]);
+        }
+
+        if (isset($r['golongan']) && $r['golongan'] != '') {
+            $r['golongan'] = ucwords(strtolower($r['golongan']));
+            JabatanPenugasanGolongan::firstOrCreate(['name' => $r['golongan']]);
+        }
+
         $data->update($r);
         if (session('role') == 'pegawai') {
 
@@ -328,6 +348,16 @@ class PegawaiController extends Controller
         $r['is_verif'] = 'sudah';
         // dump($data);
         // dd($r);
+        if (isset($r['jabatan'])) {
+            $r['jabatan'] = ucwords(strtolower($r['jabatan']));
+            JabatanPenugasanPegawai::firstOrCreate(['name' => $r['jabatan']]);
+        }
+
+        if (isset($r['golongan']) && $r['golongan'] != '') {
+            $r['golongan'] = ucwords(strtolower($r['golongan']));
+            JabatanPenugasanGolongan::firstOrCreate(['name' => $r['golongan']]);
+        }
+        
         $data->update($r);
         return redirect()->route('pegawai.show', session('no_ktp'))->with('message', 'update');
         // return redirect()->route('pegawai.index')->with('message', 'update');

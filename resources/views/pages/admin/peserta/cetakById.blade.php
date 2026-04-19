@@ -10,26 +10,13 @@
         }
 
         .kop-surat {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            text-align: center;
+            width: 100%;
             margin-bottom: 20px;
         }
 
         .kop-surat img {
-            width: 80px;
+            width: 100%;
             height: auto;
-        }
-
-        .kop-surat .kop-text {
-            flex-grow: 1;
-            padding: 0 10px;
-        }
-
-        .kop-surat h1,
-        .kop-surat h2 {
-            margin: 0;
         }
 
         table {
@@ -94,13 +81,13 @@
         }
 
         .pakta-header {
-            text-align: center;
+            width: 100%;
             margin-bottom: 20px;
         }
 
         .pakta-header img {
-            width: 100px;
-            margin-bottom: 10px;
+            width: 100%;
+            height: auto;
         }
 
         .pakta-title {
@@ -170,19 +157,18 @@
 
 <body>
     <!-- HALAMAN 1: BIODATA PESERTA -->
-    <div class="kop-surat" style="position: relative;">
-        <img style="position: absolute; left: 0; width: 90px" src="{{ asset('img_template/iconbbgp.png') }}"
-            alt="Logo Kiri">
-        <div class="kop-text">
-            <?php
-            setlocale(LC_TIME, 'id_ID.UTF-8');
-            $tgl_lahir = strftime('%d %B %Y', strtotime($getById->tgl_lahir ?? date('d-m-Y')));
-            // $today = date('d-F-Y');
-            ?>
-            <div style="margin: 50px 0 0 100px; width:500px">
-                <h2>{{ strtoupper($namaKegiatan) }}</h2>
-            </div>
-        </div>
+    <!-- HALAMAN 1: BIODATA PESERTA -->
+    <div class="kop-surat">
+        <img src="{{ public_path('img_template/kop_baru.png') }}" alt="Kop Surat">
+    </div>
+
+    <div style="text-align: center; margin-top: 10px;">
+        <?php
+        setlocale(LC_TIME, 'id_ID.UTF-8');
+        $tgl_lahir = strftime('%d %B %Y', strtotime($getById->tgl_lahir ?? date('d-m-Y')));
+        // $today = date('d-F-Y');
+        ?>
+        <h2>{{ strtoupper($namaKegiatan) }}</h2>
     </div>
 
     <img style="position: absolute; top: -25; right: 0; width: 220px"
@@ -304,8 +290,8 @@
     <!-- HALAMAN 2: PAKTA INTEGRITAS DAN SURAT PERNYATAAN SEHAT -->
     <div class="pakta-container">
         <!-- Header dengan Logo -->
-        <div class="pakta-header" style="margin-top: -15px !important;">
-            <img src="{{ asset('img_template/iconbbgp.png') }}" alt="Logo">
+        <div class="pakta-header">
+            <img src="{{ public_path('img_template/kop_baru.png') }}" alt="Kop Surat">
         </div>
 
         <!-- Judul Pakta Integritas -->
@@ -398,7 +384,7 @@
     <div class="pakta-container">
         <!-- Header dengan Logo -->
         <div class="pakta-header">
-            <img src="{{ asset('img_template/iconbbgp.png') }}" alt="Logo">
+            <img src="{{ public_path('img_template/kop_baru.png') }}" alt="Kop Surat">
         </div>
 
         <div class="pakta-title">
