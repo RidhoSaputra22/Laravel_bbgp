@@ -60,7 +60,7 @@
 
 <body>
     <div class="kop-surat" style="position: relative;">
-        <img style="position: absolute; left: 0; width: 110px" src="{{ asset('img_template/iconbbgp.png') }}"
+        <img style="position: absolute; left: 0; width: 110px" src="img_template/iconbbgp.png"
             alt="Logo Kiri">
         <div class="kop-text">
             {{-- <h3>DAFTAR HADIR PESERTA</h3> --}}
@@ -77,7 +77,7 @@
 
             </div>
         </div>
-        <img style="position: absolute; top: -25; right: 0; width: 120px" src="{{ asset('img_template/absenPeserta.png') }}"
+        <img style="position: absolute; top: -25; right: 0; width: 120px" src="img_template/absenPeserta.png"
             alt="Logo Kanan">
     </div>
     <table style="margin-top: 50px">

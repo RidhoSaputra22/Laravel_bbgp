@@ -57,8 +57,8 @@
 
 <body>
     <div class="kop-surat">
-        <img src="{{ public_path('img_template/kop_baru.png') }}" class="kop-baru" alt="Kop Surat">
-        <img style="position: absolute; top: -25; right: 0; width: 120px" src="{{ asset('img_template/absenPeserta.png') }}"
+        <img src="img_template/kop_baru.png" class="kop-baru" alt="Kop Surat">
+        <img style="position: absolute; top: -25; right: 0; width: 120px" src="img_template/absenPeserta.png"
             alt="Logo Kanan">
     </div>
 

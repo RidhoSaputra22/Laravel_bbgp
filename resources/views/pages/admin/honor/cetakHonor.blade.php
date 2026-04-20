@@ -28,7 +28,6 @@
             text-align: left;
         }
 
-        ,
         .kop-surat {
             width: 100%;
             margin-bottom: 20px;
@@ -43,7 +42,7 @@
 
 <body>
     <div class="kop-surat">
-        <img src="{{ public_path('img_template/kop_baru.png') }}" alt="Kop Surat">
+        <img src="img_template/kop_baru.png" alt="Kop Surat">
     </div>
     <table>
         <thead>

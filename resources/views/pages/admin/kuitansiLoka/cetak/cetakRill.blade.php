@@ -108,7 +108,7 @@
     ?>
     <div class="container">
         <div style="margin-top: -40px">
-            <img src="{{ public_path('img_template/kop_baru.png') }}" style="width: 100%;" alt="Kop Surat">
+            <img src="img_template/kop_baru.png" style="width: 100%;" alt="Kop Surat">
         </div>
         <hr>
         <div class="content" style="margin-top:-10px">

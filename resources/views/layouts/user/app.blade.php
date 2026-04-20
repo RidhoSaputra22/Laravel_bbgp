@@ -164,6 +164,12 @@
         </script>
     @endif
 
+    @if (session('message') == 'session expired')
+        <script>
+            swal("Session Expired", "Sesi login anda telah habis, Silahkan login kembali", "warning");
+        </script>
+    @endif
+
 
 
 </body>

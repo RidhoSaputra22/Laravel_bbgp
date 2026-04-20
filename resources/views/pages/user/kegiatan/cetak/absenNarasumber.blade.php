@@ -60,9 +60,9 @@
 
 <body>
     <div class="kop-surat">
-        <img src="{{ public_path('img_template/kop_baru.png') }}" class="kop-baru" alt="Kop Surat">
+        <img src="img_template/kop_baru.png" class="kop-baru" alt="Kop Surat">
         <img style="position: absolute; top: -25; right: 0; width: 120px"
-            src="{{ asset('img_template/daftarNarum.png') }}" alt="Logo Kanan">
+            src="img_template/daftarNarum.png" alt="Logo Kanan">
     </div>
     <div style="text-align: center; margin-top: 10px;">
         <?php

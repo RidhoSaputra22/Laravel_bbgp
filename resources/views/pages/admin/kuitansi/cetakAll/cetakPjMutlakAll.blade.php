@@ -119,7 +119,7 @@
         
         <div class="container">
             <img style="position: absolute; left: 20px; top: 20px; width: 110px;"
-                src="{{ public_path('img_template/iconbbgp.png') }}" alt="Logo Kiri">
+                src="img_template/iconbbgp.png" alt="Logo Kiri">
             <div class="header">
                 <h2 style="margin-bottom: -20px">KEMENTRIAN PENDIDKAN DAN KEBUDAYAAN</h2>
                 <h2 style="margin-bottom: -20px">RISET, DAN TEKNOLOGI</h2>

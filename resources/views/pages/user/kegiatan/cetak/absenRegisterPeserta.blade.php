@@ -66,7 +66,7 @@
 
 <body>
     <div class="kop-surat">
-        <img src="{{ public_path('img_template/kop_baru.png') }}" class="kop-baru" alt="Kop Surat">
+        <img src="img_template/kop_baru.png" class="kop-baru" alt="Kop Surat">
         <h4 style="position: absolute; top: -20; right: 0; width: 120px">Lembar Registrasi Peserta</h4>
     </div>
 
