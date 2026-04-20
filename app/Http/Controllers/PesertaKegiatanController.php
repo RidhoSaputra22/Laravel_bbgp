@@ -171,6 +171,7 @@ class PesertaKegiatanController extends Controller
         $getDataPeserta->tempat_lahir = $r->tempat_lahir;
         $getDataPeserta->pendidikan = $r->pendidikan;
         $getDataPeserta->alamat_rumah = $r->alamat_rumah;
+        $getDataPeserta->kabupaten_rumah = $r->kabupaten_rumah;
         $getDataPeserta->npwp = $r->npwp;
         
         // Handle gender mapping

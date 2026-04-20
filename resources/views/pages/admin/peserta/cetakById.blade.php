@@ -186,80 +186,76 @@
          <table cellspacing="0" cellpadding="0" border="0" style="border: none !important;" class="biodata-table">
             <tr>
                <td width="35%">1. Nama Lengkap (dengan gelar)</td>
-               <td width="65%">: {{ $peserta->nama ?? ($getById->nama ?? '-') }}</td>
+               <td width="65%">: {{ $peserta->nama ?: ($getById->nama ?: '-') }}</td>
             </tr>
             <tr>
                <td>2. NIP</td>
-               <td>: {{ $peserta->nip ?? ($getById->nip ?? '-') }}</td>
+               <td>: {{ $peserta->nip ?: ($getById->nip ?: '-') }}</td>
             </tr>
             <tr>
                <td>3. Pangkat & Golongan</td>
-               <td>: {{ $peserta->golongan ?? ($getById->golongan ?? '-') }}</td>
+               <td>: {{ $peserta->golongan ?: ($getById->golongan ?: '-') }}</td>
             </tr>
             <tr>
                <td>4. Jabatan</td>
-               <td>: {{ $peserta->jabatan ?? ($getById->jenis_jabatan ?? ($getById->jabatan ?? '-')) }}</td>
+               <td>: {{ $peserta->jabatan ?: ($getById->jenis_jabatan ?: ($getById->jabatan ?: '-')) }}</td>
             </tr>
             <tr>
                <td>5. Mata Pelajaran yang diampu</td>
-               <td>: {{ $peserta->mata_pelajaran ?? ($getById->mata_pelajaran ?? '-') }}</td>
+               <td>: {{ $peserta->mata_pelajaran ?: ($getById->mata_pelajaran ?: '-') }}</td>
             </tr>
             <tr>
                <td>6. Tempat & Tanggal Lahir</td>
-               <td>: {{ $peserta->tempat_lahir ?? ($getById->tempat_lahir ?? '-') }}, {{ $tgl_lahir }}</td>
+               <td>: {{ $peserta->tempat_lahir ?: ($getById->tempat_lahir ?: '-') }}, {{ $tgl_lahir }}</td>
             </tr>
             <tr>
                <td>7. Jenis Kelamin</td>
-               <td>: {{ $peserta->jkl ?? ($getById->gender ?? ($getById->jkl ?? '-')) }}</td>
+               <td>: {{ $peserta->jkl ?: ($getById->gender ?: ($getById->jkl ?: '-')) }}</td>
             </tr>
             <tr>
                <td>8. Status</td>
-               <td>: {{ $peserta->status ?? ($getById->status ?? '-') }}</td>
+               <td>: {{ $peserta->status ?: ($getById->status ?: '-') }}</td>
             </tr>
             <tr>
                <td>9. Agama</td>
-               <td>: {{ $peserta->agama ?? ($getById->agama ?? '-') }}</td>
+               <td>: {{ $peserta->agama ?: ($getById->agama ?: '-') }}</td>
             </tr>
             <tr>
                <td>10. Pendidikan Terakhir</td>
-               <td>: {{ $peserta->pendidikan ?? ($getById->pendidikan ?? '-') }}</td>
+               <td>: {{ $peserta->pendidikan ?: ($getById->pendidikan ?: '-') }}</td>
             </tr>
             <tr>
                <td>11. Nama Unit Kerja</td>
-               <td>: {{ $peserta->instansi ?? ($getById->instansi ?? ($getById->unit_kerja ?? '-')) }}</td>
+               <td>: {{ $peserta->instansi ?: ($getById->instansi ?: ($getById->unit_kerja ?: '-')) }}</td>
             </tr>
             <tr>
                <td>12. Alamat Unit Kerja</td>
-               <td>: {{ $peserta->alamat ?? ($getById->alamat ?? '-') }}</td>
+               <td>: {{ $peserta->alamat ?: ($getById->alamat ?: '-') }}</td>
             </tr>
             <tr>
                <td style="padding-left: 30px;">Kabupaten/Kota</td>
-               <td>: {{ $peserta->kabupaten ?? ($getById->kabupaten ?? '-') }}</td>
+               <td>: {{ $peserta->kabupaten ?: ($getById->kabupaten ?: '-') }}</td>
             </tr>
 
             <tr>
                <td>13. Alamat Rumah</td>
-               <td>: {{ $peserta->alamat_rumah ?? ($getById->alamat_rumah ?? '-') }}</td>
-            </tr>
-            <tr>
-               <td style="padding-left: 30px;"></td>
-               <td>Telp : {{ $peserta->no_hp ?? ($getById->no_hp ?? '-') }}</td>
+               <td>: {{ $peserta->alamat_rumah ?: ($getById->alamat_rumah ?: '-') }}</td>
             </tr>
             <tr>
                <td style="padding-left: 30px;">Kabupaten/Kota</td>
-               <td>: {{ $peserta->kabupaten_rumah ?? ($getById->kabupaten ?? '-') }}</td>
+               <td>: {{ $peserta->kabupaten_rumah ?: ($getById->kabupaten_rumah ?: '-') }}</td>
             </tr>
             <tr>
-               <td>14. No. HP / WA</td>
-               <td>: {{ $peserta->no_hp ?? ($getById->no_hp ?? '-') }} / {{ $peserta->no_wa ?? ($getById->no_wa ?? '-') }}</td>
+               <td>14. Nomor HP / WA</td>
+               <td>: {{ $peserta->no_hp ?: ($getById->no_hp ?: '-') }} / {{ $peserta->no_wa ?: ($getById->no_wa ?: '-') }}</td>
             </tr>
             <tr>
                <td>15. Alamat Email/akun belajar</td>
-               <td>: {{ $peserta->email ?? ($getById->email ?? '-') }}</td>
+               <td>: {{ $peserta->email ?: ($getById->email ?: '-') }}</td>
             </tr>
             <tr>
                <td>16. NPWP</td>
-               <td>: {{ $peserta->npwp ?? ($getById->npwp ?? '-') }}</td>
+               <td>: {{ $peserta->npwp ?: ($getById->npwp ?: '-') }}</td>
             </tr>
          </table>
          <footer>
@@ -309,19 +305,19 @@
             <table style="border: none !important;">
                <tr>
                   <td width="200" style="border: none !important;">Nama</td>
-                  <td style="border: none !important;">: {{ $peserta->nama ?? ($getById->nama ?? '-') }}</td>
+                  <td style="border: none !important;">: {{ $peserta->nama ?: ($getById->nama ?: '-') }}</td>
                </tr>
                <tr>
                   <td style="border: none !important;">Jabatan</td>
-                  <td style="border: none !important;">: {{ $peserta->jabatan ?? ($getById->jenis_jabatan ?? ($getById->jabatan ?? '-')) }}</td>
+                  <td style="border: none !important;">: {{ $peserta->jabatan ?: ($getById->jenis_jabatan ?: ($getById->jabatan ?: '-')) }}</td>
                </tr>
                <tr>
                   <td style="border: none !important;">Instansi/Unit Kerja</td>
-                  <td style="border: none !important;">: {{ $peserta->instansi ?? ($getById->instansi ?? ($getById->unit_kerja ?? '-')) }}</td>
+                  <td style="border: none !important;">: {{ $peserta->instansi ?: ($getById->instansi ?: ($getById->unit_kerja ?: '-')) }}</td>
                </tr>
                <tr>
                   <td style="border: none !important;">Kabupaten/Kota</td>
-                  <td style="border: none !important;">: {{ $peserta->kabupaten ?? ($getById->kabupaten ?? '-') }}</td>
+                  <td style="border: none !important;">: {{ $peserta->kabupaten ?: ($getById->kabupaten ?: '-') }}</td>
                </tr>
                <tr>
                   <td style="border: none !important;">Provinsi</td>
@@ -393,19 +389,19 @@
             <table style="border: none !important;">
                <tr>
                   <td width="200" style="border: none !important;">Nama</td>
-                  <td style="border: none !important;">: {{ $peserta->nama ?? ($getById->nama ?? '-') }}</td>
+                  <td style="border: none !important;">: {{ $peserta->nama ?: ($getById->nama ?: '-') }}</td>
                </tr>
                <tr>
                   <td style="border: none !important;">Tempat/Tanggal Lahir</td>
-                  <td style="border: none !important;">: {{ $peserta->tempat_lahir ?? ($getById->tempat_lahir ?? '-') }}, {{ $tgl_lahir }}</td>
+                  <td style="border: none !important;">: {{ $peserta->tempat_lahir ?: ($getById->tempat_lahir ?: '-') }}, {{ $tgl_lahir }}</td>
                </tr>
                <tr>
                   <td style="border: none !important;">Instansi/Unit Kerja</td>
-                  <td style="border: none !important;">: {{ $peserta->instansi ?? ($getById->instansi ?? ($getById->unit_kerja ?? '-')) }}</td>
+                  <td style="border: none !important;">: {{ $peserta->instansi ?: ($getById->instansi ?: ($getById->unit_kerja ?: '-')) }}</td>
                </tr>
                <tr>
                   <td style="border: none !important;">Alamat</td>
-                  <td style="border: none !important;">: {{ $peserta->alamat ?? ($getById->alamat ?? '-') }}</td>
+                  <td style="border: none !important;">: {{ $peserta->alamat ?: ($getById->alamat ?: '-') }}</td>
                </tr>
             </table>
          </div>
@@ -425,7 +421,7 @@
                      <p>.............., ........................ {{ $tahun_kegiatan }}</p>
                      <p>Pembuat pernyataan</p>
                      <br><br><br>
-                     <p>{{ $peserta->nama ?? ($getById->nama ?? '-') }}</p>
+                     <p>{{ $peserta->nama ?: ($getById->nama ?: '-') }}</p>
                   </td>
                </tr>
             </table>
