@@ -11,29 +11,14 @@
         }
 
         .kop-surat {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            text-align: center;
+            width: 100%;
             margin-bottom: 20px;
+            position: relative;
         }
 
-        .kop-surat img {
-            width: 80px;
-            /* Sesuaikan ukuran gambar */
+        .kop-surat .kop-baru {
+            width: 100%;
             height: auto;
-        }
-
-        .kop-surat .kop-text {
-            flex-grow: 1;
-            /* Biarkan teks tumbuh dan menempati ruang */
-            padding: 0 10px;
-            /* Beri sedikit jarak antara teks dan gambar */
-        }
-
-        .kop-surat h1,
-        .kop-surat h2 {
-            margin: 0;
         }
 
         table {

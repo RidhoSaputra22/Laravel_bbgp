@@ -170,6 +170,16 @@ class PesertaKegiatanController extends Controller
         $getDataPeserta->tgl_lahir = $r->tgl_lahir;
         $getDataPeserta->tempat_lahir = $r->tempat_lahir;
         $getDataPeserta->pendidikan = $r->pendidikan;
+        $getDataPeserta->alamat_rumah = $r->alamat_rumah;
+        $getDataPeserta->npwp = $r->npwp;
+        
+        // Handle gender mapping
+        if (isset($getDataPeserta->gender)) {
+            $getDataPeserta->gender = $r->jkl ?? $r->gender;
+        } else if (isset($getDataPeserta->jkl)) {
+            $getDataPeserta->jkl = $r->jkl ?? $r->gender;
+        }
+        
         $getDataPeserta->save();
         // $getNik = PesertaKegiatan::where('no_ktp', $r['no_ktp'])->first();
         // if ($getNik != null) {

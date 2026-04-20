@@ -26,16 +26,17 @@ class PesertaKegiatan extends Model
         'no_hp',
         'no_wa',
         'no_surat_tugas',
-        'instansi',
         'tgl_surat_tugas',
         'email',
         'mata_pelajaran',
-        'status' 
-        // 'id_pegawai',
-        // 'signature',
-        // 'jam_mengajar',
-        // 'jam_selesai',
-
+        'status',
+        'tempat_lahir',
+        'tgl_lahir',
+        'agama',
+        'pendidikan',
+        'alamat_rumah',
+        'kabupaten_rumah',
+        'npwp'
     ];
 
     public function kegiatan()

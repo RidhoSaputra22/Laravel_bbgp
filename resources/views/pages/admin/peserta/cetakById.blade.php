@@ -165,16 +165,19 @@
    <div style="text-align: center; margin-top: 10px;">
       <?php
       setlocale(LC_TIME, 'id_ID.UTF-8');
-      $tgl_lahir = strftime('%d %B %Y', strtotime($getById->tgl_lahir ?? date('d-m-Y')));
-      // $today = date('d-F-Y');
+      $tgl_lahir_val = $peserta->tgl_lahir ?? ($getById->tgl_lahir ?? null);
+      $tgl_lahir = $tgl_lahir_val ? strftime('%d %B %Y', strtotime($tgl_lahir_val)) : '-';
+      
+      $tgl_kegiatan = $peserta->kegiatan->tgl_kegiatan ?? now();
+      $tahun_kegiatan = date('Y', strtotime($tgl_kegiatan));
       ?>
-      <h2>{{ strtoupper($namaKegiatan) }}</h2>
+      <h2 style="line-height: 1.4; padding: 0 40px;">{{ strtoupper($namaKegiatan) }}</h2>
    </div>
 
    <img style="position: absolute; top: -25; right: 0; width: 220px"
       src="img_template/biodata/bio-{{
-         $peserta->status_keikutpesertaan == 'peserta' ? 'peserta' :
-         ($peserta->status_keikutpesertaan == 'panitia' ? 'panitia' : 'narasumber')
+         ($peserta->status_keikutpesertaan ?? 'peserta') == 'panitia' ? 'panitia' :
+         (($peserta->status_keikutpesertaan ?? 'peserta') == 'narasumber' ? 'narasumber' : 'peserta')
       }}.png"
       alt="Logo Kanan">
 
@@ -183,31 +186,31 @@
          <table cellspacing="0" cellpadding="0" border="0" style="border: none !important;" class="biodata-table">
             <tr>
                <td width="35%">1. Nama Lengkap (dengan gelar)</td>
-               <td width="65%">: {{ $peserta->nama }}</td>
+               <td width="65%">: {{ $peserta->nama ?? ($getById->nama ?? '-') }}</td>
             </tr>
             <tr>
                <td>2. NIP</td>
-               <td>: {{ $peserta->nip }}</td>
+               <td>: {{ $peserta->nip ?? ($getById->nip ?? '-') }}</td>
             </tr>
             <tr>
                <td>3. Pangkat & Golongan</td>
-               <td>: {{ $peserta->golongan ?? '-' }}</td>
+               <td>: {{ $peserta->golongan ?? ($getById->golongan ?? '-') }}</td>
             </tr>
             <tr>
                <td>4. Jabatan</td>
-               <td>: {{ $getById->jenis_jabatan ?? ($peserta->jabatan ?? '-') }}</td>
+               <td>: {{ $peserta->jabatan ?? ($getById->jenis_jabatan ?? ($getById->jabatan ?? '-')) }}</td>
             </tr>
             <tr>
                <td>5. Mata Pelajaran yang diampu</td>
-               <td>: {{ $peserta->mata_pelajaran ?? '-' }}</td>
+               <td>: {{ $peserta->mata_pelajaran ?? ($getById->mata_pelajaran ?? '-') }}</td>
             </tr>
             <tr>
                <td>6. Tempat & Tanggal Lahir</td>
-               <td>: {{ $getById->tempat_lahir ?? ($peserta->tempat_lahir ?? '-') }}, {{ $tgl_lahir }}</td>
+               <td>: {{ $peserta->tempat_lahir ?? ($getById->tempat_lahir ?? '-') }}, {{ $tgl_lahir }}</td>
             </tr>
             <tr>
                <td>7. Jenis Kelamin</td>
-               <td>: {{ $getById->gender ?? ($peserta->jkl ?? '-') }}</td>
+               <td>: {{ $peserta->jkl ?? ($getById->gender ?? ($getById->jkl ?? '-')) }}</td>
             </tr>
             <tr>
                <td>8. Status</td>
@@ -215,40 +218,40 @@
             </tr>
             <tr>
                <td>9. Agama</td>
-               <td>: {{ $getById->agama ?? ($peserta->agama ?? '-') }}</td>
+               <td>: {{ $peserta->agama ?? ($getById->agama ?? '-') }}</td>
             </tr>
             <tr>
                <td>10. Pendidikan Terakhir</td>
-               <td>: {{ $getById->pendidikan ?? ($peserta->pendidikan ?? '-') }}</td>
+               <td>: {{ $peserta->pendidikan ?? ($getById->pendidikan ?? '-') }}</td>
             </tr>
             <tr>
                <td>11. Nama Unit Kerja</td>
-               <td>: {{ $peserta->instansi ?? '-' }}</td>
+               <td>: {{ $peserta->instansi ?? ($getById->instansi ?? ($getById->unit_kerja ?? '-')) }}</td>
             </tr>
             <tr>
                <td>12. Alamat Unit Kerja</td>
-               <td>: {{ $peserta->alamat ?? '-' }}</td>
+               <td>: {{ $peserta->alamat ?? ($getById->alamat ?? '-') }}</td>
             </tr>
             <tr>
                <td style="padding-left: 30px;">Kabupaten/Kota</td>
-               <td>: {{ $peserta->kabupaten ?? '-' }}</td>
+               <td>: {{ $peserta->kabupaten ?? ($getById->kabupaten ?? '-') }}</td>
             </tr>
 
             <tr>
                <td>13. Alamat Rumah</td>
-               <td>: {{ $getById->alamat_rumah ?? '-' }}</td>
+               <td>: {{ $peserta->alamat_rumah ?? ($getById->alamat_rumah ?? '-') }}</td>
             </tr>
             <tr>
                <td style="padding-left: 30px;"></td>
-               <td>Telp : {{ $getById->no_hp ?? '-' }}</td>
+               <td>Telp : {{ $peserta->no_hp ?? ($getById->no_hp ?? '-') }}</td>
             </tr>
             <tr>
                <td style="padding-left: 30px;">Kabupaten/Kota</td>
-               <td>: {{ $getById->kabupaten ?? '-' }}</td>
+               <td>: {{ $peserta->kabupaten_rumah ?? ($getById->kabupaten ?? '-') }}</td>
             </tr>
             <tr>
                <td>14. No. HP / WA</td>
-               <td>: {{ $peserta->no_hp ?? '-' }} / {{ $peserta->no_wa ?? '-' }}</td>
+               <td>: {{ $peserta->no_hp ?? ($getById->no_hp ?? '-') }} / {{ $peserta->no_wa ?? ($getById->no_wa ?? '-') }}</td>
             </tr>
             <tr>
                <td>15. Alamat Email/akun belajar</td>
@@ -256,19 +259,19 @@
             </tr>
             <tr>
                <td>16. NPWP</td>
-               <td>: {{ $getById->npwp ?? ($peserta->npwp ?? '-') }}</td>
+               <td>: {{ $peserta->npwp ?? ($getById->npwp ?? '-') }}</td>
             </tr>
          </table>
          <footer>
             <div style="font-size: 14px; margin-top: 15px;">
-               <table width="100%" cellpadding="0" cellspacing="0" border="0">
+               <table width="100%" cellpadding="0" cellspacing="0" border="0" style="border: none !important;">
                   <tr>
-                     <td width="60%"></td>
-                     <td width="40%" style="text-align: left;">
-                        <p>Makassar, 08 Desember {{ date('Y') }}</p>
+                     <td width="60%" style="border: none !important;"></td>
+                     <td width="40%" style="text-align: left; border: none !important;">
+                        <p>Makassar, {{ strftime('%d %B %Y', strtotime($tgl_kegiatan)) }}</p>
                         <p style="font-weight: bold;">Peserta,</p>
-                        <br><br>
-                        <p>{{ $peserta->nama }}</p>
+                        <br><br><br>
+                        <p>{{ $peserta->nama ?? ($getById->nama ?? '-') }}</p>
                         {{-- <p>NIP. {{ $peserta->nip }}</p> --}}
                      </td>
                   </tr>
@@ -292,38 +295,37 @@
       <div class="pakta-title">
          PAKTA INTEGRITAS
       </div>
-      <div class="pakta-title" style="margin-top: -10px !important;">
-         {{-- {{ strtoupper($namaKegiatan) }} --}}
-         <i>IN SERVICE TRAINING</i> 2, TUJUH JURUS BK HEBAT BAGI GURU WALI<br>
+      <div class="pakta-title" style="margin-top: -10px !important; line-height: 1.4;">
+         {{ strtoupper($namaKegiatan) }}<br>
          BALAI BESAR GURU DAN TENAGA KEPENDIDIKAN (BBGTK)<br>
          PROVINSI SULAWESI SELATAN<br>
-         TAHUN 2025
+         TAHUN {{ $tahun_kegiatan }}
       </div>
 
       <!-- Identitas Pembuat Pernyataan -->
       <div class="pakta-content" style="margin-top: -10px !important;">
          <p>Saya yang bertanda tangan dibawah ini:</p>
          <div style="margin-top: -10px !important;" class="pakta-identity">
-            <table>
+            <table style="border: none !important;">
                <tr>
-                  <td width="200">Nama</td>
-                  <td>: {{ $peserta->nama }}</td>
+                  <td width="200" style="border: none !important;">Nama</td>
+                  <td style="border: none !important;">: {{ $peserta->nama ?? ($getById->nama ?? '-') }}</td>
                </tr>
                <tr>
-                  <td>Jabatan</td>
-                  <td>: {{ $getById->jenis_jabatan ?? '-' }}</td>
+                  <td style="border: none !important;">Jabatan</td>
+                  <td style="border: none !important;">: {{ $peserta->jabatan ?? ($getById->jenis_jabatan ?? ($getById->jabatan ?? '-')) }}</td>
                </tr>
                <tr>
-                  <td>Instansi/Unit Kerja</td>
-                  <td>: {{ $peserta->instansi }}</td>
+                  <td style="border: none !important;">Instansi/Unit Kerja</td>
+                  <td style="border: none !important;">: {{ $peserta->instansi ?? ($getById->instansi ?? ($getById->unit_kerja ?? '-')) }}</td>
                </tr>
                <tr>
-                  <td>Kabupaten/Kota</td>
-                  <td>: {{ $peserta->kabupaten }}</td>
+                  <td style="border: none !important;">Kabupaten/Kota</td>
+                  <td style="border: none !important;">: {{ $peserta->kabupaten ?? ($getById->kabupaten ?? '-') }}</td>
                </tr>
                <tr>
-                  <td>Provinsi</td>
-                  <td>: <strong>SULAWESI SELATAN</strong></td>
+                  <td style="border: none !important;">Provinsi</td>
+                  <td style="border: none !important;">: <strong>SULAWESI SELATAN</strong></td>
                </tr>
             </table>
          </div>
@@ -360,7 +362,7 @@
 
       <!-- Footer dengan Tanda Tangan -->
       <div class="pakta-footer" style="margin-top: -50px !important;">
-         <p>.............., ........................ 2025</p>
+         <p>.............., ........................ {{ $tahun_kegiatan }}</p>
          <p>Pembuat Pernyataan,</p>
          <div class="materai-box">
             Materai Rp. 10.000
@@ -388,28 +390,27 @@
       <div class="pakta-content">
          <p>Yang bertanda tangan di bawah ini:</p>
          <div class="pakta-identity">
-            <table>
+            <table style="border: none !important;">
                <tr>
-                  <td width="200">Nama</td>
-                  <td>: {{ $peserta->nama }}</td>
+                  <td width="200" style="border: none !important;">Nama</td>
+                  <td style="border: none !important;">: {{ $peserta->nama ?? ($getById->nama ?? '-') }}</td>
                </tr>
                <tr>
-                  <td>Tempat/Tanggal Lahir</td>
-                  <td>: {{ $getById->tempat_lahir ?? 'Tidak terdata' }}, {{ $tgl_lahir }}</td>
+                  <td style="border: none !important;">Tempat/Tanggal Lahir</td>
+                  <td style="border: none !important;">: {{ $peserta->tempat_lahir ?? ($getById->tempat_lahir ?? '-') }}, {{ $tgl_lahir }}</td>
                </tr>
                <tr>
-                  <td>Instansi/Unit Kerja</td>
-                  <td>: {{ $peserta->instansi }}</td>
+                  <td style="border: none !important;">Instansi/Unit Kerja</td>
+                  <td style="border: none !important;">: {{ $peserta->instansi ?? ($getById->instansi ?? ($getById->unit_kerja ?? '-')) }}</td>
                </tr>
                <tr>
-                  <td>Alamat</td>
-                  <td>: {{ $peserta->alamat ?? '-' }}</td>
+                  <td style="border: none !important;">Alamat</td>
+                  <td style="border: none !important;">: {{ $peserta->alamat ?? ($getById->alamat ?? '-') }}</td>
                </tr>
             </table>
          </div>
 
-         <p>Dengan ini menyatakan bahwa saya dalam kondisi sehat untuk mengikuti <i>In Service Training</i> 2 Tujuh
-            Jurus Bk Hebat Bagi Guru Wali pada waktu dan tempat yang ditetapkan.</p>
+         <p>Dengan ini menyatakan bahwa saya dalam kondisi sehat untuk mengikuti kegiatan <i>{{ $namaKegiatan }}</i> pada waktu dan tempat yang ditetapkan.</p>
 
          <p>Demikian surat pernyataan sehat ini saya buat dengan sungguh-sungguh dan penuh rasa tanggung jawab.</p>
       </div>
@@ -417,14 +418,14 @@
       <!-- Footer Surat Sehat -->
       <footer class="">
          <div style="font-size: 13px; margin-top: 30px;">
-            <table width="100%" cellpadding="0" cellspacing="0" border="0">
+            <table width="100%" cellpadding="0" cellspacing="0" border="0" style="border: none !important;">
                <tr>
-                  <td width="60%"></td>
-                  <td width="40%" style="text-align: left;">
-                     <p>.............., ........................ 2025</p>
+                  <td width="60%" style="border: none !important;"></td>
+                  <td width="40%" style="text-align: left; border: none !important;">
+                     <p>.............., ........................ {{ $tahun_kegiatan }}</p>
                      <p>Pembuat pernyataan</p>
                      <br><br><br>
-                     <p>{{ $peserta->nama }}</p>
+                     <p>{{ $peserta->nama ?? ($getById->nama ?? '-') }}</p>
                   </td>
                </tr>
             </table>
