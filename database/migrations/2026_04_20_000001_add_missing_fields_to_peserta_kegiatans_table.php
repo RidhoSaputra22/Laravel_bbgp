@@ -59,12 +59,37 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('peserta_kegiatans', function (Blueprint $table) {
-            $table->dropColumn([
-                'nama', 'nip', 'alamat', 'email', 'mata_pelajaran', 'status',
-                'tempat_lahir', 'tgl_lahir', 'agama', 'pendidikan',
-                'alamat_rumah', 'kabupaten_rumah', 'npwp'
-            ]);
+        if (!Schema::hasTable('peserta_kegiatans')) {
+            return;
+        }
+
+        $columns = [
+            'nama',
+            'nip',
+            'alamat',
+            'email',
+            'mata_pelajaran',
+            'status',
+            'tempat_lahir',
+            'tgl_lahir',
+            'agama',
+            'pendidikan',
+            'alamat_rumah',
+            'kabupaten_rumah',
+            'npwp',
+        ];
+
+        $existingColumns = array_values(array_filter(
+            $columns,
+            fn (string $column): bool => Schema::hasColumn('peserta_kegiatans', $column)
+        ));
+
+        if ($existingColumns === []) {
+            return;
+        }
+
+        Schema::table('peserta_kegiatans', function (Blueprint $table) use ($existingColumns) {
+            $table->dropColumn($existingColumns);
         });
     }
 };

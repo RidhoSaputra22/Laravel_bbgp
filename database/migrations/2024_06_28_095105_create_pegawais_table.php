@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::create('pegawais', function (Blueprint $table) {
             $table->id();
+            $table->string('username')->nullable();
             $table->string('nama_lengkap');
             $table->string('email');
             $table->string('no_ktp');
@@ -21,6 +22,7 @@ return new class extends Migration
             $table->date('tgl_lahir');
             $table->enum('gender', ['Laki-laki', 'Perempuan']);
             $table->string('jabatan');
+            $table->string('jenis_pegawai')->nullable();
             $table->string('status');
             $table->string('status_kepegawaian');
             $table->enum('agama', ['Islam', 'Kristen', 'Katolik', 'Hindu', 'Budha', 'Konghucu']);
@@ -32,7 +34,8 @@ return new class extends Migration
             $table->string('no_hp');
             $table->string('no_wa');
             $table->string('pas_foto');
-            $table->string('instansi');
+            $table->string('instansi')->default('Kantor BBGTK SulSel');
+            $table->string('golongan')->nullable();
             $table->string('jenis_bank');
             $table->string('no_rek');
             $table->enum('is_verif', ['sudah', 'belum']);

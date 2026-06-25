@@ -735,16 +735,50 @@ class SekolahSeeder extends Seeder
 
         ];
 
-        // foreach ($data as $key => $v) {
-        //     Sekolah::create([
-        //         'nama_sekolah' => $v['nama_sekolah'],
-        //         'npsn_sekolah' => $v['npsn_sekolah'],
-        //         'bp_sekolah' => $v['bp_sekolah'],
-        //         'status_sekolah' => $v['status_sekolah'],
-        //         'kecamatan' => $v['kecamatan'],
-        //         'kabupaten' => $v['kabupaten'],
-        //     ]);
-        // }
+        $defaults = [
+            'provinsi' => 'SULAWESI SELATAN',
+            'alamat' => null,
+            'akreditasi' => 'belum',
+            'no_telepon' => '-',
+            'email' => '-',
+            'website_url' => '-',
+            'tahun_berdiri' => '-',
+            'koordinat' => '-',
+            'nama_kepsek' => 'Belum diisi',
+            'asn_opsi' => 'tidak',
+            'nip_kepsek' => null,
+            'no_sk' => null,
+            'no_telp_kepsek' => '-',
+            'email_kepsek' => null,
+            'jumlah_guru' => 0,
+            'jumlah_guru_pns' => 0,
+            'jumlah_honorer' => 0,
+            'jumlah_kependidikan' => 0,
+            'bidang_studi' => null,
+            'jumlah_siswa' => 0,
+            'jumlah_siswa_pria' => 0,
+            'jumlah_siswa_perempuan' => 0,
+            'jumlah_siswa_per_kelas' => null,
+            'jumlah_kelas' => 0,
+            'laboratorium' => 'Tidak ada',
+            'perpustakaan' => 'Tidak ada',
+            'ruang_guru' => 'Tidak ada',
+            'jumlah_toilet' => 0,
+            'lapangan_olahraga' => 'Tidak ada',
+            'fasilitas_it' => null,
+            'akses_internet' => 'Tidak ada',
+            'ekstrakurikuler' => '-',
+            'program_unggulan' => '-',
+            'jam_belajar' => '-',
+            'foto_depan' => null,
+            'logo_sekolah' => null,
+            'denah_lokasi' => null,
+            'struktur_organisasi' => null,
+        ];
+
+        foreach ($data as $row) {
+            Sekolah::create(array_merge($defaults, $row));
+        }
 
     }
 }

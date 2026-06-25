@@ -13,7 +13,7 @@ class JenisJabatanSeeder extends Seeder
      */
     public function run(): void
     {
-        $data = ['GP (Guru Penggerak', 'Non GP (Guru Penggerak)'];
+        $data = ['GP (Guru Penggerak)', 'NoN GP (Guru Penggerak)'];
 
         foreach ($data as $key => $v) {
             JenisJabatan::create([

@@ -32,6 +32,7 @@ return new class extends Migration {
             $table->string('no_wa');
             $table->string('pas_foto');
             $table->string('no_rek');
+            $table->string('jenis_bank')->nullable();
             $table->string('npsn_sekolah');
             $table->string('npwp');
             $table->string('nuptk');
@@ -39,6 +40,7 @@ return new class extends Migration {
             $table->string('jenis_jabatan');
             $table->string('kategori_jabatan');
             $table->string('tugas_jabatan');
+            $table->string('latar_jabatan')->nullable();
             $table->enum('is_verif', ['sudah', 'belum']);
 
 

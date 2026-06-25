@@ -23,7 +23,7 @@ return new class extends Migration
             $table->string('provinsi')->default('-');
             $table->string('kecamatan');
             $table->string('kabupaten');
-            $table->text('alamat')->default('-');
+            $table->text('alamat')->nullable();
             $table->string('akreditasi')->default('-');
             $table->string('no_telepon')->default('-');
             $table->string('email')->default('-');
