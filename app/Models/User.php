@@ -26,8 +26,14 @@ class User extends Authenticatable
 
     ];
 
-    public function berkas() {
+    public function berkas()
+    {
         return $this->hasMany(Berkas::class, 'nik', 'no_ktp');
+    }
+
+    public function assessmentAssignmentsCreated()
+    {
+        return $this->hasMany(AssessmentAssignment::class, 'assigned_by');
     }
 
     /**

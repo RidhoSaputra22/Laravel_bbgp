@@ -75,7 +75,7 @@
 
                   {{-- <li class="{{ $title == 'Data Honor Kegiatan' ? '' : '' }}">
                             <a class="nav-link" href="{{ route('honor.index') }}">
-                                Penomoran 
+                                Penomoran
                             </a>
                         </li> --}}
 
@@ -124,10 +124,21 @@
                </a>
             </li>
 
-            <li class="{{ $menu == 'assessment' ? 'active' : '' }}">
-               <a class="nav-link" href="{{ route('assessment.index') }}">
-                  <i class="fas fa-clipboard-list"></i> <span>Assesment</span>
-               </a>
+            <li class="nav-item dropdown {{ in_array($menu, ['assessment', 'assessment-penugasan'], true) ? 'active' : '' }}">
+               <a href="#" class="nav-link has-dropdown"><i class="fas fa-clipboard-list"></i>
+                  <span>Assesment</span></a>
+               <ul class="dropdown-menu">
+                  <li class="{{ $menu == 'assessment' ? 'active' : '' }}">
+                     <a class="nav-link" href="{{ route('assessment.index') }}">
+                        Buat Assesment
+                     </a>
+                  </li>
+                  <li class="{{ $menu == 'assessment-penugasan' ? 'active' : '' }}">
+                     <a class="nav-link" href="{{ route('assessment.assignment.index') }}">
+                        Penugasan
+                     </a>
+                  </li>
+               </ul>
             </li>
 
             <li class="menu-header">Landing Page</li>
@@ -173,7 +184,7 @@
 
                   {{-- <li class="{{ $title == 'Data Honor Kegiatan' ? '' : '' }}">
                         <a class="nav-link" href="{{ route('honor.index') }}">
-                            Penomoran 
+                            Penomoran
                         </a>
                     </li> --}}
 

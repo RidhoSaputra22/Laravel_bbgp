@@ -27,4 +27,9 @@ class Assessment extends Model
     {
         return $this->hasMany(AssessmentForm::class)->orderBy('urutan');
     }
+
+    public function assignments()
+    {
+        return $this->hasMany(AssessmentAssignment::class)->orderByDesc('id');
+    }
 }

@@ -18,7 +18,6 @@ use Illuminate\Support\Facades\Session;
 |
 */
 
-
 //  User
 Route::group(
     ['prefix' => '', 'namespace' => 'App\Http\Controllers\User'],
@@ -42,9 +41,6 @@ Route::group(
         Route::get('/penyewaan-ruangan', [PenyewaanRuanganController::class, 'landing'])->name('penyewaan.landing');
         Route::get('/buletin-diksi', 'UserController@buletin')->name('user.buletin-diksi');
         Route::get('/lab-virtual', 'UserController@labVirtual')->name('user.lab-virtual');
-
-
-
 
         Route::get('/pegawai', 'UserController@pegawai')->name('user.pegawai');
         Route::get('/pegawai/form', 'UserController@form_pegawai')->name('user.form_pegawai');
@@ -127,7 +123,6 @@ Route::group(
 
             Route::get('/fetch-sekolah', ['GuruController@index', 'fetchSekolah'])->name('fetchSekolah');
 
-
             // Guru / Eksternal
             Route::prefix('eksternal')->group(function () {
                 Route::get('/', 'GuruController@index')->name('guru.index');
@@ -137,7 +132,6 @@ Route::group(
                 Route::get('/edit/{id}', 'GuruController@edit')->name('guru.edit');
                 Route::put('/update', 'GuruController@update')->name('guru.update');
                 Route::post('/hapus/{id}', 'GuruController@destroy')->name('guru.hapus');
-
 
                 Route::get('/export', 'GuruController@export')->name('guru.export');
                 Route::get('/export/{id}', 'GuruController@exportByUser')->name('guru.export.user');
@@ -152,15 +146,12 @@ Route::group(
                 Route::get('/data-sekolah/{id}', [UserSekolahController::class, 'show'])->name('show.data-sekolah');
                 Route::get('/data-sekolah/{id}/edit', [UserSekolahController::class, 'edit'])->name('edit.data-sekolah');
                 Route::put('/data-sekolah/{id}', [UserSekolahController::class, 'update'])->name('update.data-sekolah');
-                
+
                 Route::get('/sekolah', [AdminSekolahController::class, 'index'])->name('admin.data-sekolah.index');
                 Route::get('/sekolah/export', [AdminSekolahController::class, 'export'])->name('admin.data-sekolah.export');
                 Route::get('/sekolah/{id}', [AdminSekolahController::class, 'edit'])->name('admin.data-sekolah.edit');
 
-
             });
-
-
 
             // Pegawai
             Route::prefix('pegawai')->group(function () {
@@ -216,7 +207,7 @@ Route::group(
                 Route::get('/edit/{id}', 'PenyewaanRuanganController@edit')->name('penyewaan.edit');
                 Route::put('/update/{id}', 'PenyewaanRuanganController@update')->name('penyewaan.update');
                 Route::post('/hapus/{id}', 'PenyewaanRuanganController@destroy')->name('penyewaan.hapus');
-                
+
             });
 
             // Kepegawaian
@@ -264,9 +255,7 @@ Route::group(
                 Route::post('/updatePegawai', 'InternalController@updatePegawai')->name('internal.update.pegawai');
                 Route::post('/updatePegawaiAll', 'InternalController@updatePegawaiAll')->name('updateAllEmployees');
 
-
                 Route::post('/hapusPegawai/{id}', 'InternalController@hapusPenugasan')->name('internal.hapus.penugasan');
-
 
                 // Penugasan PPNPN
                 Route::get('/indexPpnpn/{id}', 'InternalController@indexPpnpn')->name('internal.index.ppnpn');
@@ -276,7 +265,6 @@ Route::group(
                 Route::post('/updatePpnp', 'InternalController@updatePpnpn')->name('internal.update.ppnpn');
 
                 Route::post('/hapusPpnpn/{id}', 'InternalController@hapusPpnpn')->name('internal.hapus.ppnpn');
-
 
                 Route::post('/store', 'InternalController@store')->name('internal.store');
                 Route::get('/edit/{id}', 'InternalController@edit')->name('internal.edit');
@@ -297,10 +285,8 @@ Route::group(
                 Route::put('/update', 'PendampingController@update')->name('pendamping.update');
                 Route::post('/hapus/{id}', 'PendampingController@destroy')->name('pendamping.hapus');
 
-
                 Route::put('/updatePendamping', 'PendampingController@updatePendamping')->name('pendamping.update.user');
             });
-
 
             // Akun
             Route::prefix('akun')->group(function () {
@@ -323,10 +309,14 @@ Route::group(
                 Route::get('/edit/{id}', 'AssessmentController@edit')->name('assessment.edit');
                 Route::put('/update/{id}', 'AssessmentController@update')->name('assessment.update');
                 Route::post('/hapus/{id}', 'AssessmentController@destroy')->name('assessment.hapus');
+
+                Route::prefix('penugasan')->group(function () {
+                    Route::get('/', 'AssessmentAssignmentController@index')->name('assessment.assignment.index');
+                    Route::get('/create', 'AssessmentAssignmentController@create')->name('assessment.assignment.create');
+                    Route::post('/store', 'AssessmentAssignmentController@store')->name('assessment.assignment.store');
+                    Route::get('/show/{id}', 'AssessmentAssignmentController@show')->name('assessment.assignment.show');
+                });
             });
-
-
-
 
             // Kegiatan
             Route::prefix('kegiatan')->group(function () {
@@ -370,14 +360,12 @@ Route::group(
                 Route::get('/cetakExcelPeserta/{id_kegiatan}/{jabatan}', 'HonorController@cetakExcelPeserta')->name('honor.cetakExcelPeserta');
                 Route::get('/storeNomor', 'HonorController@storeNomor')->name('honor.storeNomor');
 
-
                 Route::get('honor/cetakExcelFiltered/{kegiatan}/{jabatan}', 'HonorController@cetakExcelFiltered')->name('honor.cetakExcelFiltered');
 
                 Route::get('/getPeserta', 'HonorController@getPeserta')->name('honor.getPeserta');
 
                 Route::get('/penomoran', 'HonorController@Penomoran')->name('honor.penomoran');
             });
-
 
             //kuitansi
             Route::prefix('kuitansi')->group(function () {
@@ -434,8 +422,6 @@ Route::group(
 
                 Route::get('/storeNomor', 'KuitansiLokaController@storeNomor')->name('kuitansiLoka.storeNomor');
             });
-
-
 
             // Master Jabatan Pegawai BBGP
             Route::prefix('kependudukan')->group(function () {
@@ -508,10 +494,8 @@ Route::group(
     }
 );
 
-
 // handle route sekolah
 Route::get('/get-sekolahs', [AdminSekolahController::class, 'getSekolahs'])->name('getSekolahs');
-
 
 // Auth
 Route::group(['prefix' => 'auth', 'namespace' => 'App\Http\Controllers'], function () {
@@ -523,6 +507,7 @@ Route::group(['prefix' => 'auth', 'namespace' => 'App\Http\Controllers'], functi
     Route::post('/login/admin', 'AuthController@login_action_admin')->name('login_action_admin');
     Route::get('/logout', function () {
         Session::flush();
+
         return redirect()->route(
             'user.index'
         )->with('message', 'sukses logout');
@@ -532,22 +517,23 @@ Route::group(['prefix' => 'auth', 'namespace' => 'App\Http\Controllers'], functi
 Route::get('/repair-link', function () {
     $target = base_path('storage/app/public');
     $link = public_path('upload'); // Ganti dari storage ke upload
-    
+
     // Hapus jika sudah ada (bisa jadi broken link atau folder asli)
     if (file_exists($link)) {
         if (is_link($link)) {
             unlink($link);
         } else {
             // Jika itu folder asli, kita coba rename dulu untuk backup.
-            rename($link, $link . '_old_' . time());
+            rename($link, $link.'_old_'.time());
         }
     }
 
     try {
         // Buat Symbolic Link bernama 'upload'
         app()->make('files')->link($target, $link);
+
         return "Symbolic link 'upload' created successfully!<br>Target: $target <br>Link: $link <br><br>Sekarang file bisa diakses via <b>domain.com/upload/...</b>";
     } catch (\Exception $e) {
-        return "Failed to create link: " . $e->getMessage();
+        return 'Failed to create link: '.$e->getMessage();
     }
 });

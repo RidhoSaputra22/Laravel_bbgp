@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 class Guru extends Model
 {
     use HasFactory;
+
     protected $fillable = [
         'nama_lengkap',
         'email',
@@ -41,7 +42,13 @@ class Guru extends Model
         'is_verif',
     ];
 
-    public function sekolah() {
+    public function sekolah()
+    {
         return $this->hasOne(Sekolah::class, 'npsn_sekolah', 'npsn_sekolah');
+    }
+
+    public function assessmentAssignmentTargets()
+    {
+        return $this->hasMany(AssessmentAssignmentTarget::class);
     }
 }
