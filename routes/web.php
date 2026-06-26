@@ -315,6 +315,16 @@ Route::group(
                 Route::post('/hapus/{id}', 'AkunController@destroy')->name('akun.hapus');
             });
 
+            Route::prefix('assesment')->group(function () {
+                Route::get('/', 'AssessmentController@index')->name('assessment.index');
+                Route::get('/create', 'AssessmentController@create')->name('assessment.create');
+                Route::post('/store', 'AssessmentController@store')->name('assessment.store');
+                Route::get('/show/{id}', 'AssessmentController@show')->name('assessment.show');
+                Route::get('/edit/{id}', 'AssessmentController@edit')->name('assessment.edit');
+                Route::put('/update/{id}', 'AssessmentController@update')->name('assessment.update');
+                Route::post('/hapus/{id}', 'AssessmentController@destroy')->name('assessment.hapus');
+            });
+
 
 
 

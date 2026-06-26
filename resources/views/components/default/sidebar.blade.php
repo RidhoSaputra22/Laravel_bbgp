@@ -124,6 +124,12 @@
                </a>
             </li>
 
+            <li class="{{ $menu == 'assessment' ? 'active' : '' }}">
+               <a class="nav-link" href="{{ route('assessment.index') }}">
+                  <i class="fas fa-clipboard-list"></i> <span>Assesment</span>
+               </a>
+            </li>
+
             <li class="menu-header">Landing Page</li>
             <li class="nav-item  {{ $menu == 'agenda' ? 'active' : '' }}">
                <a href="{{ route('agenda.index') }}" class="nav-link "><i class="fas fa-thumbtack"></i>
@@ -328,6 +334,12 @@
             <li class="{{ $menu == 'akun' ? 'active' : '' }}">
                <a class="nav-link" href="{{ route('akun.index') }}">
                   <i class="fas fa-user"></i> <span>Data Akun</span>
+               </a>
+            </li>
+
+            <li class="{{ $menu == 'assessment' ? 'active' : '' }}">
+               <a class="nav-link" href="{{ route('assessment.index') }}">
+                  <i class="fas fa-clipboard-list"></i> <span>Assesment</span>
                </a>
             </li>
          @endif
