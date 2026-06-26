@@ -12,6 +12,7 @@ class AssessmentFormField extends Model
     protected $fillable = [
         'assessment_form_id',
         'label',
+        'deskripsi',
         'nama_field',
         'tipe_field',
         'placeholder',

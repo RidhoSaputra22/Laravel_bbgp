@@ -369,6 +369,7 @@
                 const radioOptions = normalizeRadioOptions(fieldData.radio_options);
                 const fieldPrefix = `forms[${formIndex}][fields][${fieldIndex}]`;
                 const labelName = `${fieldPrefix}[label]`;
+                const deskripsiName = `${fieldPrefix}[deskripsi]`;
                 const tipeFieldName = `${fieldPrefix}[tipe_field]`;
                 const placeholderName = `${fieldPrefix}[placeholder]`;
                 const urutanName = `${fieldPrefix}[urutan]`;
@@ -386,12 +387,12 @@
                     'form-group',
                     'standard-option-wrapper',
                     showTextOptions ? '' : 'd-none',
-                    hasError(opsiFieldTextName) ? 'assessment-invalid-wrapper' : ''
+
                 );
                 const multipleChoiceWrapperClass = joinClasses(
                     'multiple-choice-wrapper',
                     showMultipleChoiceOptions ? '' : 'd-none',
-                    hasError(radioOptionsName) ? 'assessment-invalid-wrapper' : ''
+
                 );
 
                 return `
@@ -452,6 +453,19 @@
                                             name="${urutanName}"
                                             value="${escapeHtml(fieldData.urutan || fieldIndex + 1)}">
                                         ${buildInvalidFeedback(urutanName)}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <div class="form-group">
+                                        <label>Deskripsi Pertanyaan</label>
+                                        <textarea class="${getInputClass(deskripsiName)} field-description-input"
+                                            name="${deskripsiName}"
+                                            rows="3"
+                                            placeholder="Tambahkan deskripsi pertanyaan bila diperlukan">${escapeHtml(fieldData.deskripsi)}</textarea>
+                                        ${buildInvalidFeedback(deskripsiName)}
                                     </div>
                                 </div>
                             </div>
@@ -576,7 +590,7 @@
 
                             <div class="form-group">
                                 <label>Deskripsi Form</label>
-                                <textarea class="${getInputClass(deskripsiName)}"
+                                <textarea class="${getInputClass(deskripsiName)} form-description-input"
                                     name="${deskripsiName}"
                                     rows="2"
                                     placeholder="Deskripsi singkat form">${escapeHtml(formData.deskripsi)}</textarea>
@@ -801,7 +815,7 @@
                         title: $formCard.find('input[name$="[judul_form]"]').val()?.trim() ||
                             'Child form tanpa judul',
                         code: $formCard.find('input[name$="[kode_form]"]').val()?.trim() || '-',
-                        description: $formCard.find('textarea[name$="[deskripsi]"]').val()?.trim() || '',
+                        description: $formCard.find('.form-description-input').first().val()?.trim() || '',
                         fields: [],
                     };
 
@@ -815,6 +829,7 @@
 
                         formData.fields.push({
                             label: $fieldCard.find('input[name$="[label]"]').val()?.trim() || 'Field tanpa label',
+                            description: $fieldCard.find('.field-description-input').val()?.trim() || '',
                             name: slugifyFieldName($fieldCard.find('input[name$="[label]"]').val()?.trim() || ''),
                             type: $fieldCard.find('select[name$="[tipe_field]"]').val() || 'text',
                             placeholder: $fieldCard.find('input[name$="[placeholder]"]').val()?.trim() || '',
@@ -932,6 +947,7 @@
                 return `
                     <div class="form-group">
                         <label>${fieldLabel}</label>
+                        ${field.description ? `<small class="form-text text-muted mb-2">${escapeHtml(field.description)}</small>` : ''}
                         ${inputHtml}
                         ${field.helpText ? `<small class="form-text text-muted">${escapeHtml(field.helpText)}</small>` : ''}
                     </div>

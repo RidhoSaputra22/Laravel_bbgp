@@ -133,6 +133,10 @@
                                                 @endif
                                             </label>
 
+                                            @if ($field->deskripsi)
+                                                <small class="form-text text-muted mb-2">{{ $field->deskripsi }}</small>
+                                            @endif
+
                                             @switch($field->tipe_field)
                                                 @case('textarea')
                                                     <textarea id="{{ $fieldLabelId }}" class="form-control" rows="3" placeholder="{{ $field->placeholder }}"

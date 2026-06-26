@@ -216,6 +216,7 @@ class AssessmentController extends Controller
                 'forms.*.is_active' => 'nullable|boolean',
                 'forms.*.fields' => 'required|array|min:1',
                 'forms.*.fields.*.label' => 'required|string|max:255',
+                'forms.*.fields.*.deskripsi' => 'nullable|string',
                 'forms.*.fields.*.tipe_field' => [
                     'required',
                     'string',
@@ -349,6 +350,7 @@ class AssessmentController extends Controller
 
                 $form->fields()->create([
                     'label' => $fieldData['label'],
+                    'deskripsi' => $fieldData['deskripsi'] ?? null,
                     'nama_field' => $fieldName,
                     'tipe_field' => $fieldData['tipe_field'],
                     'placeholder' => $fieldData['placeholder'] ?? null,
@@ -468,6 +470,7 @@ class AssessmentController extends Controller
 
                     return [
                         'label' => $field->label,
+                        'deskripsi' => $field->deskripsi,
                         'tipe_field' => $field->tipe_field,
                         'placeholder' => $field->placeholder,
                         'bantuan' => $field->bantuan,

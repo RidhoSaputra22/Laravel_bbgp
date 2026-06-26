@@ -31,6 +31,7 @@ class AssessmentSeeder extends Seeder
                         'fields' => [
                             [
                                 'label' => 'Nama Lengkap',
+                                'deskripsi' => 'Tuliskan nama lengkap peserta sesuai identitas resmi atau data administrasi yang berlaku.',
                                 'nama_field' => 'nama_lengkap',
                                 'tipe_field' => 'text',
                                 'placeholder' => 'Masukkan nama lengkap',
@@ -45,6 +46,7 @@ class AssessmentSeeder extends Seeder
                             ],
                             [
                                 'label' => 'Email Aktif',
+                                'deskripsi' => 'Gunakan alamat email yang aktif dipakai untuk menerima informasi lanjutan assessment.',
                                 'nama_field' => 'email_aktif',
                                 'tipe_field' => 'email',
                                 'placeholder' => 'contoh@bbgtk.go.id',
@@ -59,6 +61,7 @@ class AssessmentSeeder extends Seeder
                             ],
                             [
                                 'label' => 'Jabatan Saat Ini',
+                                'deskripsi' => 'Pilih jabatan utama yang saat ini paling menggambarkan peran Anda.',
                                 'nama_field' => 'jabatan_saat_ini',
                                 'tipe_field' => 'select',
                                 'placeholder' => 'Pilih jabatan',
@@ -73,6 +76,7 @@ class AssessmentSeeder extends Seeder
                             ],
                             [
                                 'label' => 'Lama Pengalaman (tahun)',
+                                'deskripsi' => 'Isi total pengalaman kerja yang relevan dalam satuan tahun penuh.',
                                 'nama_field' => 'lama_pengalaman',
                                 'tipe_field' => 'number',
                                 'placeholder' => '0',
@@ -96,6 +100,7 @@ class AssessmentSeeder extends Seeder
                         'fields' => [
                             [
                                 'label' => 'Area Kompetensi Terkuat',
+                                'deskripsi' => 'Pilih satu area kompetensi yang menurut Anda paling menonjol saat ini.',
                                 'nama_field' => 'area_kompetensi_terkuat',
                                 'tipe_field' => 'radio',
                                 'placeholder' => null,
@@ -115,6 +120,7 @@ class AssessmentSeeder extends Seeder
                             ],
                             [
                                 'label' => 'Topik yang Ingin Diperdalam',
+                                'deskripsi' => 'Anda dapat memilih lebih dari satu topik sesuai kebutuhan pengembangan diri.',
                                 'nama_field' => 'topik_yang_ingin_diperdalam',
                                 'tipe_field' => 'checkbox',
                                 'placeholder' => null,
@@ -129,6 +135,7 @@ class AssessmentSeeder extends Seeder
                             ],
                             [
                                 'label' => 'Catatan Refleksi',
+                                'deskripsi' => 'Jelaskan pengalaman, tantangan, atau kebutuhan belajar yang ingin Anda sampaikan.',
                                 'nama_field' => 'catatan_refleksi',
                                 'tipe_field' => 'textarea',
                                 'placeholder' => 'Tuliskan refleksi singkat Anda',
@@ -162,6 +169,7 @@ class AssessmentSeeder extends Seeder
                         'fields' => [
                             [
                                 'label' => 'Nama Kegiatan',
+                                'deskripsi' => 'Masukkan nama kegiatan atau program yang sedang dipantau pada assessment ini.',
                                 'nama_field' => 'nama_kegiatan',
                                 'tipe_field' => 'text',
                                 'placeholder' => 'Masukkan nama kegiatan',
@@ -176,6 +184,7 @@ class AssessmentSeeder extends Seeder
                             ],
                             [
                                 'label' => 'Tanggal Pelaksanaan',
+                                'deskripsi' => 'Tentukan tanggal utama pelaksanaan kegiatan yang menjadi objek assessment.',
                                 'nama_field' => 'tanggal_pelaksanaan',
                                 'tipe_field' => 'date',
                                 'placeholder' => null,
@@ -190,6 +199,7 @@ class AssessmentSeeder extends Seeder
                             ],
                             [
                                 'label' => 'Unggah Dokumen Eviden',
+                                'deskripsi' => 'Lampirkan dokumen pendukung yang relevan seperti laporan, foto, atau eviden kegiatan lainnya.',
                                 'nama_field' => 'dokumen_eviden',
                                 'tipe_field' => 'file',
                                 'placeholder' => null,
