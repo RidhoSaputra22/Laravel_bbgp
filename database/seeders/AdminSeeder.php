@@ -4,8 +4,8 @@ namespace Database\Seeders;
 
 use App\Models\Admin;
 use App\Models\User;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Hash;
 
 class AdminSeeder extends Seeder
 {
@@ -18,62 +18,41 @@ class AdminSeeder extends Seeder
             [
                 'name' => 'Administrator',
                 'username' => 'admin',
-                'password' => bcrypt('admin'),
+                'password' => 'admin',
                 'role' => 'admin',
             ],
             [
                 'name' => 'Kepala',
                 'username' => 'kepala',
-                'password' => bcrypt('kepala'),
+                'password' => 'kepala',
                 'role' => 'kepala',
             ],
             [
                 'name' => 'Super Admin',
                 'username' => 'superadmin',
-                'password' => bcrypt('superadmin'),
+                'password' => 'superadmin',
                 'role' => 'superadmin',
             ],
-            [
-                'name' => 'Tenaga Pendidik ',
-                'username' => 'tenaga pendidik',
-                'password' => bcrypt('tenaga_pendidik'),
-                'role' => 'tenaga pendidik',
-            ],
-            [
-                'name' => 'Tenaga Kependidikan ',
-                'username' => 'tenaga kependidikan',
-                'password' => bcrypt('tenaga_kependidikan'),
-                'role' => 'tenaga kependidikan',
-            ],
-            [
-                'name' => 'Stakeholder ',
-                'username' => 'stakeholder',
-                'password' => bcrypt('stakeholder'),
-                'role' => 'stakeholder',
-            ],
-            [
-                'name' => 'Pegawai Internal BBGTK',
-                'username' => 'pegawai',
-                'password' => bcrypt('pegawai'),
-                'role' => 'pegawai',
-            ],
-
         ];
 
-        foreach ($akun as $key => $v) {
-            Admin::create([
+        foreach ($akun as $v) {
+            $payload = [
                 'name' => $v['name'],
                 'username' => $v['username'],
-                'password' => $v['password'],
+                'no_ktp' => null,
+                'password' => Hash::make($v['password']),
                 'role' => $v['role'],
-            ]);
+            ];
 
-            User::create([
-                'name' => $v['name'],
-                'username' => $v['username'],
-                'password' => $v['password'],
-                'role' => $v['role'],
-            ]);
+            Admin::updateOrCreate(
+                ['username' => $v['username'], 'role' => $v['role']],
+                $payload
+            );
+
+            User::updateOrCreate(
+                ['username' => $v['username'], 'role' => $v['role']],
+                $payload
+            );
         }
     }
 }
