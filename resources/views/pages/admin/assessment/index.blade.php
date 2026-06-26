@@ -48,7 +48,7 @@
                             </div>
                             <div class="card-wrap">
                                 <div class="card-header">
-                                    <h4>Total Child Form</h4>
+                                    <h4>Total Form</h4>
                                 </div>
                                 <div class="card-body">
                                     {{ $totalForms }}
@@ -85,7 +85,7 @@
                                 </div>
                                 <h2>Belum ada assesment</h2>
                                 <p class="lead">
-                                    Mulai buat assesment baru untuk menyusun child form dan form-field dinamis.
+                                    Mulai buat assesment baru untuk menyusun form dan pertanyaandinamis.
                                 </p>
                                 <a href="{{ route('assessment.create') }}" class="btn btn-primary mt-3">
                                     Tambah Assesment
@@ -130,10 +130,10 @@
                                                     @endif
                                                 </td>
                                                 <td>
-                                                    <div>{{ $data->forms->count() }} child form</div>
+                                                    <div>{{ $data->forms->count() }} form</div>
                                                     <div class="text-muted">
                                                         {{ $data->forms->sum(function ($form) { return $form->fields->count(); }) }}
-                                                        form-field
+                                                        pertanyaan
                                                     </div>
                                                 </td>
                                                 <td>{{ \App\Helpers\Helper::dateIndo($data->updated_at) }}</td>
@@ -160,48 +160,7 @@
                     </div>
                 </div>
 
-                @if ($datas->isNotEmpty())
-                    <div class="row">
-                        @foreach ($datas as $data)
-                            <div class="col-lg-6">
-                                <div class="card">
-                                    <div class="card-header">
-                                        <h4>{{ $data->judul }}</h4>
-                                    </div>
-                                    <div class="card-body">
-                                        <p class="text-muted mb-3">
-                                            {{ $data->deskripsi ?: 'Belum ada deskripsi assesment.' }}
-                                        </p>
 
-                                        @foreach ($data->forms as $form)
-                                            <div class="mb-3 p-3 border rounded">
-                                                <div class="d-flex justify-content-between align-items-start mb-2">
-                                                    <div>
-                                                        <div class="font-weight-bold">{{ $form->judul_form }}</div>
-                                                        <small class="text-muted">{{ $form->kode_form }}</small>
-                                                    </div>
-                                                    <span class="badge badge-primary">
-                                                        {{ $form->fields->count() }} field
-                                                    </span>
-                                                </div>
-                                                @if ($form->deskripsi)
-                                                    <p class="text-muted mb-2">{{ $form->deskripsi }}</p>
-                                                @endif
-                                                <div>
-                                                    @foreach ($form->fields as $field)
-                                                        <span class="badge badge-light mb-1">
-                                                            {{ $field->label }} ({{ $field->tipe_field }})
-                                                        </span>
-                                                    @endforeach
-                                                </div>
-                                            </div>
-                                        @endforeach
-                                    </div>
-                                </div>
-                            </div>
-                        @endforeach
-                    </div>
-                @endif
             </div>
         </section>
     </div>

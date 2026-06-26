@@ -186,7 +186,7 @@ class AssessmentController extends Controller
             'email' => 'Email',
             'date' => 'Date',
             'select' => 'Select',
-            'radio' => 'Radio',
+            'radio' => 'Pilihan Ganda',
             'checkbox' => 'Checkbox',
             'file' => 'File',
         ];
@@ -225,8 +225,11 @@ class AssessmentController extends Controller
                 'forms.*.fields.*.placeholder' => 'nullable|string|max:255',
                 'forms.*.fields.*.bantuan' => 'nullable|string',
                 'forms.*.fields.*.opsi_field_text' => 'nullable|string',
+                'forms.*.fields.*.radio_options' => 'nullable|array',
+                'forms.*.fields.*.radio_options.*.label' => 'nullable|string|max:10',
+                'forms.*.fields.*.radio_options.*.value' => 'nullable|string|max:255',
                 'forms.*.fields.*.nilai_default' => 'nullable|string',
-                'forms.*.fields.*.lebar_kolom' => 'nullable|string|max:20',
+
                 'forms.*.fields.*.urutan' => 'nullable|integer|min:1',
                 'forms.*.fields.*.is_required' => 'nullable|boolean',
                 'forms.*.fields.*.is_active' => 'nullable|boolean',
@@ -235,10 +238,10 @@ class AssessmentController extends Controller
                 'kode_assessment.required' => 'Kode assesment wajib diisi.',
                 'kode_assessment.unique' => 'Kode assesment sudah digunakan.',
                 'judul.required' => 'Judul assesment wajib diisi.',
-                'forms.required' => 'Minimal harus ada satu child form.',
-                'forms.*.judul_form.required' => 'Judul child form wajib diisi.',
-                'forms.*.fields.required' => 'Setiap child form minimal memiliki satu form-field.',
-                'forms.*.fields.*.label.required' => 'Label form-field wajib diisi.',
+                'forms.required' => 'Minimal harus ada satu form.',
+                'forms.*.judul_form.required' => 'Judul form wajib diisi.',
+                'forms.*.fields.required' => 'Setiap form minimal memiliki satu pertanyaan.',
+                'forms.*.fields.*.label.required' => 'Label pertanyaanwajib diisi.',
                 'forms.*.fields.*.nama_field.required' => 'Nama field wajib diisi.',
                 'forms.*.fields.*.tipe_field.required' => 'Tipe field wajib dipilih.',
             ]
@@ -246,7 +249,7 @@ class AssessmentController extends Controller
 
         $validator->after(function ($validator) use ($request) {
             $forms = $request->input('forms', []);
-            $fieldTypesWithOptions = ['select', 'radio', 'checkbox'];
+            $fieldTypesWithTextOptions = ['select', 'checkbox'];
 
             foreach ($forms as $formIndex => $form) {
                 $usedFieldNames = [];
@@ -264,19 +267,65 @@ class AssessmentController extends Controller
                     if (in_array($namaField, $usedFieldNames, true)) {
                         $validator->errors()->add(
                             "forms.$formIndex.fields.$fieldIndex.nama_field",
-                            'Nama field dalam satu child form harus unik.'
+                            'Nama field dalam satu form harus unik.'
                         );
                     }
 
                     $usedFieldNames[] = $namaField;
 
+                    if (($field['tipe_field'] ?? '') === 'radio') {
+                        $radioOptions = array_values(array_filter(
+                            $field['radio_options'] ?? [],
+                            fn($option) => filled($option['label'] ?? null) || filled($option['value'] ?? null)
+                        ));
+
+                        if (count($radioOptions) < 2) {
+                            $validator->errors()->add(
+                                "forms.$formIndex.fields.$fieldIndex.radio_options",
+                                'Pilihan ganda wajib memiliki minimal dua opsi.'
+                            );
+                        }
+
+                        $usedOptionLabels = [];
+
+                        foreach ($radioOptions as $optionIndex => $option) {
+                            $optionLabel = trim((string) ($option['label'] ?? ''));
+                            $optionValue = trim((string) ($option['value'] ?? ''));
+
+                            if ($optionLabel === '') {
+                                $validator->errors()->add(
+                                    "forms.$formIndex.fields.$fieldIndex.radio_options.$optionIndex.label",
+                                    'Label opsi pilihan ganda wajib diisi.'
+                                );
+                            }
+
+                            if ($optionValue === '') {
+                                $validator->errors()->add(
+                                    "forms.$formIndex.fields.$fieldIndex.radio_options.$optionIndex.value",
+                                    'Value opsi pilihan ganda wajib diisi.'
+                                );
+                            }
+
+                            if ($optionLabel !== '' && in_array(Str::upper($optionLabel), $usedOptionLabels, true)) {
+                                $validator->errors()->add(
+                                    "forms.$formIndex.fields.$fieldIndex.radio_options.$optionIndex.label",
+                                    'Label opsi pilihan ganda harus unik.'
+                                );
+                            }
+
+                            if ($optionLabel !== '') {
+                                $usedOptionLabels[] = Str::upper($optionLabel);
+                            }
+                        }
+                    }
+
                     if (
-                        in_array($field['tipe_field'] ?? '', $fieldTypesWithOptions, true) &&
+                        in_array($field['tipe_field'] ?? '', $fieldTypesWithTextOptions, true) &&
                         blank($field['opsi_field_text'] ?? null)
                     ) {
                         $validator->errors()->add(
                             "forms.$formIndex.fields.$fieldIndex.opsi_field_text",
-                            'Opsi wajib diisi untuk field select, radio, atau checkbox.'
+                            'Opsi wajib diisi untuk field select atau checkbox.'
                         );
                     }
                 }
@@ -309,16 +358,13 @@ class AssessmentController extends Controller
                     'tipe_field' => $fieldData['tipe_field'],
                     'placeholder' => $fieldData['placeholder'] ?? null,
                     'bantuan' => $fieldData['bantuan'] ?? null,
-                    'opsi_field' => $this->parseFieldOptions(
-                        $fieldData['tipe_field'],
-                        $fieldData['opsi_field_text'] ?? null
-                    ),
+                    'opsi_field' => $this->parseFieldOptions($fieldData),
                     'nilai_default' => $fieldData['nilai_default'] ?? null,
                     'validasi' => [
                         'required' => (bool) ($fieldData['is_required'] ?? false),
                         'tipe_field' => $fieldData['tipe_field'],
                     ],
-                    'lebar_kolom' => $fieldData['lebar_kolom'] ?? 'col-md-6',
+                    'lebar_kolom' => 'col-md-12',
                     'urutan' => (int) ($fieldData['urutan'] ?? ($fieldIndex + 1)),
                     'is_required' => (bool) ($fieldData['is_required'] ?? false),
                     'is_active' => (bool) ($fieldData['is_active'] ?? false),
@@ -327,16 +373,49 @@ class AssessmentController extends Controller
         }
     }
 
-    private function parseFieldOptions(string $fieldType, ?string $rawOptions): ?array
+    private function parseFieldOptions(array $fieldData): ?array
     {
+        $fieldType = $fieldData['tipe_field'] ?? null;
+
         if (!in_array($fieldType, ['select', 'radio', 'checkbox'], true)) {
             return null;
         }
 
+        if ($fieldType === 'radio') {
+            $options = collect($fieldData['radio_options'] ?? [])
+                ->filter(fn($option) => filled($option['label'] ?? null) || filled($option['value'] ?? null))
+                ->map(function ($option, $index) {
+                    return [
+                        'label' => Str::upper(trim((string) ($option['label'] ?? $this->generateOptionLabel($index)))),
+                        'value' => trim((string) ($option['value'] ?? '')),
+                    ];
+                })
+                ->filter(fn($option) => $option['label'] !== '' && $option['value'] !== '')
+                ->values()
+                ->toArray();
+
+            return $options === [] ? null : $options;
+        }
+
+        $rawOptions = $fieldData['opsi_field_text'] ?? null;
         $options = preg_split('/[\r\n,]+/', (string) $rawOptions);
         $options = array_values(array_filter(array_map('trim', $options)));
 
         return $options === [] ? null : $options;
+    }
+
+    private function generateOptionLabel(int $index): string
+    {
+        $label = '';
+        $number = $index + 1;
+
+        while ($number > 0) {
+            $number--;
+            $label = chr(65 + ($number % 26)) . $label;
+            $number = intdiv($number, 26);
+        }
+
+        return $label;
     }
 
     private function resolveUniqueFieldName(string $rawName, array $usedFieldNames): string
@@ -381,13 +460,34 @@ class AssessmentController extends Controller
                 'urutan' => $form->urutan,
                 'is_active' => $form->is_active,
                 'fields' => $form->fields->map(function ($field) {
+                    $radioOptions = [];
+
+                    if ($field->tipe_field === 'radio') {
+                        $radioOptions = collect($field->opsi_field ?? [])
+                            ->map(function ($option, $index) {
+                                if (is_array($option) && array_key_exists('label', $option) && array_key_exists('value', $option)) {
+                                    return [
+                                        'label' => $option['label'],
+                                        'value' => $option['value'],
+                                    ];
+                                }
+
+                                return [
+                                    'label' => $this->generateOptionLabel($index),
+                                    'value' => is_scalar($option) ? (string) $option : '',
+                                ];
+                            })
+                            ->toArray();
+                    }
+
                     return [
                         'label' => $field->label,
                         'nama_field' => $field->nama_field,
                         'tipe_field' => $field->tipe_field,
                         'placeholder' => $field->placeholder,
                         'bantuan' => $field->bantuan,
-                        'opsi_field_text' => $field->opsi_field ? implode(', ', $field->opsi_field) : null,
+                        'opsi_field_text' => $field->tipe_field === 'radio' ? null : ($field->opsi_field ? implode(', ', $field->opsi_field) : null),
+                        'radio_options' => $radioOptions,
                         'nilai_default' => $field->nilai_default,
                         'lebar_kolom' => $field->lebar_kolom,
                         'urutan' => $field->urutan,

@@ -14,7 +14,18 @@
     </div>
 @endif
 
-<form action="{{ $formAction }}" method="POST">
+@push('styles')
+    <style>
+        .multiple-choice-option-row {
+            border: 1px solid #e4e6fc;
+            border-radius: 0.5rem;
+            padding: 0.75rem;
+            background: #fff;
+        }
+    </style>
+@endpush
+
+<form action="{{ $formAction }}" method="POST" id="assessment-builder-form">
     @csrf
     @if ($httpMethod !== 'POST')
         @method($httpMethod)
@@ -84,32 +95,31 @@
 
     <div class="card">
         <div class="card-header">
-            <h4>Child Form dan Form Field</h4>
+            <h4>Form Builder</h4>
             <div class="card-header-action">
                 <button type="button" class="btn btn-primary btn-sm" id="btn-add-form">
-                    <i class="fas fa-plus"></i> Tambah Child Form
+                    <i class="fas fa-plus"></i> Tambah Form
                 </button>
             </div>
         </div>
         <div class="card-body">
             <div class="alert alert-light border">
-                <div class="font-weight-bold mb-2">Tipe field yang tersedia</div>
-                <div>
-                    @foreach ($fieldTypeBadges as $key => $label)
-                        <span class="badge badge-primary mb-1">{{ $label }} ({{ $key }})</span>
-                    @endforeach
-                </div>
-                <small class="d-block text-muted mt-2">
-                    Gunakan koma atau baris baru untuk memisahkan opsi pada tipe field select, radio, dan checkbox.
-                </small>
+                <div class="font-weight-bold mb-2">Petunjuk Penggunaan</div>
+                <ul class="mb-0 pl-3">
+                    <li>Isi informasi assesment di bagian atas terlebih dahulu.</li>
+                    <li>Klik <strong>Tambah Form</strong> untuk membuat bagian form, lalu tambahkan field di dalamnya.</li>
+                    <li>Untuk field <strong>Select</strong> dan <strong>Checkbox</strong>, pisahkan opsi dengan koma atau baris baru.</li>
+                    <li>Untuk field <strong>Pilihan Ganda</strong>, isi label dan value pada opsi yang tersedia.</li>
+                    <li>Aktifkan hanya form dan field yang ingin ditampilkan ke pengguna.</li>
+                </ul>
             </div>
 
             <div id="form-builder-empty" class="empty-state d-none" data-height="220">
                 <div class="empty-state-icon bg-primary">
                     <i class="fas fa-layer-group"></i>
                 </div>
-                <h2>Belum ada child form</h2>
-                <p class="lead">Tambahkan child form pertama untuk mulai menyusun struktur assesment dinamis.</p>
+                <h2>Belum ada form</h2>
+                <p class="lead">Tambahkan form pertama untuk mulai menyusun struktur assesment dinamis.</p>
             </div>
 
             <div id="form-builder-list"></div>
@@ -124,37 +134,19 @@
     </div>
 </form>
 
-<div class="modal fade" id="assessmentPreviewModal" tabindex="-1" role="dialog" aria-labelledby="assessmentPreviewLabel"
-    aria-hidden="true">
-    <div class="modal-dialog modal-xl" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="assessmentPreviewLabel">Preview Form User</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-            <div class="modal-body bg-light">
-                <div class="alert alert-primary border-0 mb-4">
-                    Preview ini menampilkan child form dan form-field aktif seperti yang akan dilihat user.
-                </div>
-                <div id="assessment-preview-content"></div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-light" data-dismiss="modal">Tutup</button>
-            </div>
-        </div>
-    </div>
-</div>
-
 @push('scripts')
     <script>
         $(document).ready(function() {
             const assessmentFieldTypes = @json($fieldTypes);
             const initialForms = @json($builderSeed);
-            const optionFieldTypes = ['select', 'radio', 'checkbox'];
+            const textOptionFieldTypes = ['select', 'checkbox'];
+            const multipleChoiceFieldType = 'radio';
             const columnOptions = ['col-md-12', 'col-md-8', 'col-md-6', 'col-md-4'];
+            const $previewPanel = $('#assessment-preview-panel');
+            const $previewContent = $('#assessment-preview-content');
+            const $previewToggleButton = $('.btn-toggle-preview-panel');
             let formIndexCounter = 0;
+            let previewRenderTimer = null;
 
             const escapeHtml = (value) => $('<div>').text(value ?? '').html();
 
@@ -176,12 +168,98 @@
                 }).join('');
             };
 
-            const buildFieldCard = (formIndex, fieldIndex, fieldData = {}) => {
-                const fieldType = fieldData.tipe_field || 'text';
-                const showOptions = optionFieldTypes.includes(fieldType);
+            const generateChoiceLabel = (index) => {
+                let label = '';
+                let number = index + 1;
+
+                while (number > 0) {
+                    number -= 1;
+                    label = String.fromCharCode(65 + (number % 26)) + label;
+                    number = Math.floor(number / 26);
+                }
+
+                return label;
+            };
+
+            const normalizeRadioOptions = (options = []) => {
+                if (!Array.isArray(options) || !options.length) {
+                    return [{
+                        label: 'A',
+                        value: ''
+                    }, {
+                        label: 'B',
+                        value: ''
+                    }];
+                }
+
+                const normalizedOptions = options.map((option, index) => {
+                    if (typeof option === 'string') {
+                        return {
+                            label: generateChoiceLabel(index),
+                            value: option,
+                        };
+                    }
+
+                    return {
+                        label: option?.label || generateChoiceLabel(index),
+                        value: option?.value || '',
+                    };
+                });
+
+                while (normalizedOptions.length < 2) {
+                    normalizedOptions.push({
+                        label: generateChoiceLabel(normalizedOptions.length),
+                        value: '',
+                    });
+                }
+
+                return normalizedOptions;
+            };
+
+            const buildRadioOptionRow = (formIndex, fieldIndex, optionIndex, optionData = {}) => {
+                const optionLabel = optionData.label || generateChoiceLabel(optionIndex);
+                const optionValue = optionData.value || '';
 
                 return `
-                    <div class="card border assessment-field-card mb-3" data-field-index="${fieldIndex}">
+                    <div class="multiple-choice-option-row mb-2" data-option-index="${optionIndex}">
+                        <div class="row align-items-end">
+                            <div class="col-md-2">
+                                <div class="form-group mb-md-0">
+                                    <label>Label</label>
+                                    <input type="text" class="form-control radio-option-label"
+                                        name="forms[${formIndex}][fields][${fieldIndex}][radio_options][${optionIndex}][label]"
+                                        value="${escapeHtml(optionLabel)}"
+                                        maxlength="10"
+                                        placeholder="A">
+                                </div>
+                            </div>
+                            <div class="col-md-9">
+                                <div class="form-group mb-md-0">
+                                    <label>Value</label>
+                                    <input type="text" class="form-control radio-option-value"
+                                        name="forms[${formIndex}][fields][${fieldIndex}][radio_options][${optionIndex}][value]"
+                                        value="${escapeHtml(optionValue)}"
+                                        placeholder="Contoh: Jawaban 1">
+                                </div>
+                            </div>
+                            <div class="col-md-1 text-md-right">
+                                <button type="button" class="btn btn-outline-danger btn-sm btn-remove-radio-option">
+                                    <i class="fas fa-trash-alt"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            };
+
+            const buildFieldCard = (formIndex, fieldIndex, fieldData = {}) => {
+                const fieldType = fieldData.tipe_field || 'text';
+                const showTextOptions = textOptionFieldTypes.includes(fieldType);
+                const showMultipleChoiceOptions = fieldType === multipleChoiceFieldType;
+                const radioOptions = normalizeRadioOptions(fieldData.radio_options);
+
+                return `
+                    <div class="card border assessment-field-card mb-3" data-field-index="${fieldIndex}" data-radio-option-counter="${radioOptions.length}">
                         <div class="card-body">
                             <div class="d-flex justify-content-between align-items-center mb-3">
                                 <h6 class="mb-0">Form Field ${fieldIndex + 1}</h6>
@@ -238,15 +316,7 @@
                                             placeholder="Opsional">
                                     </div>
                                 </div>
-                                <div class="col-md-2">
-                                    <div class="form-group">
-                                        <label>Lebar Kolom</label>
-                                        <select class="form-control"
-                                            name="forms[${formIndex}][fields][${fieldIndex}][lebar_kolom]">
-                                            ${buildColumnOptions(fieldData.lebar_kolom || 'col-md-6')}
-                                        </select>
-                                    </div>
-                                </div>
+
                                 <div class="col-md-2">
                                     <div class="form-group">
                                         <label>Urutan</label>
@@ -257,12 +327,27 @@
                                 </div>
                             </div>
 
-                            <div class="form-group option-field-wrapper ${showOptions ? '' : 'd-none'}">
-                                <label>Opsi Field</label>
+                            <div class="form-group standard-option-wrapper ${showTextOptions ? '' : 'd-none'}">
+                                <label>Opsi Field (Select / Checkbox)</label>
                                 <textarea class="form-control"
                                     name="forms[${formIndex}][fields][${fieldIndex}][opsi_field_text]"
                                     rows="2"
                                     placeholder="Contoh: Ya, Tidak, Mungkin">${escapeHtml(fieldData.opsi_field_text)}</textarea>
+                            </div>
+
+                            <div class="multiple-choice-wrapper ${showMultipleChoiceOptions ? '' : 'd-none'}">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <label class="mb-0">Opsi Pilihan Ganda</label>
+                                    <button type="button" class="btn btn-light btn-sm btn-add-radio-option">
+                                        <i class="fas fa-plus"></i> Tambah Opsi
+                                    </button>
+                                </div>
+                                <div class="radio-option-list">
+                                    ${radioOptions.map((option, optionIndex) => buildRadioOptionRow(formIndex, fieldIndex, optionIndex, option)).join('')}
+                                </div>
+                                <small class="text-muted d-block mt-2">
+                                    Hasil akan ditampilkan seperti: A. Jawaban 1, B. Jawaban 2, dan seterusnya.
+                                </small>
                             </div>
 
                             <div class="form-group">
@@ -304,7 +389,7 @@
                 return `
                     <div class="card border assessment-form-card mb-4" data-form-index="${formIndex}" data-field-counter="0">
                         <div class="card-header">
-                            <h4>Child Form ${formIndex + 1}</h4>
+                            <h4>Form ${formIndex + 1}</h4>
                             <div class="card-header-action">
                                 <button type="button" class="btn btn-outline-danger btn-sm btn-remove-form">
                                     <i class="fas fa-trash-alt"></i> Hapus Form
@@ -315,7 +400,7 @@
                             <div class="row">
                                 <div class="col-md-4">
                                     <div class="form-group">
-                                        <label>Judul Child Form</label>
+                                        <label>Judul Form</label>
                                         <input type="text" class="form-control"
                                             name="forms[${formIndex}][judul_form]"
                                             value="${escapeHtml(formData.judul_form)}"
@@ -351,11 +436,11 @@
                             </div>
 
                             <div class="form-group">
-                                <label>Deskripsi Child Form</label>
+                                <label>Deskripsi Form</label>
                                 <textarea class="form-control"
                                     name="forms[${formIndex}][deskripsi]"
                                     rows="2"
-                                    placeholder="Deskripsi singkat child form">${escapeHtml(formData.deskripsi)}</textarea>
+                                    placeholder="Deskripsi singkat form">${escapeHtml(formData.deskripsi)}</textarea>
                             </div>
 
                             <div class="d-flex justify-content-between align-items-center mb-3">
@@ -377,6 +462,9 @@
 
                 $formCard.find('.assessment-field-list').append(buildFieldCard(formIndex, fieldIndex, fieldData));
                 $formCard.attr('data-field-counter', fieldIndex + 1);
+
+                const $fieldCard = $formCard.find('.assessment-field-card').last();
+                toggleOptionWrapper($fieldCard);
             };
 
             const appendForm = (formData = {}) => {
@@ -390,10 +478,95 @@
                 toggleEmptyState();
             };
 
+            const appendRadioOption = ($fieldCard, optionData = {}) => {
+                const formIndex = Number($fieldCard.closest('.assessment-form-card').data('form-index'));
+                const fieldIndex = Number($fieldCard.data('field-index'));
+                const optionIndex = Number($fieldCard.attr('data-radio-option-counter') || 0);
+                const normalizedOption = {
+                    label: optionData.label || generateChoiceLabel(optionIndex),
+                    value: optionData.value || '',
+                };
+
+                $fieldCard.find('.radio-option-list').append(buildRadioOptionRow(formIndex, fieldIndex, optionIndex,
+                    normalizedOption));
+                $fieldCard.attr('data-radio-option-counter', optionIndex + 1);
+                reindexRadioOptions($fieldCard);
+            };
+
+            const updateRemoveRadioOptionState = ($fieldCard) => {
+                const shouldDisable = $fieldCard.find('.multiple-choice-option-row').length <= 2;
+
+                $fieldCard.find('.btn-remove-radio-option')
+                    .prop('disabled', shouldDisable)
+                    .toggleClass('disabled', shouldDisable);
+            };
+
+            const reindexRadioOptions = ($fieldCard) => {
+                const formIndex = Number($fieldCard.closest('.assessment-form-card').data('form-index'));
+                const fieldIndex = Number($fieldCard.data('field-index'));
+
+                $fieldCard.find('.multiple-choice-option-row').each(function(optionIndex) {
+                    const $optionRow = $(this);
+                    const generatedLabel = generateChoiceLabel(optionIndex);
+                    const $labelInput = $optionRow.find('.radio-option-label');
+                    const $valueInput = $optionRow.find('.radio-option-value');
+
+                    $optionRow.attr('data-option-index', optionIndex);
+                    $labelInput
+                        .attr('name', `forms[${formIndex}][fields][${fieldIndex}][radio_options][${optionIndex}][label]`)
+                        .attr('placeholder', generatedLabel);
+
+                    if (!$labelInput.val()?.trim()) {
+                        $labelInput.val(generatedLabel);
+                    }
+
+                    $valueInput.attr(
+                        'name',
+                        `forms[${formIndex}][fields][${fieldIndex}][radio_options][${optionIndex}][value]`
+                    );
+                });
+
+                $fieldCard.attr('data-radio-option-counter', $fieldCard.find('.multiple-choice-option-row').length);
+                updateRemoveRadioOptionState($fieldCard);
+            };
+
+            const ensureMultipleChoiceOptions = ($fieldCard, minimum = 2) => {
+                const optionCount = $fieldCard.find('.multiple-choice-option-row').length;
+
+                if (optionCount >= minimum) {
+                    return;
+                }
+
+                for (let index = optionCount; index < minimum; index += 1) {
+                    appendRadioOption($fieldCard, {
+                        label: generateChoiceLabel(index),
+                        value: '',
+                    });
+                }
+
+                reindexRadioOptions($fieldCard);
+            };
+
             const toggleOptionWrapper = ($fieldCard) => {
                 const selectedType = $fieldCard.find('.field-type-select').val();
-                const shouldShow = optionFieldTypes.includes(selectedType);
-                $fieldCard.find('.option-field-wrapper').toggleClass('d-none', !shouldShow);
+                const showTextOptions = textOptionFieldTypes.includes(selectedType);
+                const showMultipleChoiceOptions = selectedType === multipleChoiceFieldType;
+
+                $fieldCard.find('.standard-option-wrapper')
+                    .toggleClass('d-none', !showTextOptions)
+                    .find('textarea')
+                    .prop('disabled', !showTextOptions);
+
+                $fieldCard.find('.multiple-choice-wrapper')
+                    .toggleClass('d-none', !showMultipleChoiceOptions)
+                    .find('input')
+                    .prop('disabled', !showMultipleChoiceOptions);
+
+                if (showMultipleChoiceOptions) {
+                    ensureMultipleChoiceOptions($fieldCard);
+                } else {
+                    updateRemoveRadioOptionState($fieldCard);
+                }
             };
 
             const toggleEmptyState = () => {
@@ -412,6 +585,18 @@
                     .filter(Boolean);
             };
 
+            const getMultipleChoiceOptions = ($fieldCard) => {
+                return $fieldCard.find('.multiple-choice-option-row').map(function(optionIndex) {
+                    const $optionRow = $(this);
+
+                    return {
+                        label: ($optionRow.find('.radio-option-label').val()?.trim() || generateChoiceLabel(
+                            optionIndex)).toUpperCase(),
+                        value: $optionRow.find('.radio-option-value').val()?.trim() || '',
+                    };
+                }).get().filter((option) => option.label || option.value);
+            };
+
             const getBadgeClass = (status) => {
                 if (status === 'publish') {
                     return 'success';
@@ -422,6 +607,33 @@
                 }
 
                 return 'secondary';
+            };
+
+            const formatStatusLabel = (status) => {
+                if (!status) {
+                    return 'Draft';
+                }
+
+                return status.charAt(0).toUpperCase() + status.slice(1);
+            };
+
+            const sanitizePreviewKey = (value) => {
+                return String(value || 'field')
+                    .toLowerCase()
+                    .replace(/[^a-z0-9_-]/g, '-');
+            };
+
+            const isPreviewPanelVisible = () => !$previewPanel.hasClass('d-none');
+
+            const updatePreviewToggleButton = () => {
+                const isVisible = isPreviewPanelVisible();
+
+                $previewToggleButton
+                    .toggleClass('btn-primary', !isVisible)
+                    .toggleClass('btn-secondary', isVisible);
+
+                $previewToggleButton.find('.preview-toggle-label').text(isVisible ? 'Tutup Preview' :
+                    'Preview Form');
             };
 
             const getPreviewState = () => {
@@ -458,7 +670,10 @@
                             placeholder: $fieldCard.find('input[name$="[placeholder]"]').val()?.trim() || '',
                             defaultValue: $fieldCard.find('input[name$="[nilai_default]"]').val()?.trim() || '',
                             helpText: $fieldCard.find('textarea[name$="[bantuan]"]').val()?.trim() || '',
-                            options: parseOptionText($fieldCard.find('textarea[name$="[opsi_field_text]"]').val()),
+                            options: $fieldCard.find('select[name$="[tipe_field]"]').val() === multipleChoiceFieldType ?
+                                getMultipleChoiceOptions($fieldCard) :
+                                parseOptionText($fieldCard.find('textarea[name$="[opsi_field_text]"]').val()),
+                            widthClass: $fieldCard.find('select[name$="[lebar_kolom]"]').val() || 'col-md-6',
                             required: $fieldCard.find('input[name$="[is_required]"]').is(':checked'),
                         });
                     });
@@ -479,7 +694,7 @@
                 };
             };
 
-            const renderPreviewFieldInput = (field) => {
+            const renderPreviewFieldInput = (field, previewKey) => {
                 const fieldLabel = `${escapeHtml(field.label)}${field.required ? ' <span class="text-danger">*</span>' : ''}`;
                 const placeholder = escapeHtml(field.placeholder);
                 const defaultValue = escapeHtml(field.defaultValue);
@@ -487,7 +702,7 @@
 
                 if (field.type === 'textarea') {
                     inputHtml = `
-                        <textarea class="form-control" rows="3" placeholder="${placeholder}" disabled>${defaultValue}</textarea>
+                        <textarea class="form-control" rows="3" placeholder="${placeholder}">${defaultValue}</textarea>
                     `;
                 } else if (field.type === 'select') {
                     const options = field.options.length ? field.options : ['Belum ada opsi'];
@@ -497,28 +712,53 @@
                     }).join('');
 
                     inputHtml = `
-                        <select class="form-control" disabled>
-                            <option value="">${placeholder || '-- Pilih salah satu --'}</option>
+                        <select class="form-control">
+                            <option value="" ${!field.defaultValue ? 'selected' : ''}>${placeholder || '-- Pilih salah satu --'}</option>
                             ${optionsHtml}
                         </select>
                     `;
-                } else if (field.type === 'radio' || field.type === 'checkbox') {
-                    const options = field.options.length ? field.options : ['Belum ada opsi'];
-                    const selectedValues = parseOptionText(field.defaultValue);
-                    const choiceType = field.type === 'radio' ? 'radio' : 'checkbox';
+                } else if (field.type === 'radio') {
+                    const options = field.options.length ? field.options : [{
+                        label: 'A',
+                        value: 'Belum ada opsi'
+                    }];
 
                     inputHtml = options.map((option, index) => {
-                        const isChecked = field.type === 'radio'
-                            ? option === field.defaultValue
-                            : selectedValues.includes(option);
+                        const optionLabel = typeof option === 'object' ? (option.label || generateChoiceLabel(index)) :
+                            generateChoiceLabel(index);
+                        const optionValue = typeof option === 'object' ? (option.value || '') : option;
+                        const isChecked = optionValue === field.defaultValue;
+                        const inputId = `${sanitizePreviewKey(previewKey)}-${index}`;
 
                         return `
-                            <div class="custom-control custom-${choiceType} mb-2">
-                                <input type="${choiceType}" class="custom-control-input"
-                                    id="preview-${escapeHtml(field.name || 'field')}-${index}"
-                                    ${isChecked ? 'checked' : ''} disabled>
+                            <div class="custom-control custom-radio mb-2">
+                                <input type="radio" class="custom-control-input"
+                                    id="${inputId}"
+                                    name="${sanitizePreviewKey(previewKey)}"
+                                    ${isChecked ? 'checked' : ''}>
                                 <label class="custom-control-label"
-                                    for="preview-${escapeHtml(field.name || 'field')}-${index}">
+                                    for="${inputId}">
+                                    ${escapeHtml(optionLabel)}. ${escapeHtml(optionValue)}
+                                </label>
+                            </div>
+                        `;
+                    }).join('');
+                } else if (field.type === 'checkbox') {
+                    const options = field.options.length ? field.options : ['Belum ada opsi'];
+                    const selectedValues = parseOptionText(field.defaultValue);
+
+                    inputHtml = options.map((option, index) => {
+                        const isChecked = selectedValues.includes(option);
+                        const inputId = `${sanitizePreviewKey(previewKey)}-${index}`;
+
+                        return `
+                            <div class="custom-control custom-checkbox mb-2">
+                                <input type="checkbox" class="custom-control-input"
+                                    id="${inputId}"
+                                    name="${sanitizePreviewKey(previewKey)}[]"
+                                    ${isChecked ? 'checked' : ''}>
+                                <label class="custom-control-label"
+                                    for="${inputId}">
                                     ${escapeHtml(option)}
                                 </label>
                             </div>
@@ -527,7 +767,7 @@
                 } else if (field.type === 'file') {
                     inputHtml = `
                         <div class="custom-file">
-                            <input type="file" class="custom-file-input" disabled>
+                            <input type="file" class="custom-file-input">
                             <label class="custom-file-label">
                                 ${defaultValue || 'Pilih file'}
                             </label>
@@ -543,7 +783,7 @@
 
                     inputHtml = `
                         <input type="${typeMap[field.type] || 'text'}" class="form-control"
-                            value="${defaultValue}" placeholder="${placeholder}" disabled>
+                            value="${defaultValue}" placeholder="${placeholder}">
                     `;
                 }
 
@@ -567,7 +807,7 @@
                                     <div class="font-weight-bold">${escapeHtml(data.code)}</div>
                                 </div>
                                 <div class="mb-3">
-                                    <span class="badge badge-${getBadgeClass(data.status)}">${escapeHtml(data.status)}</span>
+                                    <span class="badge badge-${getBadgeClass(data.status)}">${escapeHtml(formatStatusLabel(data.status))}</span>
                                     <span class="badge badge-${data.isActive ? 'primary' : 'light'}">
                                         ${data.isActive ? 'Aktif' : 'Nonaktif'}
                                     </span>
@@ -593,20 +833,20 @@
                             </div>
                             <h2>Belum ada form aktif untuk dipreview</h2>
                             <p class="lead mb-0">
-                                Aktifkan child form dan field yang ingin ditampilkan ke user.
+                                Aktifkan form dan field yang ingin ditampilkan ke user.
                             </p>
                         </div>
                     `;
 
-                    $('#assessment-preview-content').html(contentHtml);
+                    $previewContent.html(contentHtml);
                     return;
                 }
 
                 data.forms.forEach((form, index) => {
-                    const fieldsHtml = form.fields.map((field) => {
+                    const fieldsHtml = form.fields.map((field, fieldIndex) => {
                         return `
-                            <div class="col-md-6">
-                                ${renderPreviewFieldInput(field)}
+                            <div class="${escapeHtml(field.widthClass || 'col-md-6')}">
+                                ${renderPreviewFieldInput(field, `${form.code || form.title}-${field.name || fieldIndex}`)}
                             </div>
                         `;
                     }).join('');
@@ -629,32 +869,116 @@
                     `;
                 });
 
-                $('#assessment-preview-content').html(contentHtml);
+                $previewContent.html(contentHtml);
+            };
+
+            const syncPreviewFileInput = () => {
+                $previewContent.off('change', '.custom-file-input').on('change', '.custom-file-input',
+                    function() {
+                        const fileName = this.files && this.files.length ? this.files[0].name :
+                            'Pilih file';
+                        $(this).next('.custom-file-label').text(fileName);
+                    });
+            };
+
+            const openPreviewPanel = () => {
+                renderPreview();
+                syncPreviewFileInput();
+                $previewPanel.removeClass('d-none');
+                updatePreviewToggleButton();
+
+                $('html, body').animate({
+                    scrollTop: $previewPanel.offset().top - 90
+                }, 250);
+            };
+
+            const closePreviewPanel = () => {
+                $previewPanel.addClass('d-none');
+                updatePreviewToggleButton();
+            };
+
+            const schedulePreviewRender = () => {
+                if (!isPreviewPanelVisible()) {
+                    return;
+                }
+
+                clearTimeout(previewRenderTimer);
+                previewRenderTimer = setTimeout(function() {
+                    renderPreview();
+                    syncPreviewFileInput();
+                }, 120);
             };
 
             $('#btn-add-form').on('click', function() {
                 appendForm();
+                schedulePreviewRender();
             });
 
             $(document).on('click', '.btn-add-field', function() {
                 appendField($(this).closest('.assessment-form-card'));
+                schedulePreviewRender();
+            });
+
+            $(document).on('click', '.btn-add-radio-option', function() {
+                const $fieldCard = $(this).closest('.assessment-field-card');
+                appendRadioOption($fieldCard);
+                schedulePreviewRender();
             });
 
             $(document).on('click', '.btn-remove-form', function() {
                 $(this).closest('.assessment-form-card').remove();
                 toggleEmptyState();
+                schedulePreviewRender();
             });
 
             $(document).on('click', '.btn-remove-field', function() {
                 $(this).closest('.assessment-field-card').remove();
+                schedulePreviewRender();
+            });
+
+            $(document).on('click', '.btn-remove-radio-option', function() {
+                const $fieldCard = $(this).closest('.assessment-field-card');
+
+                if ($fieldCard.find('.multiple-choice-option-row').length <= 2) {
+                    return;
+                }
+
+                $(this).closest('.multiple-choice-option-row').remove();
+                reindexRadioOptions($fieldCard);
+                schedulePreviewRender();
+            });
+
+            $(document).on('input', '.radio-option-label', function() {
+                const sanitizedValue = $(this).val().toUpperCase().replace(/\s+/g, '');
+                $(this).val(sanitizedValue);
+                schedulePreviewRender();
             });
 
             $(document).on('change', '.field-type-select', function() {
                 toggleOptionWrapper($(this).closest('.assessment-field-card'));
+                schedulePreviewRender();
             });
 
-            $('#assessmentPreviewModal').on('show.bs.modal', function() {
+            $previewToggleButton.on('click', function() {
+                if (isPreviewPanelVisible()) {
+                    closePreviewPanel();
+                    return;
+                }
+
+                openPreviewPanel();
+            });
+
+            $('.btn-close-preview-panel').on('click', function() {
+                closePreviewPanel();
+            });
+
+            $('.btn-refresh-preview-panel').on('click', function() {
                 renderPreview();
+                syncPreviewFileInput();
+            });
+
+            $('#assessment-builder-form').on('input change', 'input, textarea, select', function() {
+                schedulePreviewRender();
             });
 
             if (Array.isArray(initialForms) && initialForms.length) {
@@ -662,6 +986,8 @@
             } else {
                 appendForm();
             }
+
+            updatePreviewToggleButton();
         });
     </script>
 @endpush
