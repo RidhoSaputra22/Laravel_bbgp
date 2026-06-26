@@ -1,6 +1,7 @@
 @php
     $builderSeed = old('forms', $formBuilderData ?? []);
     $fieldTypeBadges = $fieldTypes ?? [];
+    $validationErrors = $errors->getMessages();
 @endphp
 
 @if ($errors->any())
@@ -16,11 +17,50 @@
 
 @push('styles')
     <style>
-        .multiple-choice-option-row {
-            border: 1px solid #e4e6fc;
+        .assessment-required {
+            color: #fc544b;
+            font-weight: 700;
+        }
+
+        .assessment-invalid-wrapper {
+            border: 1px solid #fc544b;
             border-radius: 0.5rem;
             padding: 0.75rem;
+        }
+
+        .assessment-invalid-list {
+            border: 1px dashed #fc544b;
+            border-radius: 0.5rem;
+            padding: 0.75rem;
+        }
+
+        .invalid-feedback {
+            display: block;
+            font-size: 0.8rem;
+        }
+
+        .multiple-choice-option-row {
+            border: 1px solid #e4e6fc;
+            border-radius: .1rem;
+            padding: 0.75rem;
             background: #fff;
+        }
+
+        .assessment-builder-actions {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+        }
+
+        .assessment-builder-actions .custom-switch {
+            padding-left: 2.25rem;
+            margin-bottom: 0;
+        }
+
+        .assessment-builder-actions .custom-control-label {
+            white-space: nowrap;
         }
     </style>
 @endpush
@@ -39,24 +79,31 @@
             <div class="row">
                 <div class="col-md-4">
                     <div class="form-group">
-                        <label>Kode Assesment</label>
-                        <input type="text" name="kode_assessment" class="form-control"
+                        <label>Kode Assesment <span class="assessment-required">*</span></label>
+                        <input type="text" name="kode_assessment"
+                            class="form-control @error('kode_assessment') is-invalid @enderror"
                             value="{{ old('kode_assessment', $assessment->kode_assessment) }}"
-                            placeholder="Contoh: ASM-001">
+                            placeholder="Contoh: ASM-001" required>
+                        @error('kode_assessment')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
                     </div>
                 </div>
                 <div class="col-md-5">
                     <div class="form-group">
-                        <label>Judul Assesment</label>
-                        <input type="text" name="judul" class="form-control"
+                        <label>Judul Assesment <span class="assessment-required">*</span></label>
+                        <input type="text" name="judul" class="form-control @error('judul') is-invalid @enderror"
                             value="{{ old('judul', $assessment->judul) }}"
-                            placeholder="Masukkan judul assesment">
+                            placeholder="Masukkan judul assesment" required>
+                        @error('judul')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
                     </div>
                 </div>
                 <div class="col-md-3">
                     <div class="form-group">
-                        <label>Status</label>
-                        <select name="status" class="form-control">
+                        <label>Status <span class="assessment-required">*</span></label>
+                        <select name="status" class="form-control @error('status') is-invalid @enderror" required>
                             <option value="draft"
                                 @selected(old('status', $assessment->status ?: 'draft') == 'draft')>Draft</option>
                             <option value="publish"
@@ -64,6 +111,9 @@
                             <option value="nonaktif"
                                 @selected(old('status', $assessment->status) == 'nonaktif')>Nonaktif</option>
                         </select>
+                        @error('status')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
                     </div>
                 </div>
             </div>
@@ -72,15 +122,21 @@
                 <div class="col-md-6">
                     <div class="form-group">
                         <label>Deskripsi</label>
-                        <textarea name="deskripsi" class="form-control" rows="4"
+                        <textarea name="deskripsi" class="form-control @error('deskripsi') is-invalid @enderror" rows="4"
                             placeholder="Deskripsi singkat assesment">{{ old('deskripsi', $assessment->deskripsi) }}</textarea>
+                        @error('deskripsi')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
                     </div>
                 </div>
                 <div class="col-md-6">
                     <div class="form-group">
                         <label>Petunjuk Pengisian</label>
-                        <textarea name="petunjuk" class="form-control" rows="4"
+                        <textarea name="petunjuk" class="form-control @error('petunjuk') is-invalid @enderror" rows="4"
                             placeholder="Petunjuk untuk pengguna form">{{ old('petunjuk', $assessment->petunjuk) }}</textarea>
+                        @error('petunjuk')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
                     </div>
                 </div>
             </div>
@@ -96,20 +152,16 @@
     <div class="card">
         <div class="card-header">
             <h4>Form Builder</h4>
-            <div class="card-header-action">
-                <button type="button" class="btn btn-primary btn-sm" id="btn-add-form">
-                    <i class="fas fa-plus"></i> Tambah Form
-                </button>
-            </div>
         </div>
         <div class="card-body">
             <div class="alert alert-light border">
                 <div class="font-weight-bold mb-2">Petunjuk Penggunaan</div>
                 <ul class="mb-0 pl-3">
                     <li>Isi informasi assesment di bagian atas terlebih dahulu.</li>
-                    <li>Klik <strong>Tambah Form</strong> untuk membuat bagian form, lalu tambahkan field di dalamnya.</li>
-                    <li>Untuk field <strong>Select</strong> dan <strong>Checkbox</strong>, pisahkan opsi dengan koma atau baris baru.</li>
+                    <li>Klik <strong>Tambah Form</strong> di bagian bawah untuk membuat bagian form, lalu tambahkan field di bawah form terkait.</li>
+                    <li>Untuk field <strong>Daftar Pilihan</strong> dan <strong>Kotak Centang</strong>, pisahkan opsi dengan koma atau baris baru.</li>
                     <li>Untuk field <strong>Pilihan Ganda</strong>, isi label dan value pada opsi yang tersedia.</li>
+                    <li>Nama field akan dibuat otomatis dari label yang Anda isi.</li>
                     <li>Aktifkan hanya form dan field yang ingin ditampilkan ke pengguna.</li>
                 </ul>
             </div>
@@ -123,6 +175,15 @@
             </div>
 
             <div id="form-builder-list"></div>
+            @error('forms')
+                <div class="invalid-feedback mt-2">{{ $message }}</div>
+            @enderror
+
+            <div class="text-right mt-3">
+                <button type="button" class="btn btn-primary btn-sm" id="btn-add-form">
+                    <i class="fas fa-plus"></i> Tambah Form
+                </button>
+            </div>
         </div>
     </div>
 
@@ -139,16 +200,61 @@
         $(document).ready(function() {
             const assessmentFieldTypes = @json($fieldTypes);
             const initialForms = @json($builderSeed);
+            const validationErrors = @json($validationErrors);
             const textOptionFieldTypes = ['select', 'checkbox'];
             const multipleChoiceFieldType = 'radio';
             const columnOptions = ['col-md-12', 'col-md-8', 'col-md-6', 'col-md-4'];
             const $previewPanel = $('#assessment-preview-panel');
             const $previewContent = $('#assessment-preview-content');
             const $previewToggleButton = $('.btn-toggle-preview-panel');
+            const requiredMarker = '<span class="assessment-required">*</span>';
+            const errorKeys = Object.keys(validationErrors || {});
             let formIndexCounter = 0;
             let previewRenderTimer = null;
 
             const escapeHtml = (value) => $('<div>').text(value ?? '').html();
+            const joinClasses = (...classes) => classes.filter(Boolean).join(' ');
+
+            const nameToErrorKey = (name) => String(name || '')
+                .replace(/\[(.*?)\]/g, '.$1')
+                .replace(/^\./, '');
+
+            const getFieldError = (name) => {
+                const messages = validationErrors[nameToErrorKey(name)] || [];
+                return Array.isArray(messages) && messages.length ? messages[0] : '';
+            };
+
+            const hasError = (name) => Boolean(getFieldError(name));
+
+            const hasNestedErrors = (prefix) => {
+                const normalizedPrefix = nameToErrorKey(prefix);
+                return errorKeys.some((key) => key === normalizedPrefix || key.startsWith(`${normalizedPrefix}.`));
+            };
+
+            const getInputClass = (name, baseClass = 'form-control') => {
+                return joinClasses(baseClass, hasError(name) ? 'is-invalid' : '');
+            };
+
+            const buildInvalidFeedback = (name, extraClass = '') => {
+                const message = getFieldError(name);
+
+                if (!message) {
+                    return '';
+                }
+
+                return `<div class="${joinClasses('invalid-feedback', 'd-block', extraClass)}">${escapeHtml(message)}</div>`;
+            };
+
+            const buildRequiredLabel = (label) => `${label} ${requiredMarker}`;
+
+            const slugifyFieldName = (value) => String(value || '')
+                .toLowerCase()
+                .trim()
+                .replace(/[^a-z0-9]+/g, '_')
+                .replace(/^_+|_+$/g, '')
+                .replace(/_+/g, '_');
+
+
 
             const normalizeChecked = (value) => {
                 return value === true || value === 1 || value === '1' || value === 'on';
@@ -219,27 +325,31 @@
             const buildRadioOptionRow = (formIndex, fieldIndex, optionIndex, optionData = {}) => {
                 const optionLabel = optionData.label || generateChoiceLabel(optionIndex);
                 const optionValue = optionData.value || '';
+                const optionLabelName = `forms[${formIndex}][fields][${fieldIndex}][radio_options][${optionIndex}][label]`;
+                const optionValueName = `forms[${formIndex}][fields][${fieldIndex}][radio_options][${optionIndex}][value]`;
 
                 return `
                     <div class="multiple-choice-option-row mb-2" data-option-index="${optionIndex}">
                         <div class="row align-items-end">
                             <div class="col-md-2">
                                 <div class="form-group mb-md-0">
-                                    <label>Label</label>
-                                    <input type="text" class="form-control radio-option-label"
-                                        name="forms[${formIndex}][fields][${fieldIndex}][radio_options][${optionIndex}][label]"
+                                    <label>${buildRequiredLabel('Label')}</label>
+                                    <input type="text" class="${getInputClass(optionLabelName, 'form-control radio-option-label')}"
+                                        name="${optionLabelName}"
                                         value="${escapeHtml(optionLabel)}"
                                         maxlength="10"
                                         placeholder="A">
+                                    ${buildInvalidFeedback(optionLabelName)}
                                 </div>
                             </div>
                             <div class="col-md-9">
                                 <div class="form-group mb-md-0">
-                                    <label>Value</label>
-                                    <input type="text" class="form-control radio-option-value"
-                                        name="forms[${formIndex}][fields][${fieldIndex}][radio_options][${optionIndex}][value]"
+                                    <label>${buildRequiredLabel('Value')}</label>
+                                    <input type="text" class="${getInputClass(optionValueName, 'form-control radio-option-value')}"
+                                        name="${optionValueName}"
                                         value="${escapeHtml(optionValue)}"
                                         placeholder="Contoh: Jawaban 1">
+                                    ${buildInvalidFeedback(optionValueName)}
                                 </div>
                             </div>
                             <div class="col-md-1 text-md-right">
@@ -257,109 +367,39 @@
                 const showTextOptions = textOptionFieldTypes.includes(fieldType);
                 const showMultipleChoiceOptions = fieldType === multipleChoiceFieldType;
                 const radioOptions = normalizeRadioOptions(fieldData.radio_options);
+                const fieldPrefix = `forms[${formIndex}][fields][${fieldIndex}]`;
+                const labelName = `${fieldPrefix}[label]`;
+                const tipeFieldName = `${fieldPrefix}[tipe_field]`;
+                const placeholderName = `${fieldPrefix}[placeholder]`;
+                const urutanName = `${fieldPrefix}[urutan]`;
+                const opsiFieldTextName = `${fieldPrefix}[opsi_field_text]`;
+                const radioOptionsName = `${fieldPrefix}[radio_options]`;
+                const bantuanName = `${fieldPrefix}[bantuan]`;
+                const fieldCardClass = joinClasses(
+                    'card',
+                    'border',
+                    'assessment-field-card',
+                    'mb-3',
+                    hasNestedErrors(fieldPrefix) ? 'border-danger' : ''
+                );
+                const standardOptionWrapperClass = joinClasses(
+                    'form-group',
+                    'standard-option-wrapper',
+                    showTextOptions ? '' : 'd-none',
+                    hasError(opsiFieldTextName) ? 'assessment-invalid-wrapper' : ''
+                );
+                const multipleChoiceWrapperClass = joinClasses(
+                    'multiple-choice-wrapper',
+                    showMultipleChoiceOptions ? '' : 'd-none',
+                    hasError(radioOptionsName) ? 'assessment-invalid-wrapper' : ''
+                );
 
                 return `
-                    <div class="card border assessment-field-card mb-3" data-field-index="${fieldIndex}" data-radio-option-counter="${radioOptions.length}">
+                    <div class="${fieldCardClass}" data-field-index="${fieldIndex}" data-radio-option-counter="${radioOptions.length}">
                         <div class="card-body">
                             <div class="d-flex justify-content-between align-items-center mb-3">
-                                <h6 class="mb-0">Form Field ${fieldIndex + 1}</h6>
-                                <button type="button" class="btn btn-outline-danger btn-sm btn-remove-field">
-                                    <i class="fas fa-trash-alt"></i>
-                                </button>
-                            </div>
-                            <div class="row">
-                                <div class="col-md-4">
-                                    <div class="form-group">
-                                        <label>Label Field</label>
-                                        <input type="text" class="form-control"
-                                            name="forms[${formIndex}][fields][${fieldIndex}][label]"
-                                            value="${escapeHtml(fieldData.label)}"
-                                            placeholder="Contoh: Nama Lengkap">
-                                    </div>
-                                </div>
-                                <div class="col-md-4">
-                                    <div class="form-group">
-                                        <label>Nama Field</label>
-                                        <input type="text" class="form-control"
-                                            name="forms[${formIndex}][fields][${fieldIndex}][nama_field]"
-                                            value="${escapeHtml(fieldData.nama_field)}"
-                                            placeholder="Contoh: nama_lengkap">
-                                    </div>
-                                </div>
-                                <div class="col-md-4">
-                                    <div class="form-group">
-                                        <label>Tipe Field</label>
-                                        <select class="form-control field-type-select"
-                                            name="forms[${formIndex}][fields][${fieldIndex}][tipe_field]">
-                                            ${buildFieldTypeOptions(fieldType)}
-                                        </select>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="row">
-                                <div class="col-md-4">
-                                    <div class="form-group">
-                                        <label>Placeholder</label>
-                                        <input type="text" class="form-control"
-                                            name="forms[${formIndex}][fields][${fieldIndex}][placeholder]"
-                                            value="${escapeHtml(fieldData.placeholder)}"
-                                            placeholder="Placeholder field">
-                                    </div>
-                                </div>
-                                <div class="col-md-4">
-                                    <div class="form-group">
-                                        <label>Nilai Default</label>
-                                        <input type="text" class="form-control"
-                                            name="forms[${formIndex}][fields][${fieldIndex}][nilai_default]"
-                                            value="${escapeHtml(fieldData.nilai_default)}"
-                                            placeholder="Opsional">
-                                    </div>
-                                </div>
-
-                                <div class="col-md-2">
-                                    <div class="form-group">
-                                        <label>Urutan</label>
-                                        <input type="number" min="1" class="form-control"
-                                            name="forms[${formIndex}][fields][${fieldIndex}][urutan]"
-                                            value="${escapeHtml(fieldData.urutan || fieldIndex + 1)}">
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="form-group standard-option-wrapper ${showTextOptions ? '' : 'd-none'}">
-                                <label>Opsi Field (Select / Checkbox)</label>
-                                <textarea class="form-control"
-                                    name="forms[${formIndex}][fields][${fieldIndex}][opsi_field_text]"
-                                    rows="2"
-                                    placeholder="Contoh: Ya, Tidak, Mungkin">${escapeHtml(fieldData.opsi_field_text)}</textarea>
-                            </div>
-
-                            <div class="multiple-choice-wrapper ${showMultipleChoiceOptions ? '' : 'd-none'}">
-                                <div class="d-flex justify-content-between align-items-center mb-2">
-                                    <label class="mb-0">Opsi Pilihan Ganda</label>
-                                    <button type="button" class="btn btn-light btn-sm btn-add-radio-option">
-                                        <i class="fas fa-plus"></i> Tambah Opsi
-                                    </button>
-                                </div>
-                                <div class="radio-option-list">
-                                    ${radioOptions.map((option, optionIndex) => buildRadioOptionRow(formIndex, fieldIndex, optionIndex, option)).join('')}
-                                </div>
-                                <small class="text-muted d-block mt-2">
-                                    Hasil akan ditampilkan seperti: A. Jawaban 1, B. Jawaban 2, dan seterusnya.
-                                </small>
-                            </div>
-
-                            <div class="form-group">
-                                <label>Bantuan / Keterangan</label>
-                                <textarea class="form-control"
-                                    name="forms[${formIndex}][fields][${fieldIndex}][bantuan]"
-                                    rows="2"
-                                    placeholder="Catatan tambahan untuk pengguna">${escapeHtml(fieldData.bantuan)}</textarea>
-                            </div>
-
-                            <div class="row">
-                                <div class="col-md-6">
+                                <h6 class="mb-0">Pertanyaan ${fieldIndex + 1}</h6>
+                                <div class="assessment-builder-actions">
                                     <div class="custom-control custom-switch">
                                         <input type="checkbox" class="custom-control-input"
                                             id="field-required-${formIndex}-${fieldIndex}"
@@ -368,8 +408,6 @@
                                         <label class="custom-control-label"
                                             for="field-required-${formIndex}-${fieldIndex}">Field wajib diisi</label>
                                     </div>
-                                </div>
-                                <div class="col-md-6">
                                     <div class="custom-control custom-switch">
                                         <input type="checkbox" class="custom-control-input"
                                             id="field-active-${formIndex}-${fieldIndex}"
@@ -378,7 +416,92 @@
                                         <label class="custom-control-label"
                                             for="field-active-${formIndex}-${fieldIndex}">Field aktif</label>
                                     </div>
+                                    <button type="button" class="btn btn-outline-danger btn-sm btn-remove-field">
+                                        <i class="fas fa-trash-alt"></i>
+                                    </button>
                                 </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-5">
+                                    <div class="form-group">
+                                        <label>${buildRequiredLabel('Label Field')}</label>
+                                        <input type="text" class="${getInputClass(labelName, 'form-control field-label-input')}"
+                                            name="${labelName}"
+                                            value="${escapeHtml(fieldData.label)}"
+                                            placeholder="Contoh: Nama Lengkap"
+                                            required>
+                                        ${buildInvalidFeedback(labelName)}
+
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label>${buildRequiredLabel('Tipe Pertanyaan')}</label>
+                                        <select class="${getInputClass(tipeFieldName, 'form-control field-type-select')}"
+                                            name="${tipeFieldName}"
+                                            required>
+                                            ${buildFieldTypeOptions(fieldType)}
+                                        </select>
+                                        ${buildInvalidFeedback(tipeFieldName)}
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label>Urutan</label>
+                                        <input type="number" min="1" class="${getInputClass(urutanName)}"
+                                            name="${urutanName}"
+                                            value="${escapeHtml(fieldData.urutan || fieldIndex + 1)}">
+                                        ${buildInvalidFeedback(urutanName)}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <div class="form-group">
+                                        <label>Placeholder</label>
+                                        <input type="text" class="${getInputClass(placeholderName)}"
+                                            name="${placeholderName}"
+                                            value="${escapeHtml(fieldData.placeholder)}"
+                                            placeholder="Placeholder field">
+                                        ${buildInvalidFeedback(placeholderName)}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="${standardOptionWrapperClass}">
+                                <label>${buildRequiredLabel('Opsi Field (Daftar Pilihan / Kotak Centang)')}</label>
+                                <textarea class="${getInputClass(opsiFieldTextName)}"
+                                    name="${opsiFieldTextName}"
+                                    rows="2"
+                                    placeholder="Contoh: Ya, Tidak, Mungkin">${escapeHtml(fieldData.opsi_field_text)}</textarea>
+                                ${buildInvalidFeedback(opsiFieldTextName)}
+                            </div>
+
+                            <div class="${multipleChoiceWrapperClass}">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <label class="mb-0">${buildRequiredLabel('Opsi Pilihan Ganda')}</label>
+                                    <button type="button" class="btn btn-light btn-sm btn-add-radio-option">
+                                        <i class="fas fa-plus"></i> Tambah Opsi
+                                    </button>
+                                </div>
+                                <div class="radio-option-list">
+                                    ${radioOptions.map((option, optionIndex) => buildRadioOptionRow(formIndex, fieldIndex, optionIndex, option)).join('')}
+                                </div>
+                                ${buildInvalidFeedback(radioOptionsName, 'mt-2')}
+                                <small class="text-muted d-block mt-2">
+                                    Hasil akan ditampilkan seperti: A. Jawaban 1, B. Jawaban 2, dan seterusnya.
+                                </small>
+
+                            </div>
+
+                            <div class="form-group">
+                                <label>Bantuan / Keterangan</label>
+                                <textarea class="${getInputClass(bantuanName)}"
+                                    name="${bantuanName}"
+                                    rows="2"
+                                    placeholder="Catatan tambahan untuk pengguna">${escapeHtml(fieldData.bantuan)}</textarea>
+                                ${buildInvalidFeedback(bantuanName)}
                             </div>
                         </div>
                     </div>
@@ -386,11 +509,32 @@
             };
 
             const buildFormCard = (formIndex, formData = {}) => {
+                const formPrefix = `forms[${formIndex}]`;
+                const judulFormName = `${formPrefix}[judul_form]`;
+                const kodeFormName = `${formPrefix}[kode_form]`;
+                const urutanName = `${formPrefix}[urutan]`;
+                const deskripsiName = `${formPrefix}[deskripsi]`;
+                const fieldsName = `${formPrefix}[fields]`;
+                const formCardClass = joinClasses(
+                    'card',
+                    'border',
+                    'assessment-form-card',
+                    'mb-4',
+                    hasNestedErrors(formPrefix) ? 'border-danger' : ''
+                );
+
                 return `
-                    <div class="card border assessment-form-card mb-4" data-form-index="${formIndex}" data-field-counter="0">
+                    <div class="${formCardClass}" data-form-index="${formIndex}" data-field-counter="0">
                         <div class="card-header">
                             <h4>Form ${formIndex + 1}</h4>
-                            <div class="card-header-action">
+                            <div class="assessment-builder-actions">
+                                <div class="custom-control custom-switch">
+                                    <input type="checkbox" class="custom-control-input"
+                                        id="form-active-${formIndex}"
+                                        name="forms[${formIndex}][is_active]"
+                                        value="1" ${formData.is_active === undefined || normalizeChecked(formData.is_active) ? 'checked' : ''}>
+                                    <label class="custom-control-label" for="form-active-${formIndex}">Aktif</label>
+                                </div>
                                 <button type="button" class="btn btn-outline-danger btn-sm btn-remove-form">
                                     <i class="fas fa-trash-alt"></i> Hapus Form
                                 </button>
@@ -400,57 +544,57 @@
                             <div class="row">
                                 <div class="col-md-4">
                                     <div class="form-group">
-                                        <label>Judul Form</label>
-                                        <input type="text" class="form-control"
-                                            name="forms[${formIndex}][judul_form]"
+                                        <label>${buildRequiredLabel('Judul Form')}</label>
+                                        <input type="text" class="${getInputClass(judulFormName)}"
+                                            name="${judulFormName}"
                                             value="${escapeHtml(formData.judul_form)}"
-                                            placeholder="Contoh: Profil Peserta">
+                                            placeholder="Contoh: Profil Peserta"
+                                            required>
+                                        ${buildInvalidFeedback(judulFormName)}
                                     </div>
                                 </div>
                                 <div class="col-md-4">
                                     <div class="form-group">
                                         <label>Kode Form</label>
-                                        <input type="text" class="form-control"
-                                            name="forms[${formIndex}][kode_form]"
+                                        <input type="text" class="${getInputClass(kodeFormName)}"
+                                            name="${kodeFormName}"
                                             value="${escapeHtml(formData.kode_form)}"
                                             placeholder="Contoh: FORM-PROFIL">
+                                        ${buildInvalidFeedback(kodeFormName)}
                                     </div>
                                 </div>
-                                <div class="col-md-2">
+                                <div class="col-md-4">
                                     <div class="form-group">
                                         <label>Urutan</label>
-                                        <input type="number" min="1" class="form-control"
-                                            name="forms[${formIndex}][urutan]"
+                                        <input type="number" min="1" class="${getInputClass(urutanName)}"
+                                            name="${urutanName}"
                                             value="${escapeHtml(formData.urutan || formIndex + 1)}">
-                                    </div>
-                                </div>
-                                <div class="col-md-2 d-flex align-items-center">
-                                    <div class="custom-control custom-switch mt-4">
-                                        <input type="checkbox" class="custom-control-input"
-                                            id="form-active-${formIndex}"
-                                            name="forms[${formIndex}][is_active]"
-                                            value="1" ${formData.is_active === undefined || normalizeChecked(formData.is_active) ? 'checked' : ''}>
-                                        <label class="custom-control-label" for="form-active-${formIndex}">Aktif</label>
+                                        ${buildInvalidFeedback(urutanName)}
                                     </div>
                                 </div>
                             </div>
 
                             <div class="form-group">
                                 <label>Deskripsi Form</label>
-                                <textarea class="form-control"
-                                    name="forms[${formIndex}][deskripsi]"
+                                <textarea class="${getInputClass(deskripsiName)}"
+                                    name="${deskripsiName}"
                                     rows="2"
                                     placeholder="Deskripsi singkat form">${escapeHtml(formData.deskripsi)}</textarea>
+                                ${buildInvalidFeedback(deskripsiName)}
                             </div>
 
                             <div class="d-flex justify-content-between align-items-center mb-3">
-                                <h6 class="mb-0">Daftar Form Field</h6>
+                                <h6 class="mb-0">Daftar Pertanyaan</h6>
+                            </div>
+
+                            <div class="${joinClasses('assessment-field-list', hasError(fieldsName) ? 'assessment-invalid-list' : '')}"></div>
+                            ${buildInvalidFeedback(fieldsName, 'mt-2')}
+
+                            <div class="text-right mt-3">
                                 <button type="button" class="btn btn-primary btn-sm btn-add-field">
                                     <i class="fas fa-plus"></i> Tambah Field
                                 </button>
                             </div>
-
-                            <div class="assessment-field-list"></div>
                         </div>
                     </div>
                 `;
@@ -465,6 +609,7 @@
 
                 const $fieldCard = $formCard.find('.assessment-field-card').last();
                 toggleOptionWrapper($fieldCard);
+                updateAutoFieldNameHint($fieldCard);
             };
 
             const appendForm = (formData = {}) => {
@@ -569,6 +714,11 @@
                 }
             };
 
+            const updateAutoFieldNameHint = ($fieldCard) => {
+                const labelValue = $fieldCard.find('.field-label-input').val()?.trim() || '';
+                $fieldCard.find('.auto-field-name-hint').html(buildAutoFieldNameHint(labelValue));
+            };
+
             const toggleEmptyState = () => {
                 const hasForms = $('.assessment-form-card').length > 0;
                 $('#form-builder-empty').toggleClass('d-none', hasForms);
@@ -665,10 +815,9 @@
 
                         formData.fields.push({
                             label: $fieldCard.find('input[name$="[label]"]').val()?.trim() || 'Field tanpa label',
-                            name: $fieldCard.find('input[name$="[nama_field]"]').val()?.trim() || '',
+                            name: slugifyFieldName($fieldCard.find('input[name$="[label]"]').val()?.trim() || ''),
                             type: $fieldCard.find('select[name$="[tipe_field]"]').val() || 'text',
                             placeholder: $fieldCard.find('input[name$="[placeholder]"]').val()?.trim() || '',
-                            defaultValue: $fieldCard.find('input[name$="[nilai_default]"]').val()?.trim() || '',
                             helpText: $fieldCard.find('textarea[name$="[bantuan]"]').val()?.trim() || '',
                             options: $fieldCard.find('select[name$="[tipe_field]"]').val() === multipleChoiceFieldType ?
                                 getMultipleChoiceOptions($fieldCard) :
@@ -697,23 +846,21 @@
             const renderPreviewFieldInput = (field, previewKey) => {
                 const fieldLabel = `${escapeHtml(field.label)}${field.required ? ' <span class="text-danger">*</span>' : ''}`;
                 const placeholder = escapeHtml(field.placeholder);
-                const defaultValue = escapeHtml(field.defaultValue);
                 let inputHtml = '';
 
                 if (field.type === 'textarea') {
                     inputHtml = `
-                        <textarea class="form-control" rows="3" placeholder="${placeholder}">${defaultValue}</textarea>
+                        <textarea class="form-control" rows="3" placeholder="${placeholder}"></textarea>
                     `;
                 } else if (field.type === 'select') {
                     const options = field.options.length ? field.options : ['Belum ada opsi'];
                     const optionsHtml = options.map((option) => {
-                        const selected = option === field.defaultValue ? 'selected' : '';
-                        return `<option value="${escapeHtml(option)}" ${selected}>${escapeHtml(option)}</option>`;
+                        return `<option value="${escapeHtml(option)}">${escapeHtml(option)}</option>`;
                     }).join('');
 
                     inputHtml = `
                         <select class="form-control">
-                            <option value="" ${!field.defaultValue ? 'selected' : ''}>${placeholder || '-- Pilih salah satu --'}</option>
+                            <option value="" selected>${placeholder || '-- Pilih salah satu --'}</option>
                             ${optionsHtml}
                         </select>
                     `;
@@ -727,15 +874,13 @@
                         const optionLabel = typeof option === 'object' ? (option.label || generateChoiceLabel(index)) :
                             generateChoiceLabel(index);
                         const optionValue = typeof option === 'object' ? (option.value || '') : option;
-                        const isChecked = optionValue === field.defaultValue;
                         const inputId = `${sanitizePreviewKey(previewKey)}-${index}`;
 
                         return `
                             <div class="custom-control custom-radio mb-2">
                                 <input type="radio" class="custom-control-input"
                                     id="${inputId}"
-                                    name="${sanitizePreviewKey(previewKey)}"
-                                    ${isChecked ? 'checked' : ''}>
+                                    name="${sanitizePreviewKey(previewKey)}">
                                 <label class="custom-control-label"
                                     for="${inputId}">
                                     ${escapeHtml(optionLabel)}. ${escapeHtml(optionValue)}
@@ -745,18 +890,15 @@
                     }).join('');
                 } else if (field.type === 'checkbox') {
                     const options = field.options.length ? field.options : ['Belum ada opsi'];
-                    const selectedValues = parseOptionText(field.defaultValue);
 
                     inputHtml = options.map((option, index) => {
-                        const isChecked = selectedValues.includes(option);
                         const inputId = `${sanitizePreviewKey(previewKey)}-${index}`;
 
                         return `
                             <div class="custom-control custom-checkbox mb-2">
                                 <input type="checkbox" class="custom-control-input"
                                     id="${inputId}"
-                                    name="${sanitizePreviewKey(previewKey)}[]"
-                                    ${isChecked ? 'checked' : ''}>
+                                    name="${sanitizePreviewKey(previewKey)}[]">
                                 <label class="custom-control-label"
                                     for="${inputId}">
                                     ${escapeHtml(option)}
@@ -769,7 +911,7 @@
                         <div class="custom-file">
                             <input type="file" class="custom-file-input">
                             <label class="custom-file-label">
-                                ${defaultValue || 'Pilih file'}
+                                Pilih file
                             </label>
                         </div>
                     `;
@@ -783,7 +925,7 @@
 
                     inputHtml = `
                         <input type="${typeMap[field.type] || 'text'}" class="form-control"
-                            value="${defaultValue}" placeholder="${placeholder}">
+                            value="" placeholder="${placeholder}">
                     `;
                 }
 
@@ -799,7 +941,7 @@
             const renderPreview = () => {
                 const data = getPreviewState();
                 let contentHtml = `
-                    <div class="card shadow-sm border-0 mb-4">
+                    <div class="card  border-0 mb-4">
                         <div class="card-body">
                             <div class="d-flex justify-content-between align-items-start flex-wrap">
                                 <div class="mb-3">
@@ -852,7 +994,7 @@
                     }).join('');
 
                     contentHtml += `
-                        <div class="card shadow-sm border-0 mb-4">
+                        <div class="card  border-0 mb-4">
                             <div class="card-header bg-white">
                                 <div>
                                     <h4 class="mb-1">${escapeHtml(form.title)}</h4>
@@ -952,6 +1094,10 @@
                 const sanitizedValue = $(this).val().toUpperCase().replace(/\s+/g, '');
                 $(this).val(sanitizedValue);
                 schedulePreviewRender();
+            });
+
+            $(document).on('input', '.field-label-input', function() {
+                updateAutoFieldNameHint($(this).closest('.assessment-field-card'));
             });
 
             $(document).on('change', '.field-type-select', function() {

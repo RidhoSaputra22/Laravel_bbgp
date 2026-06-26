@@ -106,7 +106,7 @@ class AssessmentSeeder extends Seeder
                                     ['label' => 'C', 'value' => 'Evaluasi'],
                                     ['label' => 'D', 'value' => 'Pelaporan'],
                                 ],
-                                'nilai_default' => 'Pelaporan',
+                                'nilai_default' => null,
                                 'validasi' => ['required' => true],
                                 'lebar_kolom' => 'col-md-12',
                                 'urutan' => 1,
@@ -149,7 +149,7 @@ class AssessmentSeeder extends Seeder
                 'kode_assessment' => 'ASM-MONEV-002',
                 'judul' => 'Assessment Monitoring Kegiatan',
                 'deskripsi' => 'Template assessment untuk monitoring kegiatan lapangan dan pengumpulan eviden.',
-                'petunjuk' => 'Lengkapi form sesuai kebutuhan monitoring. Gunakan tipe field yang tersedia untuk menyusun form baru.',
+                'petunjuk' => 'Lengkapi form sesuai kebutuhan monitoring. Gunakan Tipe Pertanyaan yang tersedia untuk menyusun form baru.',
                 'status' => 'draft',
                 'is_active' => true,
                 'forms' => [

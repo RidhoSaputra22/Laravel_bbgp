@@ -28,17 +28,6 @@
         return $label;
     };
 
-    $normalizeDefaultValues = function ($value): array {
-        return collect(preg_split('/[\r\n,]+/', (string) $value))
-            ->map(function ($item) {
-                return trim($item);
-            })
-            ->filter(function ($item) {
-                return $item !== '';
-            })
-            ->values()
-            ->all();
-    };
 @endphp
 
 @push('styles')
@@ -147,16 +136,16 @@
                                             @switch($field->tipe_field)
                                                 @case('textarea')
                                                     <textarea id="{{ $fieldLabelId }}" class="form-control" rows="3" placeholder="{{ $field->placeholder }}"
-                                                        readonly>{{ $field->nilai_default }}</textarea>
+                                                        readonly></textarea>
                                                 @break
 
                                                 @case('select')
                                                     <select id="{{ $fieldLabelId }}" class="form-control" disabled>
-                                                        <option value="" @selected(blank($field->nilai_default))>
+                                                        <option value="" selected>
                                                             {{ $field->placeholder ?: '-- Pilih salah satu --' }}
                                                         </option>
                                                         @foreach ($field->opsi_field ?? [] as $option)
-                                                            <option value="{{ $option }}" @selected($option == $field->nilai_default)>
+                                                            <option value="{{ $option }}">
                                                                 {{ $option }}
                                                             </option>
                                                         @endforeach
@@ -172,7 +161,7 @@
                                                         @endphp
                                                         <div class="custom-control custom-radio mb-2">
                                                             <input type="radio" class="custom-control-input" id="{{ $optionId }}"
-                                                                name="{{ $field->nama_field }}" @checked($optionValue == $field->nilai_default) disabled>
+                                                                name="{{ $field->nama_field }}" disabled>
                                                             <label class="custom-control-label" for="{{ $optionId }}">
                                                                 {{ $optionLabel }}. {{ $optionValue }}
                                                             </label>
@@ -183,16 +172,13 @@
                                                 @break
 
                                                 @case('checkbox')
-                                                    @php
-                                                        $selectedValues = $normalizeDefaultValues($field->nilai_default);
-                                                    @endphp
                                                     @forelse ($field->opsi_field ?? [] as $option)
                                                         @php
                                                             $optionId = $fieldLabelId . '-' . $loop->index;
                                                         @endphp
                                                         <div class="custom-control custom-checkbox mb-2">
                                                             <input type="checkbox" class="custom-control-input" id="{{ $optionId }}"
-                                                                name="{{ $field->nama_field }}[]" @checked(in_array($option, $selectedValues, true)) disabled>
+                                                                name="{{ $field->nama_field }}[]" disabled>
                                                             <label class="custom-control-label" for="{{ $optionId }}">
                                                                 {{ $option }}
                                                             </label>
@@ -206,14 +192,14 @@
                                                     <div class="custom-file">
                                                         <input type="file" class="custom-file-input" id="{{ $fieldLabelId }}" disabled>
                                                         <label class="custom-file-label" for="{{ $fieldLabelId }}">
-                                                            {{ $field->nilai_default ?: 'Pilih file' }}
+                                                            Pilih file
                                                         </label>
                                                     </div>
                                                 @break
 
                                                 @default
                                                     <input type="{{ in_array($field->tipe_field, ['text', 'email', 'number', 'date'], true) ? $field->tipe_field : 'text' }}"
-                                                        id="{{ $fieldLabelId }}" class="form-control" value="{{ $field->nilai_default }}"
+                                                        id="{{ $fieldLabelId }}" class="form-control" value=""
                                                         placeholder="{{ $field->placeholder }}" readonly>
                                             @endswitch
 

@@ -180,15 +180,15 @@ class AssessmentController extends Controller
     private function fieldTypes(): array
     {
         return [
-            'text' => 'Text',
-            'textarea' => 'Textarea',
-            'number' => 'Number',
+            'text' => 'Teks',
+            'textarea' => 'Area Teks',
+            'number' => 'Angka',
             'email' => 'Email',
-            'date' => 'Date',
-            'select' => 'Select',
+            'date' => 'Tanggal',
+            'select' => 'Daftar Pilihan',
             'radio' => 'Pilihan Ganda',
-            'checkbox' => 'Checkbox',
-            'file' => 'File',
+            'checkbox' => 'Kotak Centang',
+            'file' => 'Unggah File',
         ];
     }
 
@@ -216,7 +216,6 @@ class AssessmentController extends Controller
                 'forms.*.is_active' => 'nullable|boolean',
                 'forms.*.fields' => 'required|array|min:1',
                 'forms.*.fields.*.label' => 'required|string|max:255',
-                'forms.*.fields.*.nama_field' => 'required|string|max:100',
                 'forms.*.fields.*.tipe_field' => [
                     'required',
                     'string',
@@ -228,8 +227,6 @@ class AssessmentController extends Controller
                 'forms.*.fields.*.radio_options' => 'nullable|array',
                 'forms.*.fields.*.radio_options.*.label' => 'nullable|string|max:10',
                 'forms.*.fields.*.radio_options.*.value' => 'nullable|string|max:255',
-                'forms.*.fields.*.nilai_default' => 'nullable|string',
-
                 'forms.*.fields.*.urutan' => 'nullable|integer|min:1',
                 'forms.*.fields.*.is_required' => 'nullable|boolean',
                 'forms.*.fields.*.is_active' => 'nullable|boolean',
@@ -241,9 +238,8 @@ class AssessmentController extends Controller
                 'forms.required' => 'Minimal harus ada satu form.',
                 'forms.*.judul_form.required' => 'Judul form wajib diisi.',
                 'forms.*.fields.required' => 'Setiap form minimal memiliki satu pertanyaan.',
-                'forms.*.fields.*.label.required' => 'Label pertanyaanwajib diisi.',
-                'forms.*.fields.*.nama_field.required' => 'Nama field wajib diisi.',
-                'forms.*.fields.*.tipe_field.required' => 'Tipe field wajib dipilih.',
+                'forms.*.fields.*.label.required' => 'Label pertanyaan wajib diisi.',
+                'forms.*.fields.*.tipe_field.required' => 'Tipe Pertanyaan wajib dipilih.',
             ]
         );
 
@@ -255,23 +251,25 @@ class AssessmentController extends Controller
                 $usedFieldNames = [];
 
                 foreach (($form['fields'] ?? []) as $fieldIndex => $field) {
-                    $namaField = Str::snake($field['nama_field'] ?? '');
+                    $namaField = $this->generateFieldNameFromLabel($field['label'] ?? '');
 
                     if ($namaField === '') {
                         $validator->errors()->add(
-                            "forms.$formIndex.fields.$fieldIndex.nama_field",
-                            'Nama field tidak boleh kosong.'
+                            "forms.$formIndex.fields.$fieldIndex.label",
+                            'Label field harus mengandung huruf atau angka agar nama field otomatis bisa dibuat.'
                         );
                     }
 
                     if (in_array($namaField, $usedFieldNames, true)) {
                         $validator->errors()->add(
-                            "forms.$formIndex.fields.$fieldIndex.nama_field",
-                            'Nama field dalam satu form harus unik.'
+                            "forms.$formIndex.fields.$fieldIndex.label",
+                            'Label field tidak boleh sama. Ubah label agar berbeda.'
                         );
                     }
 
-                    $usedFieldNames[] = $namaField;
+                    if ($namaField !== '') {
+                        $usedFieldNames[] = $namaField;
+                    }
 
                     if (($field['tipe_field'] ?? '') === 'radio') {
                         $radioOptions = array_values(array_filter(
@@ -325,7 +323,7 @@ class AssessmentController extends Controller
                     ) {
                         $validator->errors()->add(
                             "forms.$formIndex.fields.$fieldIndex.opsi_field_text",
-                            'Opsi wajib diisi untuk field select atau checkbox.'
+                            'Opsi wajib diisi untuk field daftar pilihan atau kotak centang.'
                         );
                     }
                 }
@@ -346,11 +344,8 @@ class AssessmentController extends Controller
                 'is_active' => (bool) ($formData['is_active'] ?? false),
             ]);
 
-            $usedFieldNames = [];
-
             foreach (array_values($formData['fields']) as $fieldIndex => $fieldData) {
-                $fieldName = $this->resolveUniqueFieldName($fieldData['nama_field'], $usedFieldNames);
-                $usedFieldNames[] = $fieldName;
+                $fieldName = $this->generateFieldNameFromLabel($fieldData['label']);
 
                 $form->fields()->create([
                     'label' => $fieldData['label'],
@@ -359,7 +354,7 @@ class AssessmentController extends Controller
                     'placeholder' => $fieldData['placeholder'] ?? null,
                     'bantuan' => $fieldData['bantuan'] ?? null,
                     'opsi_field' => $this->parseFieldOptions($fieldData),
-                    'nilai_default' => $fieldData['nilai_default'] ?? null,
+                    'nilai_default' => null,
                     'validasi' => [
                         'required' => (bool) ($fieldData['is_required'] ?? false),
                         'tipe_field' => $fieldData['tipe_field'],
@@ -418,18 +413,9 @@ class AssessmentController extends Controller
         return $label;
     }
 
-    private function resolveUniqueFieldName(string $rawName, array $usedFieldNames): string
+    private function generateFieldNameFromLabel(?string $label): string
     {
-        $baseName = Str::snake($rawName);
-        $fieldName = $baseName;
-        $counter = 2;
-
-        while (in_array($fieldName, $usedFieldNames, true)) {
-            $fieldName = $baseName . '_' . $counter;
-            $counter++;
-        }
-
-        return $fieldName;
+        return Str::slug((string) $label, '_');
     }
 
     private function generateUniqueSlug(string $title, ?int $ignoreId = null): string
@@ -482,13 +468,11 @@ class AssessmentController extends Controller
 
                     return [
                         'label' => $field->label,
-                        'nama_field' => $field->nama_field,
                         'tipe_field' => $field->tipe_field,
                         'placeholder' => $field->placeholder,
                         'bantuan' => $field->bantuan,
                         'opsi_field_text' => $field->tipe_field === 'radio' ? null : ($field->opsi_field ? implode(', ', $field->opsi_field) : null),
                         'radio_options' => $radioOptions,
-                        'nilai_default' => $field->nilai_default,
                         'lebar_kolom' => $field->lebar_kolom,
                         'urutan' => $field->urutan,
                         'is_required' => $field->is_required,
