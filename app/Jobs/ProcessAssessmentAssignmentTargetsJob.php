@@ -24,7 +24,7 @@ class ProcessAssessmentAssignmentTargetsJob implements ShouldQueue
      */
     public function __construct(
         public int $assignmentId,
-        public array $guruIds
+        public array $targetRows
     ) {
         $this->onQueue('assessment-assignment');
     }
@@ -38,7 +38,7 @@ class ProcessAssessmentAssignmentTargetsJob implements ShouldQueue
             return;
         }
 
-        $service->processTargetChunk($this->assignmentId, $this->guruIds);
+        $service->processTargetChunk($this->assignmentId, $this->targetRows);
     }
 
     public function failed(Throwable $exception): void

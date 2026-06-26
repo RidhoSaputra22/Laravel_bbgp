@@ -377,7 +377,7 @@
                 const radioOptionsName = `${fieldPrefix}[radio_options]`;
                 const bantuanName = `${fieldPrefix}[bantuan]`;
                 const fieldCardClass = joinClasses(
-                    'card',
+                    '',
                     'border',
                     'assessment-field-card',
                     'mb-3',

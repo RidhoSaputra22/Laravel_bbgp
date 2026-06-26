@@ -5,7 +5,6 @@ namespace App\Services;
 use App\Jobs\ProcessAssessmentAssignmentTargetsJob;
 use App\Models\Assessment;
 use App\Models\AssessmentAssignment;
-use App\Models\Guru;
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -13,17 +12,25 @@ use Throwable;
 
 class AssessmentAssignmentService
 {
-    public const BATCH_THRESHOLD = 5;
+    public const BATCH_THRESHOLD = 25;
 
     public const CHUNK_SIZE = 50;
+
+    public const TARGETS_PER_SESSION = 41;
+
+    public const DEFAULT_SESSION_DURATION_HOURS = 3;
+
+    public const SESSION_DURATION_OPTIONS = [1, 2, 3, 4, 5, 6, 7, 8];
 
     public function createAssignment(array $payload, ?int $assignedBy = null): AssessmentAssignment
     {
         $guruIds = $this->normalizeGuruIds($payload['guru_ids'] ?? []);
+        $sessionDurationHours = (int) ($payload['durasi_sesi_jam'] ?? self::DEFAULT_SESSION_DURATION_HOURS);
         $shouldBatch = count($guruIds) > self::BATCH_THRESHOLD;
 
-        $assignment = DB::transaction(function () use ($payload, $guruIds, $assignedBy, $shouldBatch) {
+        $assignmentData = DB::transaction(function () use ($payload, $guruIds, $assignedBy, $shouldBatch, $sessionDurationHours) {
             $assessment = Assessment::findOrFail($payload['assessment_id']);
+            $totalSessions = $this->calculateTotalSessions(count($guruIds));
 
             $assignment = AssessmentAssignment::create([
                 'assessment_id' => $assessment->id,
@@ -32,29 +39,47 @@ class AssessmentAssignmentService
                 'deskripsi' => $payload['deskripsi'] ?? null,
                 'tanggal_mulai' => $payload['tanggal_mulai'] ?? null,
                 'tanggal_selesai' => $payload['tanggal_selesai'] ?? null,
+                'kapasitas_per_sesi' => self::TARGETS_PER_SESSION,
+                'durasi_sesi_jam' => $sessionDurationHours,
+                'total_sesi' => $totalSessions,
                 'status_distribusi' => $shouldBatch ? 'diproses' : 'draft',
                 'total_target' => count($guruIds),
                 'total_ditugaskan' => 0,
                 'assigned_by' => $assignedBy ?: null,
             ]);
 
+            $sessionRows = $this->createSessions(
+                $assignment,
+                count($guruIds),
+                $sessionDurationHours
+            );
+
+            $targetRows = $this->buildTargetRows($assignment->id, $guruIds, $sessionRows);
+
             if (! $shouldBatch) {
-                $this->storeTargetRows($assignment->id, $guruIds);
+                $this->storeTargetRows($targetRows);
                 $this->refreshAssignmentSummary($assignment->id);
             }
 
-            return $assignment;
+            return [
+                'assignment' => $assignment,
+                'target_rows' => $targetRows,
+            ];
         });
 
+        /** @var \App\Models\AssessmentAssignment $assignment */
+        $assignment = $assignmentData['assignment'];
+        $targetRows = $assignmentData['target_rows'];
+
         if ($shouldBatch) {
-            $this->dispatchBatch($assignment, $guruIds);
+            $this->dispatchBatch($assignment, $targetRows);
             $assignment->refresh();
         }
 
-        return $assignment->load(['assessment', 'creator'])->loadCount('targets');
+        return $assignment->load(['assessment', 'creator', 'sessions'])->loadCount('targets');
     }
 
-    public function processTargetChunk(int $assignmentId, array $guruIds): void
+    public function processTargetChunk(int $assignmentId, array $targetRows): void
     {
         $assignment = AssessmentAssignment::find($assignmentId);
 
@@ -62,7 +87,7 @@ class AssessmentAssignmentService
             return;
         }
 
-        $this->storeTargetRows($assignmentId, $this->normalizeGuruIds($guruIds));
+        $this->storeTargetRows($targetRows);
         $this->refreshAssignmentSummary($assignmentId);
     }
 
@@ -92,9 +117,9 @@ class AssessmentAssignmentService
         ])->save();
     }
 
-    private function dispatchBatch(AssessmentAssignment $assignment, array $guruIds): void
+    private function dispatchBatch(AssessmentAssignment $assignment, array $targetRows): void
     {
-        $jobs = collect(array_chunk($guruIds, self::CHUNK_SIZE))
+        $jobs = collect(array_chunk($targetRows, self::CHUNK_SIZE))
             ->map(fn (array $chunk) => new ProcessAssessmentAssignmentTargetsJob($assignment->id, $chunk))
             ->all();
 
@@ -118,37 +143,21 @@ class AssessmentAssignmentService
         }
     }
 
-    private function storeTargetRows(int $assignmentId, array $guruIds): void
+    private function storeTargetRows(array $targetRows): void
     {
-        if ($guruIds === []) {
-            return;
-        }
-
-        $now = now();
-        $rows = Guru::query()
-            ->whereIn('id', $guruIds)
-            ->pluck('id')
-            ->map(function ($guruId) use ($assignmentId, $now) {
-                return [
-                    'assessment_assignment_id' => $assignmentId,
-                    'guru_id' => $guruId,
-                    'status' => 'ditugaskan',
-                    'assigned_at' => $now,
-                    'created_at' => $now,
-                    'updated_at' => $now,
-                ];
-            })
-            ->values()
-            ->all();
-
-        if ($rows === []) {
+        if ($targetRows === []) {
             return;
         }
 
         DB::table('assessment_assignment_targets')->upsert(
-            $rows,
+            $targetRows,
             ['assessment_assignment_id', 'guru_id'],
-            ['status', 'assigned_at', 'updated_at']
+            [
+                'assessment_assignment_session_id',
+                'status',
+                'assigned_at',
+                'updated_at',
+            ]
         );
     }
 
@@ -164,5 +173,72 @@ class AssessmentAssignmentService
         } while (AssessmentAssignment::where('kode_penugasan', $code)->exists());
 
         return $code;
+    }
+
+    private function createSessions(
+        AssessmentAssignment $assignment,
+        int $totalTargets,
+        int $sessionDurationHours
+    ): array {
+        $totalSessions = $this->calculateTotalSessions($totalTargets);
+
+        if ($totalSessions === 0) {
+            return [];
+        }
+
+        $remainingTargets = $totalTargets;
+        $sessions = [];
+
+        for ($sessionNumber = 1; $sessionNumber <= $totalSessions; $sessionNumber++) {
+            $sessions[] = $assignment->sessions()->create([
+                'nomor_sesi' => $sessionNumber,
+                'label_sesi' => 'Sesi '.$sessionNumber,
+                'kapasitas_peserta' => self::TARGETS_PER_SESSION,
+                'total_peserta' => min(self::TARGETS_PER_SESSION, $remainingTargets),
+                'durasi_sesi_jam' => $sessionDurationHours,
+            ]);
+
+            $remainingTargets -= self::TARGETS_PER_SESSION;
+        }
+
+        return $sessions;
+    }
+
+    private function buildTargetRows(
+        int $assignmentId,
+        array $guruIds,
+        array $sessions
+    ): array {
+        if ($guruIds === []) {
+            return [];
+        }
+
+        $now = now();
+
+        return collect($guruIds)
+            ->values()
+            ->map(function (int $guruId, int $index) use ($assignmentId, $sessions, $now) {
+                $sessionIndex = intdiv($index, self::TARGETS_PER_SESSION);
+
+                return [
+                    'assessment_assignment_id' => $assignmentId,
+                    'assessment_assignment_session_id' => $sessions[$sessionIndex]->id ?? null,
+                    'guru_id' => $guruId,
+                    'status' => 'ditugaskan',
+                    'assigned_at' => $now,
+                    'created_at' => $now,
+                    'updated_at' => $now,
+                ];
+            })
+            ->all();
+    }
+
+    private function calculateTotalSessions(int $totalTargets): int
+    {
+        if ($totalTargets <= 0) {
+            return 0;
+        }
+
+        return (int) ceil($totalTargets / self::TARGETS_PER_SESSION);
     }
 }

@@ -6,20 +6,13 @@
             ->map(fn($id) => (string) $id)
             ->all();
         $selectedAssessmentId = (string) old('assessment_id', '');
+        $selectedDurationHours = (int) old('durasi_sesi_jam', $defaultSessionDurationHours);
     @endphp
 
     @push('styles')
         <style>
-            .assignment-summary-box {
-                min-height: 100%;
-                border: 1px dashed #d7dce4;
-                border-radius: 0.75rem;
-                padding: 1.25rem;
-                background: #f8fafc;
-            }
-
-            .assignment-summary-box .summary-value {
-                font-size: 1.25rem;
+            .summary-value {
+                font-size: 1.2rem;
                 font-weight: 700;
                 color: #34395e;
             }
@@ -133,6 +126,36 @@
                                         </div>
                                     </div>
 
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label>Durasi Sesi Assessment <span class="text-danger">*</span></label>
+                                                <select name="durasi_sesi_jam" id="durasi_sesi_jam"
+                                                    class="form-control @error('durasi_sesi_jam') is-invalid @enderror">
+                                                    @foreach ($sessionDurationOptions as $durationHour)
+                                                        <option value="{{ $durationHour }}"
+                                                            @selected($selectedDurationHours === (int) $durationHour)>
+                                                            {{ $durationHour }} jam
+                                                        </option>
+                                                    @endforeach
+                                                </select>
+                                                @error('durasi_sesi_jam')
+                                                    <div class="invalid-feedback">{{ $message }}</div>
+                                                @enderror
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label>Kapasitas Guru Per Sesi</label>
+                                                <input type="text" class="form-control" value="{{ $sessionCapacity }} guru"
+                                                    readonly>
+                                                <small class="text-muted">
+                                                    Sistem otomatis membagi guru per {{ $sessionCapacity }} orang untuk setiap sesi.
+                                                </small>
+                                            </div>
+                                        </div>
+                                    </div>
+
                                     <div class="form-group mb-0">
                                         <label>Deskripsi Penugasan</label>
                                         <textarea name="deskripsi" rows="4" class="form-control @error('deskripsi') is-invalid @enderror"
@@ -189,12 +212,17 @@
                                         Total guru terpilih:
                                         <span class="font-weight-bold" id="selected-guru-count">{{ count($oldGuruIds) }}</span>
                                     </small>
+                                    <div class="mt-2 text-muted">
+                                        Estimasi total sesi:
+                                        <span class="font-weight-bold" id="estimated-session-count">0</span>
+                                        sesi
+                                    </div>
                                 </div>
                             </div>
                         </div>
 
                         <div class="col-lg-4">
-                            <div class="assignment-summary-box mb-4">
+                            <div class="card card-body mb-4">
                                 <h6 class="text-primary mb-3">Ringkasan Assesment</h6>
                                 <div class="mb-3">
                                     <div class="text-muted small">Kode</div>
@@ -217,6 +245,21 @@
                                         <div class="text-muted small">Total Pertanyaan</div>
                                         <div class="summary-value" id="summary-fields">0</div>
                                     </div>
+                                </div>
+                                <hr>
+                                <div class="row">
+                                    <div class="col-6">
+                                        <div class="text-muted small">Kapasitas/Sesi</div>
+                                        <div class="summary-value" id="summary-session-capacity">{{ $sessionCapacity }}</div>
+                                    </div>
+                                    <div class="col-6">
+                                        <div class="text-muted small">Durasi/Sesi</div>
+                                        <div class="summary-value" id="summary-session-duration">{{ $selectedDurationHours }}</div>
+                                    </div>
+                                </div>
+                                <div class="mt-3">
+                                    <div class="text-muted small">Estimasi Total Sesi</div>
+                                    <div class="summary-value" id="summary-total-sessions">0</div>
                                 </div>
                             </div>
 
@@ -246,6 +289,8 @@
         $(function() {
             const $assessmentSelect = $('#assessment_id');
             const $guruSelect = $('#guru_ids');
+            const $durationSelect = $('#durasi_sesi_jam');
+            const sessionCapacity = {{ $sessionCapacity }};
 
             $('.select2').select2({
                 width: '100%',
@@ -254,6 +299,17 @@
             function updateSelectedGuruCount() {
                 const selectedGuru = $guruSelect.val() || [];
                 $('#selected-guru-count').text(selectedGuru.length);
+                updateSessionSummary(selectedGuru.length);
+            }
+
+            function updateSessionSummary(totalGuru) {
+                const durationHours = Number($durationSelect.val() || {{ $defaultSessionDurationHours }});
+                const totalSessions = totalGuru > 0 ? Math.ceil(totalGuru / sessionCapacity) : 0;
+
+                $('#estimated-session-count').text(totalSessions);
+                $('#summary-session-capacity').text(sessionCapacity + ' guru');
+                $('#summary-session-duration').text(durationHours + ' jam');
+                $('#summary-total-sessions').text(totalSessions);
             }
 
             function updateAssessmentSummary() {
@@ -289,6 +345,10 @@
 
             $guruSelect.on('change', updateSelectedGuruCount);
             $assessmentSelect.on('change', updateAssessmentSummary);
+            $durationSelect.on('change', function() {
+                const selectedGuru = $guruSelect.val() || [];
+                updateSessionSummary(selectedGuru.length);
+            });
 
             updateSelectedGuruCount();
             updateAssessmentSummary();

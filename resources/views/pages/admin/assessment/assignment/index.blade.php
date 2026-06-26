@@ -1,15 +1,16 @@
-@extends('layouts.app', ['title' => 'Penugasan Assesment'])
+@extends('layouts.app', ['title' => 'Data Penugasan Assesment'])
 
 @section('content')
     @php
         $totalTargets = $datas->sum('total_target');
         $completedAssignments = $datas->where('status_distribusi', 'selesai')->count();
+        $totalSessions = $datas->sum('total_sesi');
     @endphp
 
     <div class="main-content">
         <section class="section">
             <div class="section-header">
-                <h1>Penugasan Assesment</h1>
+                <h1>Data Penugasan Assesment</h1>
                 <div class="section-header-breadcrumb">
                     <a href="{{ route('assessment.assignment.create') }}" class="btn btn-primary">
                         <i class="fas fa-plus"></i> Buat Penugasan
@@ -19,7 +20,7 @@
 
             <div class="section-body">
                 <div class="row">
-                    <div class="col-lg-4 col-md-6 col-12">
+                    <div class="col-lg-3 col-md-6 col-12">
                         <div class="card card-statistic-1">
                             <div class="card-icon bg-primary">
                                 <i class="fas fa-tasks"></i>
@@ -34,7 +35,7 @@
                             </div>
                         </div>
                     </div>
-                    <div class="col-lg-4 col-md-6 col-12">
+                    <div class="col-lg-3 col-md-6 col-12">
                         <div class="card card-statistic-1">
                             <div class="card-icon bg-success">
                                 <i class="fas fa-check-circle"></i>
@@ -49,7 +50,7 @@
                             </div>
                         </div>
                     </div>
-                    <div class="col-lg-4 col-md-6 col-12">
+                    <div class="col-lg-3 col-md-6 col-12">
                         <div class="card card-statistic-1">
                             <div class="card-icon bg-warning">
                                 <i class="fas fa-users"></i>
@@ -64,11 +65,26 @@
                             </div>
                         </div>
                     </div>
+                    <div class="col-lg-3 col-md-6 col-12">
+                        <div class="card card-statistic-1">
+                            <div class="card-icon bg-info">
+                                <i class="fas fa-clock"></i>
+                            </div>
+                            <div class="card-wrap">
+                                <div class="card-header">
+                                    <h4>Total Sesi Assessment</h4>
+                                </div>
+                                <div class="card-body">
+                                    {{ $totalSessions }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="card">
                     <div class="card-header">
-                        <h4>Daftar Penugasan Form Assesment</h4>
+                        <h4>Tabel Assessment Assignments</h4>
                     </div>
                     <div class="card-body">
                         @if ($datas->isEmpty())
@@ -78,7 +94,8 @@
                                 </div>
                                 <h2>Belum ada penugasan assesment</h2>
                                 <p class="lead">
-                                    Buat penugasan baru untuk mendistribusikan form assesment ke guru yang dipilih.
+                                    Data pada halaman ini diambil dari tabel penugasan assesment yang sudah dibuat
+                                    admin untuk mendistribusikan form ke guru terpilih.
                                 </p>
                                 <a href="{{ route('assessment.assignment.create') }}" class="btn btn-primary mt-3">
                                     Buat Penugasan
@@ -86,15 +103,17 @@
                             </div>
                         @else
                             <div class="table-responsive">
-                                <table class="table table-striped">
+                                <table class="table table-striped table-hover">
                                     <thead>
                                         <tr>
                                             <th class="text-center">#</th>
-                                            <th>Kode</th>
-                                            <th>Penugasan</th>
-                                            <th>Assesment</th>
+                                            <th>Kode Penugasan</th>
+                                            <th>Judul Penugasan</th>
+                                            <th>Assessment</th>
                                             <th>Periode</th>
                                             <th>Distribusi</th>
+                                            <th>Target & Sesi</th>
+                                            <th>Dibuat Oleh</th>
                                             <th>Update</th>
                                             <th class="text-center">Action</th>
                                         </tr>
@@ -108,16 +127,13 @@
                                                     'selesai' => 'success',
                                                     'gagal' => 'danger',
                                                 ][$data->status_distribusi] ?? 'secondary';
+                                                $deliveryType = $data->job_batch_id ? 'Batch Job' : 'Langsung';
                                             @endphp
-                                            <tr>
+                                            <tr class="align-middle">
                                                 <td class="text-center">{{ $loop->iteration }}</td>
                                                 <td>
                                                     <div class="font-weight-bold">{{ $data->kode_penugasan }}</div>
-                                                    @if ($data->job_batch_id)
-                                                        <small class="text-muted">Batch: {{ $data->job_batch_id }}</small>
-                                                    @else
-                                                        <small class="text-muted">Distribusi langsung</small>
-                                                    @endif
+                                                    <small class="text-muted">{{ $deliveryType }}</small>
                                                 </td>
                                                 <td>
                                                     <div class="font-weight-bold">{{ $data->judul_penugasan }}</div>
@@ -143,19 +159,35 @@
                                                         {{ ucfirst($data->status_distribusi) }}
                                                     </span>
                                                     <div class="text-muted mt-1">
-                                                        {{ $data->total_ditugaskan }}/{{ $data->total_target }} guru
+                                                        {{ $deliveryType }}
                                                     </div>
+                                                </td>
+                                                <td>
+                                                    <div class="font-weight-bold">{{ $data->total_target }} guru</div>
+                                                    <small class="text-muted">
+                                                        {{ $data->total_sesi }} sesi / {{ $data->kapasitas_per_sesi }} guru per sesi
+                                                    </small>
+                                                    <br>
+                                                    <small class="text-muted">
+                                                        {{ $data->durasi_sesi_jam }} jam per sesi
+                                                    </small>
+                                                </td>
+                                                <td>
+                                                    <div>{{ optional($data->creator)->name ?: 'Sistem' }}</div>
+                                                    <small class="text-muted">
+                                                        {{ $data->job_batch_id ? \Illuminate\Support\Str::limit($data->job_batch_id, 18) : 'Tanpa batch id' }}
+                                                    </small>
                                                 </td>
                                                 <td>
                                                     <div>{{ \App\Helpers\Helper::dateIndo($data->updated_at) }}</div>
                                                     <small class="text-muted">
-                                                        {{ optional($data->creator)->name ?: 'Sistem' }}
+                                                        {{ $data->updated_at->format('H:i') }}
                                                     </small>
                                                 </td>
                                                 <td class="text-center">
                                                     <a href="{{ route('assessment.assignment.show', $data->id) }}"
                                                         class="btn btn-info btn-sm my-1">
-                                                        <i class="fas fa-eye"></i>
+                                                        <i class="fas fa-eye mr-1"></i> Detail
                                                     </a>
                                                 </td>
                                             </tr>

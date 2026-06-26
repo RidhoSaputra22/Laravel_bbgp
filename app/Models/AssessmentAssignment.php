@@ -16,6 +16,9 @@ class AssessmentAssignment extends Model
         'deskripsi',
         'tanggal_mulai',
         'tanggal_selesai',
+        'kapasitas_per_sesi',
+        'durasi_sesi_jam',
+        'total_sesi',
         'status_distribusi',
         'total_target',
         'total_ditugaskan',
@@ -28,6 +31,9 @@ class AssessmentAssignment extends Model
         'tanggal_mulai' => 'date',
         'tanggal_selesai' => 'date',
         'processed_at' => 'datetime',
+        'kapasitas_per_sesi' => 'integer',
+        'durasi_sesi_jam' => 'integer',
+        'total_sesi' => 'integer',
         'total_target' => 'integer',
         'total_ditugaskan' => 'integer',
     ];
@@ -44,6 +50,14 @@ class AssessmentAssignment extends Model
 
     public function targets()
     {
-        return $this->hasMany(AssessmentAssignmentTarget::class)->orderByDesc('id');
+        return $this->hasMany(AssessmentAssignmentTarget::class)
+            ->orderBy('assessment_assignment_session_id')
+            ->orderBy('id');
+    }
+
+    public function sessions()
+    {
+        return $this->hasMany(AssessmentAssignmentSession::class)
+            ->orderBy('nomor_sesi');
     }
 }

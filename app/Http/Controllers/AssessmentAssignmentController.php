@@ -23,7 +23,7 @@ class AssessmentAssignmentController extends Controller
         $this->authorizeAccess();
 
         $datas = AssessmentAssignment::with(['assessment', 'creator'])
-            ->withCount('targets')
+            ->withCount(['targets', 'sessions'])
             ->orderByDesc('id')
             ->get();
 
@@ -62,6 +62,9 @@ class AssessmentAssignmentController extends Controller
             'assessmentList' => $assessmentList,
             'guruList' => $guruList,
             'batchThreshold' => AssessmentAssignmentService::BATCH_THRESHOLD,
+            'sessionCapacity' => AssessmentAssignmentService::TARGETS_PER_SESSION,
+            'defaultSessionDurationHours' => AssessmentAssignmentService::DEFAULT_SESSION_DURATION_HOURS,
+            'sessionDurationOptions' => AssessmentAssignmentService::SESSION_DURATION_OPTIONS,
         ]);
     }
 
@@ -98,9 +101,11 @@ class AssessmentAssignmentController extends Controller
         $assignment = AssessmentAssignment::with([
             'assessment.forms.fields',
             'creator',
+            'sessions.targets',
             'targets.guru',
+            'targets.session',
         ])
-            ->withCount('targets')
+            ->withCount(['targets', 'sessions'])
             ->findOrFail($id);
 
         return view('pages.admin.assessment.assignment.show', [
@@ -135,6 +140,11 @@ class AssessmentAssignmentController extends Controller
                 'deskripsi' => 'nullable|string',
                 'tanggal_mulai' => 'nullable|date',
                 'tanggal_selesai' => 'nullable|date|after_or_equal:tanggal_mulai',
+                'durasi_sesi_jam' => [
+                    'required',
+                    'integer',
+                    Rule::in(AssessmentAssignmentService::SESSION_DURATION_OPTIONS),
+                ],
                 'guru_ids' => 'required|array|min:1',
                 'guru_ids.*' => 'required|integer|distinct|exists:gurus,id',
             ],
@@ -142,6 +152,8 @@ class AssessmentAssignmentController extends Controller
                 'judul_penugasan.required' => 'Judul penugasan wajib diisi.',
                 'assessment_id.required' => 'Form assesment wajib dipilih.',
                 'assessment_id.exists' => 'Assesment yang dipilih tidak valid atau sudah nonaktif.',
+                'durasi_sesi_jam.required' => 'Durasi sesi assessment wajib dipilih.',
+                'durasi_sesi_jam.in' => 'Durasi sesi assessment harus sesuai pilihan yang tersedia.',
                 'guru_ids.required' => 'Minimal pilih satu guru untuk ditugasi.',
                 'guru_ids.min' => 'Minimal pilih satu guru untuk ditugasi.',
                 'guru_ids.*.exists' => 'Ada guru yang dipilih tetapi datanya tidak ditemukan.',
