@@ -4,10 +4,7 @@
     'type' => 'button',
     'icon' => null,
     'disabled' => false,
-    'minHeight' => 'min-h-[44px]',
-    'rounded' => 'rounded-xl',
-    'paddingX' => 'px-4',
-    'paddingY' => 'py-2',
+
 ])
 
 @php
@@ -19,11 +16,8 @@
     ];
 
     $buttonClasses = [
-        'inline-flex items-center justify-center text-sm font-semibold transition focus:outline-none focus:ring-4',
-        $minHeight,
-        $rounded,
-        $paddingX,
-        $paddingY,
+        'inline-flex items-center justify-center text-sm font-semibold transition focus:outline-none focus:ring-4 px-3 py-2 rounded-sm ',
+
         $variants[$variant] ?? $variants['primary'],
     ];
 @endphp

@@ -16,7 +16,7 @@
     type="file"
     name="{{ $name }}"
     @class([
-        'block w-full cursor-pointer rounded-[14px] border bg-white px-4 py-3 text-sm text-slate-700 file:mr-4 file:rounded-lg file:border-0 file:bg-[#eaf5fb] file:px-3 file:py-2 file:font-semibold file:text-[#0d5f98] hover:file:bg-[#dff0fb]',
+        'block w-full cursor-pointer rounded-sm border bg-white px-4 py-3 text-sm text-slate-700 file:mr-4 file:rounded-lg file:border-0 file:bg-[#eaf5fb] file:px-3 file:py-2 file:font-semibold file:text-[#0d5f98] hover:file:bg-[#dff0fb]',
         'border-red-500' => $errorMessage,
         'border-[#d7e3ee]' => ! $errorMessage,
     ])

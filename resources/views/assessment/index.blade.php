@@ -2,11 +2,58 @@
 
 @section('content')
     @php
-        $assignedCount = $dashboardCards->count();
-        $activeCount = $dashboardCards
-            ->filter(fn($item) => in_array($item['meta']['status'], ['ready', 'in_progress'], true))
-            ->count();
-        $submittedCount = $dashboardCards->filter(fn($item) => $item['meta']['status'] === 'submitted')->count();
+        $birthPlaceDate = collect([
+            $guru->tempat_lahir,
+            filled($guru->tgl_lahir) ? \Illuminate\Support\Carbon::parse($guru->tgl_lahir)->format('d/m/Y') : null,
+        ])
+            ->filter()
+            ->implode(', ');
+
+        $contactNumber = collect([
+            $guru->no_hp,
+            filled($guru->no_wa) && $guru->no_wa !== $guru->no_hp ? $guru->no_wa : null,
+        ])
+            ->filter()
+            ->implode(' / ');
+
+        $participantDetails = [
+            [
+                'label' => 'Nama Lengkap',
+                'value' => $guru->nama_lengkap ?: '-',
+            ],
+            [
+                'label' => 'NIK',
+                'value' => $guru->no_ktp ?: '-',
+            ],
+            [
+                'label' => 'Tempat, Tanggal Lahir',
+                'value' => $birthPlaceDate ?: '-',
+            ],
+            [
+                'label' => 'Jenis Kelamin',
+                'value' => $guru->gender ?: '-',
+            ],
+            [
+                'label' => 'Jabatan',
+                'value' => $guru->jabatan ?: '-',
+            ],
+            [
+                'label' => 'Email',
+                'value' => $guru->email ?: '-',
+            ],
+            [
+                'label' => 'Nomor Kontak',
+                'value' => $contactNumber ?: '-',
+            ],
+            [
+                'label' => 'Satuan Pendidikan',
+                'value' => $guru->satuan_pendidikan ?: '-',
+            ],
+            [
+                'label' => 'Alamat Rumah',
+                'value' => $guru->alamat_rumah ?: '-',
+            ],
+        ];
     @endphp
 
     <div>
@@ -20,28 +67,28 @@
                     atau buka kembali hasil yang sudah dikirim.
                 </p>
             </div>
-            <div class="text-right text-xs">
+            <div class="text-right text-sm ">
                 <div class="font-bold">{{ $guru->nama_lengkap }}</div>
-                <div class="">NIK: {{ $guru->no_ktp }}</div>
+
                 <div class="">
-                    Instansi: {{ $guru->satuan_pendidikan ?: '-' }}
+                     {{ $guru->satuan_pendidikan ?: '-' }}
                 </div>
             </div>
         </div>
     </div>
-    <section class="p-14 grid grid-cols-[2fr_1fr] gap-10">
-
-        <x-assessment::ui.card
-            class="overflow-hidden">
-            <div class="px-6 pb-0 pt-7 sm:px-[30px]">
+    <section class="grid gap-8 p-6 lg:grid-cols-[minmax(0,2fr)_minmax(320px,1fr)] lg:gap-10 lg:p-14">
+        <div class="space-y-8 lg:space-y-12">
+            <x-assessment::ui.card>
                 <h3 class="mb-1.5 text-xl font-bold text-[#0c3556]">
                     Daftar Penugasan Assessment
                 </h3>
+
                 <p class="text-[#6d8092]">
-                    Pilih penugasan yang ingin Anda kerjakan. Status dan akses akan menyesuaikan tanggal serta progres
-                    pengerjaan.
+                    Pilih penugasan yang ingin Anda kerjakan. Status dan akses akan menyesuaikan tanggal, jam sesi,
+                    serta progres pengerjaan.
                 </p>
-            </div>
+
+            </x-assessment::ui.card>
 
             @forelse ($dashboardCards as $item)
                 @php
@@ -54,17 +101,24 @@
                 <x-assessment::ui.empty-state icon="far fa-folder-open" title="Belum ada assessment yang ditugaskan"
                     description="Saat admin menambahkan assignment baru untuk akun Anda, daftar assessment akan muncul di halaman ini." />
             @endforelse
-        </x-assessment::ui.card>
-        <div class="mb-4 grid grid-cols-3 gap-4 ">
-            <x-assessment::ui.stat-card label="Total Penugasan" :value="$assignedCount"
-                description="Seluruh assignment assessment yang terhubung ke akun Anda." />
-
-            <x-assessment::ui.stat-card label="Siap atau Berjalan" :value="$activeCount"
-                description="Assessment yang bisa dimulai sekarang atau sedang Anda kerjakan." />
-
-            <x-assessment::ui.stat-card label="Selesai Dikirim" :value="$submittedCount"
-                description="Assessment yang sudah selesai dan hasilnya dapat Anda lihat kembali." />
         </div>
 
+        <aside class="min-w-0">
+            <x-assessment::ui.card class="overflow-hidden" padding="p-0" rounded="rounded-sm"
+                >
+                <div class="flex gap-3 items-center border-b border-slate-300 px-6 py-5">
+                    <i class="fa fa-user " aria-hidden="true"></i>
+                    <h1 class="text-md font-medium">Data Diri Peserta </h1>
+                </div>
+
+                <div class="px-6 py-1 grid grid-cols-2">
+
+                    @foreach ($participantDetails as $detail)
+                        <x-assessment::ui.detail-row :label="$detail['label']" :value="$detail['value']"
+                            valueClass="font-mono  leading-relaxed text-slate-900" :first="$loop->first" />
+                    @endforeach
+                </div>
+            </x-assessment::ui.card>
+        </aside>
     </section>
 @endsection

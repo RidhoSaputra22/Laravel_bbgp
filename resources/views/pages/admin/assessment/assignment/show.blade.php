@@ -7,17 +7,20 @@
 
 @section('content')
     @php
-        $statusBadge = [
-            'draft' => 'secondary',
-            'diproses' => 'warning',
-            'selesai' => 'success',
-            'gagal' => 'danger',
-        ][$assignment->status_distribusi] ?? 'secondary';
+        $statusBadge =
+            [
+                'draft' => 'secondary',
+                'diproses' => 'warning',
+                'selesai' => 'success',
+                'gagal' => 'danger',
+            ][$assignment->status_distribusi] ?? 'secondary';
 
         $assessments = $assignment->assessments;
         $totalAssessments = $assessments->count();
-        $totalForms = $assessments->sum(fn ($assessment) => $assessment->forms->count());
-        $totalFields = $assessments->sum(fn ($assessment) => $assessment->forms->sum(fn ($form) => $form->fields->count()));
+        $totalForms = $assessments->sum(fn($assessment) => $assessment->forms->count());
+        $totalFields = $assessments->sum(
+            fn($assessment) => $assessment->forms->sum(fn($form) => $form->fields->count()),
+        );
     @endphp
 
     <div class="main-content">
@@ -98,133 +101,144 @@
                     </div>
                 </div>
 
-                <div class="row">
-                    <div class="col-lg-5">
-                        <div class="card">
-                            <div class="card-header">
-                                <h4>Informasi Penugasan</h4>
+                <div class="card">
+                    <div class="card-header">
+                        <h4>Informasi Penugasan</h4>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <div class="text-muted small">Kode Penugasan</div>
+                            <div class="font-weight-bold">{{ $assignment->kode_penugasan }}</div>
+                        </div>
+                        <div class="mb-3">
+                            <div class="text-muted small">Judul</div>
+                            <div class="font-weight-bold">{{ $assignment->judul_penugasan }}</div>
+                        </div>
+                        <div class="mb-3">
+                            <div class="text-muted small">Status Distribusi</div>
+                            <div>
+                                <span class="badge badge-{{ $statusBadge }}">
+                                    {{ ucfirst($assignment->status_distribusi) }}
+                                </span>
                             </div>
-                            <div class="card-body">
-                                <div class="mb-3">
-                                    <div class="text-muted small">Kode Penugasan</div>
-                                    <div class="font-weight-bold">{{ $assignment->kode_penugasan }}</div>
-                                </div>
-                                <div class="mb-3">
-                                    <div class="text-muted small">Judul</div>
-                                    <div class="font-weight-bold">{{ $assignment->judul_penugasan }}</div>
-                                </div>
-                                <div class="mb-3">
-                                    <div class="text-muted small">Status Distribusi</div>
-                                    <div>
-                                        <span class="badge badge-{{ $statusBadge }}">
-                                            {{ ucfirst($assignment->status_distribusi) }}
-                                        </span>
-                                    </div>
-                                </div>
-                                <div class="mb-3">
-                                    <div class="text-muted small">Periode</div>
-                                    <div>
-                                        {{ $assignment->tanggal_mulai ? \App\Helpers\Helper::dateIndo($assignment->tanggal_mulai) : '-' }}
-                                        s/d
-                                        {{ $assignment->tanggal_selesai ? \App\Helpers\Helper::dateIndo($assignment->tanggal_selesai) : '-' }}
-                                    </div>
-                                </div>
-                                <div class="mb-3">
-                                    <div class="text-muted small">Dibuat Oleh</div>
-                                    <div>{{ optional($assignment->creator)->name ?: 'Sistem' }}</div>
-                                </div>
-                                <div class="mb-3">
-                                    <div class="text-muted small">Pengaturan Sesi</div>
-                                    <div>{{ $assignment->total_sesi }} sesi</div>
-                                    <small class="text-muted">
-                                        {{ $assignment->kapasitas_per_sesi }} guru per sesi / {{ $assignment->durasi_sesi_jam }} jam per sesi
-                                    </small>
-                                </div>
-                                <div class="mb-3">
-                                    <div class="text-muted small">Form Assessment Dipilih</div>
-                                    <div>{{ $totalAssessments }} assessment</div>
-                                    <small class="text-muted">
-                                        {{ $totalForms }} form / {{ $totalFields }} pertanyaan
-                                    </small>
-                                </div>
-                                <div class="mb-3">
-                                    <div class="text-muted small">Batch ID</div>
-                                    <div>{{ $assignment->job_batch_id ?: 'Distribusi langsung' }}</div>
-                                </div>
-                                <div class="mb-0">
-                                    <div class="text-muted small">Deskripsi</div>
-                                    <div>{{ $assignment->deskripsi ?: 'Tidak ada deskripsi tambahan.' }}</div>
-                                </div>
+                        </div>
+                        <div class="mb-3">
+                            <div class="text-muted small">Periode</div>
+                            <div>
+                                {{ $assignment->tanggal_mulai ? \App\Helpers\Helper::dateIndo($assignment->tanggal_mulai) : '-' }}
+                                @if ($assignment->jam_mulai_label)
+                                    / {{ $assignment->jam_mulai_label }} WITA
+                                @endif
+                                s/d
+                                {{ $assignment->tanggal_selesai ? \App\Helpers\Helper::dateIndo($assignment->tanggal_selesai) : '-' }}
                             </div>
+                        </div>
+                        <div class="mb-3">
+                            <div class="text-muted small">Jam Sesi Awal</div>
+                            <div>{{ $assignment->jam_mulai_label ? $assignment->jam_mulai_label . ' WITA' : 'Belum diatur' }}</div>
+                        </div>
+                        <div class="mb-3">
+                            <div class="text-muted small">Dibuat Oleh</div>
+                            <div>{{ optional($assignment->creator)->name ?: 'Sistem' }}</div>
+                        </div>
+                        <div class="mb-3">
+                            <div class="text-muted small">Pengaturan Sesi</div>
+                            <div>{{ $assignment->total_sesi }} sesi</div>
+                            <small class="text-muted">
+                                {{ $assignment->kapasitas_per_sesi }} guru per sesi / {{ $assignment->durasi_sesi_jam }}
+                                jam per sesi
+                            </small>
+                            @if ($assignment->jam_mulai_label)
+                                <br>
+                                <small class="text-muted">
+                                    Patokan sesi 1 mulai {{ $assignment->jam_mulai_label }} WITA
+                                </small>
+                            @endif
+                        </div>
+                        <div class="mb-3">
+                            <div class="text-muted small">Form Assessment Dipilih</div>
+                            <div>{{ $totalAssessments }} assessment</div>
+                            <small class="text-muted">
+                                {{ $totalForms }} form / {{ $totalFields }} pertanyaan
+                            </small>
+                        </div>
+                        <div class="mb-3">
+                            <div class="text-muted small">Batch ID</div>
+                            <div>{{ $assignment->job_batch_id ?: 'Distribusi langsung' }}</div>
+                        </div>
+                        <div class="mb-0">
+                            <div class="text-muted small">Deskripsi</div>
+                            <div>{{ $assignment->deskripsi ?: 'Tidak ada deskripsi tambahan.' }}</div>
                         </div>
                     </div>
+                </div>
 
-                    <div class="col-lg-7">
-                        <div class="card">
-                            <div class="card-header">
-                                <h4>Assessment Yang Ditugaskan</h4>
+                <div class="card">
+                    <div class="card-header">
+                        <h4>Assessment Yang Ditugaskan</h4>
+                    </div>
+                    <div class="card-body">
+                        @if ($assessments->isEmpty())
+                            <div class="alert alert-warning mb-0">
+                                Penugasan ini belum memiliki form assessment terhubung.
                             </div>
-                            <div class="card-body">
-                                @if ($assessments->isEmpty())
-                                    <div class="alert alert-warning mb-0">
-                                        Penugasan ini belum memiliki form assessment terhubung.
-                                    </div>
-                                @else
-                                    <div class="mb-3">
-                                        <div class="text-muted small">Ringkasan Assessment</div>
-                                        <div class="font-weight-bold">{{ $totalAssessments }} assessment</div>
-                                        <small class="text-muted">
-                                            {{ $totalForms }} form / {{ $totalFields }} pertanyaan
-                                        </small>
-                                    </div>
-                                    <div class="table-responsive">
-                                        <table class="table table-striped" id="table-assignment-assessment">
-                                            <thead>
-                                                <tr>
-                                                    <th class="text-center">#</th>
-                                                    <th>Kode</th>
-                                                    <th>Judul</th>
-                                                    <th>Status</th>
-                                                    <th>Struktur</th>
-                                                    <th>Deskripsi</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                @foreach ($assessments as $assessment)
-                                                    @php
-                                                        $assessmentStatusBadge = $assessment->status === 'publish'
-                                                            ? 'success'
-                                                            : ($assessment->status === 'draft' ? 'warning' : 'secondary');
-                                                    @endphp
-                                                    <tr>
-                                                        <td class="text-center">{{ $loop->iteration }}</td>
-                                                        <td class="font-weight-bold">{{ $assessment->kode_assessment }}</td>
-                                                        <td>{{ $assessment->judul }}</td>
-                                                        <td>
-                                                            <span class="badge badge-{{ $assessmentStatusBadge }}">
-                                                                {{ ucfirst($assessment->status) }}
-                                                            </span>
-                                                            <span
-                                                                class="badge badge-{{ $assessment->is_active ? 'primary' : 'light' }}">
-                                                                {{ $assessment->is_active ? 'Aktif' : 'Nonaktif' }}
-                                                            </span>
-                                                        </td>
-                                                        <td>
-                                                            {{ $assessment->forms->count() }} form /
-                                                            {{ $assessment->forms->sum(fn ($form) => $form->fields->count()) }}
-                                                            pertanyaan
-                                                        </td>
-                                                        <td>
-                                                            {{ \Illuminate\Support\Str::limit($assessment->deskripsi ?: 'Tidak ada deskripsi assessment.', 120) }}
-                                                        </td>
-                                                    </tr>
-                                                @endforeach
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                @endif
+                        @else
+                            <div class="mb-3">
+                                <div class="text-muted small">Ringkasan Assessment</div>
+                                <div class="font-weight-bold">{{ $totalAssessments }} assessment</div>
+                                <small class="text-muted">
+                                    {{ $totalForms }} form / {{ $totalFields }} pertanyaan
+                                </small>
                             </div>
-                        </div>
+                            <div class="table-responsive">
+                                <table class="table table-striped" id="table-assignment-assessment">
+                                    <thead>
+                                        <tr>
+                                            <th class="text-center">#</th>
+                                            <th>Kode</th>
+                                            <th>Judul</th>
+                                            <th>Status</th>
+                                            <th>Struktur</th>
+                                            <th>Deskripsi</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach ($assessments as $assessment)
+                                            @php
+                                                $assessmentStatusBadge =
+                                                    $assessment->status === 'publish'
+                                                        ? 'success'
+                                                        : ($assessment->status === 'draft'
+                                                            ? 'warning'
+                                                            : 'secondary');
+                                            @endphp
+                                            <tr>
+                                                <td class="text-center">{{ $loop->iteration }}</td>
+                                                <td class="font-weight-bold">{{ $assessment->kode_assessment }}</td>
+                                                <td>{{ $assessment->judul }}</td>
+                                                <td>
+                                                    <span class="badge badge-{{ $assessmentStatusBadge }}">
+                                                        {{ ucfirst($assessment->status) }}
+                                                    </span>
+                                                    <span
+                                                        class="badge badge-{{ $assessment->is_active ? 'primary' : 'light' }}">
+                                                        {{ $assessment->is_active ? 'Aktif' : 'Nonaktif' }}
+                                                    </span>
+                                                </td>
+                                                <td>
+                                                    {{ $assessment->forms->count() }} form /
+                                                    {{ $assessment->forms->sum(fn($form) => $form->fields->count()) }}
+                                                    pertanyaan
+                                                </td>
+                                                <td>
+                                                    {{ \Illuminate\Support\Str::limit($assessment->deskripsi ?: 'Tidak ada deskripsi assessment.', 120) }}
+                                                </td>
+                                            </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                            </div>
+                        @endif
                     </div>
                 </div>
 
@@ -244,6 +258,7 @@
                                         <tr>
                                             <th class="text-center">#</th>
                                             <th>Label Sesi</th>
+                                            <th>Jadwal</th>
                                             <th>Kapasitas</th>
                                             <th>Alokasi Guru</th>
                                             <th>Durasi</th>
@@ -254,6 +269,7 @@
                                             <tr>
                                                 <td class="text-center">{{ $session->nomor_sesi }}</td>
                                                 <td class="font-weight-bold">{{ $session->label_sesi }}</td>
+                                                <td>{{ $session->jadwal_sesi_label ?: 'Jadwal belum diatur' }}</td>
                                                 <td>{{ $session->kapasitas_peserta }} guru</td>
                                                 <td>{{ $session->total_peserta }} guru</td>
                                                 <td>{{ $session->durasi_sesi_jam }} jam</td>
@@ -292,12 +308,13 @@
                                     <tbody>
                                         @foreach ($assignment->targets as $target)
                                             @php
-                                                $targetBadge = [
-                                                    'ditugaskan' => 'primary',
-                                                    'dikerjakan' => 'warning',
-                                                    'selesai' => 'success',
-                                                    'dibatalkan' => 'secondary',
-                                                ][$target->status] ?? 'secondary';
+                                                $targetBadge =
+                                                    [
+                                                        'ditugaskan' => 'primary',
+                                                        'dikerjakan' => 'warning',
+                                                        'selesai' => 'success',
+                                                        'dibatalkan' => 'secondary',
+                                                    ][$target->status] ?? 'secondary';
                                             @endphp
                                             <tr>
                                                 <td class="text-center">{{ $loop->iteration }}</td>
@@ -316,7 +333,7 @@
                                                         {{ optional($target->session)->label_sesi ?: 'Belum dipetakan' }}
                                                     </div>
                                                     <small class="text-muted">
-                                                        {{ optional($target->session)->durasi_sesi_jam ? optional($target->session)->durasi_sesi_jam.' jam' : '-' }}
+                                                        {{ optional($target->session)->jadwal_sesi_label ?: 'Jadwal belum diatur' }}
                                                     </small>
                                                 </td>
                                                 <td>

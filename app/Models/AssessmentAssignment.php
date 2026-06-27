@@ -14,6 +14,7 @@ class AssessmentAssignment extends Model
         'judul_penugasan',
         'deskripsi',
         'tanggal_mulai',
+        'jam_mulai',
         'tanggal_selesai',
         'kapasitas_per_sesi',
         'durasi_sesi_jam',
@@ -61,5 +62,14 @@ class AssessmentAssignment extends Model
     {
         return $this->hasMany(AssessmentAssignmentSession::class)
             ->orderBy('nomor_sesi');
+    }
+
+    public function getJamMulaiLabelAttribute(): ?string
+    {
+        if (! $this->jam_mulai) {
+            return null;
+        }
+
+        return substr((string) $this->jam_mulai, 0, 5);
     }
 }

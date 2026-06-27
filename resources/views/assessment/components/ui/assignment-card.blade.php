@@ -3,24 +3,25 @@
     'meta',
 ])
 
-<div class="border-t border-[#eaf0f5] p-6 sm:p-[30px]">
-    <div class="flex flex-col justify-between gap-4 lg:flex-row lg:items-start">
+<div class="relative ">
+    <x-assessment::ui.card>
+         <div class="flex flex-col justify-between gap-4 lg:flex-row lg:items-start">
         <div class="lg:pr-4">
-            <div class="mb-2 font-bold tracking-[0.04em] text-[#0d5f98]">
+            <div class=" font-bold font-mono">
                 {{ $target->assignment->kode_penugasan }}
             </div>
 
-            <div class="mb-2 text-2xl font-bold leading-[1.3] text-[#0c3556] lg:text-[26px]">
+            <div class=" text-sm font-bold   lg:text-2xl">
                 {{ $target->assignment->judul_penugasan }}
             </div>
 
-            <div class="mb-[18px] leading-[1.8] text-[#687d90]">
+            <div class="text-sm font-light text-slate-500">
                 {{ $target->assignment->deskripsi ?: 'Penugasan ini belum memiliki deskripsi tambahan.' }}
             </div>
         </div>
 
-        <div class="shrink-0">
-            <x-assessment::ui.status-badge :tone="$meta['badge']">
+        <div class="shrink-0 absolute top-0 right-0">
+            <x-assessment::ui.status-badge :tone="$meta['badge']" class="rounded-bl-sm py-2 px-5  ">
                 {{ $meta['label'] }}
             </x-assessment::ui.status-badge>
         </div>
@@ -45,7 +46,7 @@
         </span>
         <span class="inline-flex items-center gap-2">
             <i class="far fa-clock"></i>
-            {{ $meta['session_label'] }}
+            {{ $meta['session_label'] }} | {{ $meta['session_schedule_text'] }}
         </span>
     </div>
 
@@ -82,4 +83,5 @@
             @endif
         </div>
     </div>
+    </x-assessment::ui.card>
 </div>

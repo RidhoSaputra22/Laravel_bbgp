@@ -31,8 +31,8 @@
         placeholder="{{ $placeholder }}"
         @required($required)
         @class([
-            'min-h-[50px] w-full rounded-[14px] border bg-white px-4 text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-[#1376bd] focus:ring-4 focus:ring-[#1376bd]/15',
-            'min-h-[52px]' => $label,
+            'py-3 px-4 w-full rounded-sm border bg-white px-4 text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-[#1376bd] focus:ring-4 focus:ring-[#1376bd]/15',
+            '' => $label,
             'border-red-500 focus:border-red-500 focus:ring-red-500/15' => $errorMessage,
             'border-[#d8e3ee]' => ! $errorMessage,
         ])

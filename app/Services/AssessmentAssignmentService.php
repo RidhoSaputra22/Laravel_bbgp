@@ -6,6 +6,7 @@ use App\Jobs\ProcessAssessmentAssignmentTargetsJob;
 use App\Models\Assessment;
 use App\Models\AssessmentAssignment;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -28,6 +29,7 @@ class AssessmentAssignmentService
         $assessmentIds = $this->normalizeAssessmentIds($payload['assessment_ids'] ?? []);
         $guruIds = $this->normalizeGuruIds($payload['guru_ids'] ?? []);
         $sessionDurationHours = (int) ($payload['durasi_sesi_jam'] ?? self::DEFAULT_SESSION_DURATION_HOURS);
+        $startTime = $this->normalizeStartTime($payload['jam_mulai'] ?? null);
         $shouldBatch = count($guruIds) > self::BATCH_THRESHOLD;
 
         $assignmentData = DB::transaction(function () use (
@@ -36,7 +38,8 @@ class AssessmentAssignmentService
             $guruIds,
             $assignedBy,
             $shouldBatch,
-            $sessionDurationHours
+            $sessionDurationHours,
+            $startTime
         ) {
             $assessmentSyncData = $this->buildAssessmentSyncData($assessmentIds);
             $totalSessions = $this->calculateTotalSessions(count($guruIds));
@@ -46,6 +49,7 @@ class AssessmentAssignmentService
                 'judul_penugasan' => $payload['judul_penugasan'],
                 'deskripsi' => $payload['deskripsi'] ?? null,
                 'tanggal_mulai' => $payload['tanggal_mulai'] ?? null,
+                'jam_mulai' => $startTime,
                 'tanggal_selesai' => $payload['tanggal_selesai'] ?? null,
                 'kapasitas_per_sesi' => self::TARGETS_PER_SESSION,
                 'durasi_sesi_jam' => $sessionDurationHours,
@@ -61,7 +65,8 @@ class AssessmentAssignmentService
             $sessionRows = $this->createSessions(
                 $assignment,
                 count($guruIds),
-                $sessionDurationHours
+                $sessionDurationHours,
+                $this->resolveFirstSessionStartAt($payload, $startTime)
             );
 
             $targetRows = $this->buildTargetRows($assignment->id, $guruIds, $sessionRows);
@@ -193,7 +198,8 @@ class AssessmentAssignmentService
     private function createSessions(
         AssessmentAssignment $assignment,
         int $totalTargets,
-        int $sessionDurationHours
+        int $sessionDurationHours,
+        ?Carbon $firstSessionStartAt = null
     ): array {
         $totalSessions = $this->calculateTotalSessions($totalTargets);
 
@@ -205,9 +211,18 @@ class AssessmentAssignmentService
         $sessions = [];
 
         for ($sessionNumber = 1; $sessionNumber <= $totalSessions; $sessionNumber++) {
+            $sessionStartAt = $firstSessionStartAt
+                ? $firstSessionStartAt->copy()->addHours(($sessionNumber - 1) * $sessionDurationHours)
+                : null;
+            $sessionEndAt = $sessionStartAt
+                ? $sessionStartAt->copy()->addHours($sessionDurationHours)
+                : null;
+
             $sessions[] = $assignment->sessions()->create([
                 'nomor_sesi' => $sessionNumber,
                 'label_sesi' => 'Sesi '.$sessionNumber,
+                'waktu_mulai' => $sessionStartAt,
+                'waktu_selesai' => $sessionEndAt,
                 'kapasitas_peserta' => self::TARGETS_PER_SESSION,
                 'total_peserta' => min(self::TARGETS_PER_SESSION, $remainingTargets),
                 'durasi_sesi_jam' => $sessionDurationHours,
@@ -272,7 +287,7 @@ class AssessmentAssignmentService
             ->all();
 
         if (count($validAssessmentIds) !== count($assessmentIds)) {
-            throw (new ModelNotFoundException())->setModel(Assessment::class, $assessmentIds);
+            throw (new ModelNotFoundException)->setModel(Assessment::class, $assessmentIds);
         }
 
         return collect($assessmentIds)
@@ -283,5 +298,25 @@ class AssessmentAssignmentService
                 ],
             ])
             ->all();
+    }
+
+    private function normalizeStartTime(?string $startTime): ?string
+    {
+        if (! $startTime) {
+            return null;
+        }
+
+        return Carbon::createFromFormat('H:i', $startTime)->format('H:i:s');
+    }
+
+    private function resolveFirstSessionStartAt(array $payload, ?string $startTime): ?Carbon
+    {
+        $startDate = $payload['tanggal_mulai'] ?? null;
+
+        if (! $startDate || ! $startTime) {
+            return null;
+        }
+
+        return Carbon::parse($startDate.' '.$startTime);
     }
 }

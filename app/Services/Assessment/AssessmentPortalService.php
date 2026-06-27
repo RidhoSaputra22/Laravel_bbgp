@@ -117,7 +117,12 @@ class AssessmentPortalService
             'assessment_total' => $assessmentCount,
             'form_total' => $formCount,
             'session_label' => optional($target->session)->label_sesi ?: 'Belum dibagi sesi',
-            'date_text' => $this->formatDateRange($assignment->tanggal_mulai, $assignment->tanggal_selesai),
+            'session_schedule_text' => optional($target->session)->jadwal_sesi_label ?: 'Jadwal sesi belum ditentukan',
+            'date_text' => $this->formatDateRange(
+                $assignment->tanggal_mulai,
+                $assignment->tanggal_selesai,
+                $assignment->jam_mulai_label
+            ),
         ];
 
         if ($target->status === 'dibatalkan') {
@@ -161,12 +166,26 @@ class AssessmentPortalService
             ]);
         }
 
-        if ($assignment->tanggal_mulai && $now->lt($assignment->tanggal_mulai->copy()->startOfDay())) {
+        $sessionStartAt = optional($target->session)->waktu_mulai;
+
+        if ($sessionStartAt && $now->lt($sessionStartAt)) {
             return array_merge($meta, [
                 'status' => 'upcoming',
                 'label' => 'Menunggu Jadwal',
                 'badge' => 'info',
-                'description' => 'Assessment belum dibuka sesuai tanggal mulai penugasan.',
+                'description' => 'Assessment untuk sesi Anda dibuka mulai '.$this->formatDateTime($sessionStartAt).'.',
+                'can_open' => false,
+            ]);
+        }
+
+        $assignmentStartAt = $this->resolveAssignmentStartAt($assignment);
+
+        if ($assignmentStartAt && $now->lt($assignmentStartAt)) {
+            return array_merge($meta, [
+                'status' => 'upcoming',
+                'label' => 'Menunggu Jadwal',
+                'badge' => 'info',
+                'description' => 'Assessment belum dibuka dan akan tersedia mulai '.$this->formatDateTime($assignmentStartAt).'.',
                 'can_open' => false,
             ]);
         }
@@ -205,10 +224,14 @@ class AssessmentPortalService
             });
     }
 
-    private function formatDateRange($startDate, $endDate): string
+    private function formatDateRange($startDate, $endDate, ?string $startTimeLabel = null): string
     {
         $start = $startDate ? $startDate->format('d M Y') : null;
         $end = $endDate ? $endDate->format('d M Y') : null;
+
+        if ($start && $startTimeLabel) {
+            $start .= ' '.$startTimeLabel.' WITA';
+        }
 
         if ($start && $end) {
             return $start.' - '.$end;
@@ -223,5 +246,25 @@ class AssessmentPortalService
         }
 
         return 'Tanpa batas tanggal';
+    }
+
+    private function resolveAssignmentStartAt($assignment): ?\Illuminate\Support\Carbon
+    {
+        if (! $assignment->tanggal_mulai) {
+            return null;
+        }
+
+        if ($assignment->jam_mulai_label) {
+            return \Illuminate\Support\Carbon::parse(
+                $assignment->tanggal_mulai->format('Y-m-d').' '.$assignment->jam_mulai_label
+            );
+        }
+
+        return $assignment->tanggal_mulai->copy()->startOfDay();
+    }
+
+    private function formatDateTime(\Illuminate\Support\Carbon $dateTime): string
+    {
+        return $dateTime->format('d M Y H:i').' WITA';
     }
 }

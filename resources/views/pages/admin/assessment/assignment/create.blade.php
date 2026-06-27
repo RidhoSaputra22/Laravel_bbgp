@@ -14,6 +14,7 @@
             ->map(fn ($id) => (string) $id)
             ->all();
         $selectedDurationHours = (int) old('durasi_sesi_jam', $defaultSessionDurationHours);
+        $selectedStartTime = old('jam_mulai');
 
         $assessmentTableItems = $assessmentList
             ->map(function ($assessment) {
@@ -161,7 +162,7 @@
                                     </div>
 
                                     <div class="row">
-                                        <div class="col-md-6">
+                                        <div class="col-md-4">
                                             <div class="form-group">
                                                 <label>Tanggal Mulai</label>
                                                 <input type="date" name="tanggal_mulai"
@@ -172,7 +173,22 @@
                                                 @enderror
                                             </div>
                                         </div>
-                                        <div class="col-md-6">
+                                        <div class="col-md-4">
+                                            <div class="form-group">
+                                                <label>Jam Mulai Sesi Awal</label>
+                                                <input type="time" name="jam_mulai" id="jam_mulai"
+                                                    class="form-control @error('jam_mulai') is-invalid @enderror"
+                                                    value="{{ $selectedStartTime }}">
+                                                <small class="text-muted">
+                                                    Sesi 1 dimulai pada jam ini. Sesi berikutnya otomatis berurutan
+                                                    mengikuti durasi per sesi.
+                                                </small>
+                                                @error('jam_mulai')
+                                                    <div class="invalid-feedback">{{ $message }}</div>
+                                                @enderror
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
                                             <div class="form-group">
                                                 <label>Tanggal Selesai</label>
                                                 <input type="date" name="tanggal_selesai"
@@ -301,6 +317,14 @@
                                         <div class="summary-value" id="summary-total-sessions">0</div>
                                     </div>
                                 </div>
+                                <div class="row mt-3">
+                                    <div class="col-6">
+                                        <div class="text-muted small">Jam Sesi Awal</div>
+                                        <div class="summary-value" id="summary-session-start-time">
+                                            {{ $selectedStartTime ?: '-' }}
+                                        </div>
+                                    </div>
+                                </div>
                                 <div class="mt-3">
                                     <div class="text-muted small">Metode Distribusi</div>
                                     <div class="summary-value" id="summary-distribution-method">-</div>
@@ -354,6 +378,12 @@
                 return Number((durationSelect ? durationSelect.value : '') || defaultDurationHours);
             }
 
+            function getSelectedStartTime() {
+                const startTimeInput = document.getElementById('jam_mulai');
+
+                return (startTimeInput ? startTimeInput.value : '') || '-';
+            }
+
             function updateAssessmentSummary() {
                 const summaryCount = document.getElementById('summary-assessment-count');
                 const summaryForms = document.getElementById('summary-forms');
@@ -399,6 +429,7 @@
                 const summarySessionCapacity = document.getElementById('summary-session-capacity');
                 const summarySessionDuration = document.getElementById('summary-session-duration');
                 const summaryTotalSessions = document.getElementById('summary-total-sessions');
+                const summarySessionStartTime = document.getElementById('summary-session-start-time');
                 const summaryDistributionMethod = document.getElementById('summary-distribution-method');
 
                 if (summaryGuruCount) {
@@ -415,6 +446,10 @@
 
                 if (summaryTotalSessions) {
                     summaryTotalSessions.textContent = totalSessions;
+                }
+
+                if (summarySessionStartTime) {
+                    summarySessionStartTime.textContent = getSelectedStartTime();
                 }
 
                 if (summaryDistributionMethod) {
@@ -436,9 +471,16 @@
 
             document.addEventListener('DOMContentLoaded', function() {
                 const durationSelect = document.getElementById('durasi_sesi_jam');
+                const startTimeInput = document.getElementById('jam_mulai');
 
                 if (durationSelect) {
                     durationSelect.addEventListener('change', function() {
+                        updateGuruSummary();
+                    });
+                }
+
+                if (startTimeInput) {
+                    startTimeInput.addEventListener('change', function() {
                         updateGuruSummary();
                     });
                 }

@@ -56,6 +56,7 @@
                     <div class="text-sm text-slate-500 lg:col-span-4 lg:text-right">
                         <div>Dikirim pada: {{ $submittedAt ?: '-' }}</div>
                         <div>Sesi: {{ $meta['session_label'] }}</div>
+                        <div>Jadwal: {{ $meta['session_schedule_text'] }}</div>
                     </div>
                 </div>
 
@@ -132,6 +133,7 @@
 
                         <x-assessment::ui.detail-row label="Status" :value="$meta['label']" :first="true" />
                         <x-assessment::ui.detail-row label="Periode Penugasan" :value="$meta['date_text']" />
+                        <x-assessment::ui.detail-row label="Jadwal Sesi" :value="$meta['session_schedule_text']" />
                         <x-assessment::ui.detail-row
                             label="Jumlah Assessment"
                             :value="$meta['assessment_total'].' assessment / '.$meta['form_total'].' form'"

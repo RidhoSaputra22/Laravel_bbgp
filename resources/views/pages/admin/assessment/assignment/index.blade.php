@@ -162,8 +162,11 @@
                                                         {{ $data->tanggal_mulai ? \App\Helpers\Helper::dateIndo($data->tanggal_mulai) : '-' }}
                                                     </div>
                                                     <small class="text-muted">
-                                                        s/d
-                                                        {{ $data->tanggal_selesai ? \App\Helpers\Helper::dateIndo($data->tanggal_selesai) : '-' }}
+                                                        {{ $data->jam_mulai_label ? $data->jam_mulai_label . ' WITA' : 'Jam awal belum diatur' }}
+                                                    </small>
+                                                    <br>
+                                                    <small class="text-muted">
+                                                        s/d {{ $data->tanggal_selesai ? \App\Helpers\Helper::dateIndo($data->tanggal_selesai) : '-' }}
                                                     </small>
                                                 </td>
                                                 <td>
@@ -182,6 +185,10 @@
                                                     <br>
                                                     <small class="text-muted">
                                                         {{ $data->durasi_sesi_jam }} jam per sesi
+                                                    </small>
+                                                    <br>
+                                                    <small class="text-muted">
+                                                        Sesi awal {{ $data->jam_mulai_label ? $data->jam_mulai_label . ' WITA' : 'belum diatur' }}
                                                     </small>
                                                 </td>
                                                 <td>

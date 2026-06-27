@@ -5,8 +5,8 @@
     'first' => false,
 ])
 
-<div {{ $attributes->class(['border-t border-[#ebf1f6] py-[18px]', 'border-t-0 pt-0' => $first]) }}>
-    <div class="mb-1 text-sm text-slate-500">
+<div {{ $attributes->class(['py-3', ]) }}>
+    <div class="text-sm text-slate-500">
         {{ $label }}
     </div>
 
