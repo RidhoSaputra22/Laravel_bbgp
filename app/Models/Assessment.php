@@ -30,6 +30,9 @@ class Assessment extends Model
 
     public function assignments()
     {
-        return $this->hasMany(AssessmentAssignment::class)->orderByDesc('id');
+        return $this->belongsToMany(AssessmentAssignment::class, 'assessment_assignment_assessments')
+            ->withPivot('urutan')
+            ->withTimestamps()
+            ->orderByDesc('assessment_assignments.id');
     }
 }

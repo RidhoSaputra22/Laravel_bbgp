@@ -22,7 +22,7 @@ class AssessmentAssignmentController extends Controller
     {
         $this->authorizeAccess();
 
-        $datas = AssessmentAssignment::with(['assessment', 'creator'])
+        $datas = AssessmentAssignment::with(['assessments', 'creator'])
             ->withCount(['targets', 'sessions'])
             ->orderByDesc('id')
             ->get();
@@ -99,7 +99,7 @@ class AssessmentAssignmentController extends Controller
         $this->authorizeAccess();
 
         $assignment = AssessmentAssignment::with([
-            'assessment.forms.fields',
+            'assessments.forms.fields',
             'creator',
             'sessions.targets',
             'targets.guru',
@@ -127,11 +127,12 @@ class AssessmentAssignmentController extends Controller
         return Validator::make(
             $request->all(),
             [
-                'kode_penugasan' => 'nullable|string|max:100|unique:assessment_assignments,kode_penugasan',
                 'judul_penugasan' => 'required|string|max:255',
-                'assessment_id' => [
+                'assessment_ids' => 'required|array|min:1',
+                'assessment_ids.*' => [
                     'required',
                     'integer',
+                    'distinct',
                     Rule::exists('assessments', 'id')->where(function ($query) {
                         $query->where('is_active', true)
                             ->whereIn('status', ['draft', 'publish']);
@@ -150,8 +151,9 @@ class AssessmentAssignmentController extends Controller
             ],
             [
                 'judul_penugasan.required' => 'Judul penugasan wajib diisi.',
-                'assessment_id.required' => 'Form assesment wajib dipilih.',
-                'assessment_id.exists' => 'Assesment yang dipilih tidak valid atau sudah nonaktif.',
+                'assessment_ids.required' => 'Minimal pilih satu form assesment.',
+                'assessment_ids.min' => 'Minimal pilih satu form assesment.',
+                'assessment_ids.*.exists' => 'Ada form assesment yang dipilih tetapi datanya tidak valid atau sudah nonaktif.',
                 'durasi_sesi_jam.required' => 'Durasi sesi assessment wajib dipilih.',
                 'durasi_sesi_jam.in' => 'Durasi sesi assessment harus sesuai pilihan yang tersedia.',
                 'guru_ids.required' => 'Minimal pilih satu guru untuk ditugasi.',

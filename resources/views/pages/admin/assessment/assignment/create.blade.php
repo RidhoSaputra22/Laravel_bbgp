@@ -1,12 +1,76 @@
 @extends('layouts.app', ['title' => 'Buat Penugasan Assesment'])
 
+@push('styles')
+    <link rel="stylesheet" href="{{ asset('library/datatables.net-bs4/css/dataTables.bootstrap4.min.css') }}">
+    <link rel="stylesheet" href="{{ asset('library/datatables.net-select-bs4/css/select.bootstrap4.min.css') }}">
+@endpush
+
 @section('content')
     @php
         $oldGuruIds = collect(old('guru_ids', []))
-            ->map(fn($id) => (string) $id)
+            ->map(fn ($id) => (string) $id)
             ->all();
-        $selectedAssessmentId = (string) old('assessment_id', '');
+        $oldAssessmentIds = collect(old('assessment_ids', old('assessment_id') ? [old('assessment_id')] : []))
+            ->map(fn ($id) => (string) $id)
+            ->all();
         $selectedDurationHours = (int) old('durasi_sesi_jam', $defaultSessionDurationHours);
+
+        $assessmentTableItems = $assessmentList
+            ->map(function ($assessment) {
+                $totalForms = $assessment->forms->count();
+                $totalFields = $assessment->forms->sum(fn ($form) => $form->fields->count());
+
+                return [
+                    'id' => (string) $assessment->id,
+                    'label' => $assessment->judul,
+                    'description' => $assessment->kode_assessment.' | '.ucfirst($assessment->status),
+                    'cells' => [
+                        $assessment->kode_assessment,
+                        $assessment->judul,
+                        ucfirst($assessment->status),
+                        $totalForms.' form / '.$totalFields.' pertanyaan',
+                    ],
+                    'payload' => [
+                        'kode' => $assessment->kode_assessment,
+                        'judul' => $assessment->judul,
+                        'status' => ucfirst($assessment->status),
+                        'forms' => $totalForms,
+                        'fields' => $totalFields,
+                    ],
+                ];
+            })
+            ->all();
+
+        $guruTableItems = $guruList
+            ->map(function ($guru) {
+                $descriptionParts = array_filter([
+                    $guru->email,
+                    $guru->satuan_pendidikan ?: 'Instansi belum diisi',
+                    $guru->kabupaten ?: 'Kabupaten belum diisi',
+                    $guru->is_verif === 'sudah' ? 'Terverifikasi' : 'Belum verifikasi',
+                ]);
+
+                return [
+                    'id' => (string) $guru->id,
+                    'label' => $guru->nama_lengkap,
+                    'description' => implode(' | ', $descriptionParts),
+                    'cells' => [
+                        $guru->nama_lengkap,
+                        $guru->email ?: '-',
+                        $guru->satuan_pendidikan ?: 'Instansi belum diisi',
+                        $guru->kabupaten ?: 'Kabupaten belum diisi',
+                        $guru->is_verif === 'sudah' ? 'Terverifikasi' : 'Belum verifikasi',
+                    ],
+                    'payload' => [
+                        'nama' => $guru->nama_lengkap,
+                        'email' => $guru->email,
+                        'satuan_pendidikan' => $guru->satuan_pendidikan,
+                        'kabupaten' => $guru->kabupaten,
+                        'status_verifikasi' => $guru->is_verif === 'sudah' ? 'Terverifikasi' : 'Belum verifikasi',
+                    ],
+                ];
+            })
+            ->all();
     @endphp
 
     @push('styles')
@@ -17,9 +81,20 @@
                 color: #34395e;
             }
 
-            .select2-container--default .select2-selection--multiple {
-                min-height: 44px;
-                border-color: #e4e6fc;
+            .assignment-summary-list {
+                list-style: none;
+                padding-left: 0;
+                margin-bottom: 0;
+                display: flex;
+                flex-direction: column;
+                gap: 0.75rem;
+            }
+
+            .assignment-summary-list li {
+                border: 1px solid #e4e6fc;
+                border-radius: 10px;
+                padding: 0.75rem;
+                background: #fcfcff;
             }
         </style>
     @endpush
@@ -52,51 +127,35 @@
                                     <h4>Informasi Penugasan</h4>
                                 </div>
                                 <div class="card-body">
-                                    <div class="row">
-                                        <div class="col-md-6">
-                                            <div class="form-group">
-                                                <label>Kode Penugasan</label>
-                                                <input type="text" name="kode_penugasan"
-                                                    class="form-control @error('kode_penugasan') is-invalid @enderror"
-                                                    value="{{ old('kode_penugasan') }}"
-                                                    placeholder="Kosongkan untuk generate otomatis">
-                                                @error('kode_penugasan')
-                                                    <div class="invalid-feedback">{{ $message }}</div>
-                                                @enderror
-                                            </div>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <div class="form-group">
-                                                <label>Judul Penugasan <span class="text-danger">*</span></label>
-                                                <input type="text" name="judul_penugasan"
-                                                    class="form-control @error('judul_penugasan') is-invalid @enderror"
-                                                    value="{{ old('judul_penugasan') }}"
-                                                    placeholder="Contoh: Penugasan Monitoring Guru GP Angkatan 1">
-                                                @error('judul_penugasan')
-                                                    <div class="invalid-feedback">{{ $message }}</div>
-                                                @enderror
-                                            </div>
-                                        </div>
+                                    <div class="alert alert-light border mb-4">
+                                        Kode penugasan tidak perlu diisi lagi. Sistem akan membuat kode otomatis saat
+                                        penugasan disimpan.
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label>Judul Penugasan <span class="text-danger">*</span></label>
+                                        <input type="text" name="judul_penugasan"
+                                            class="form-control @error('judul_penugasan') is-invalid @enderror"
+                                            value="{{ old('judul_penugasan') }}"
+                                            placeholder="Contoh: Penugasan Monitoring Guru GP Angkatan 1">
+                                        @error('judul_penugasan')
+                                            <div class="invalid-feedback">{{ $message }}</div>
+                                        @enderror
                                     </div>
 
                                     <div class="form-group">
                                         <label>Form Assesment <span class="text-danger">*</span></label>
-                                        <select name="assessment_id" id="assessment_id"
-                                            class="form-control select2 @error('assessment_id') is-invalid @enderror">
-                                            <option value="">-- Pilih Form Assesment --</option>
-                                            @foreach ($assessmentList as $assessment)
-                                                <option value="{{ $assessment->id }}"
-                                                    data-kode="{{ $assessment->kode_assessment }}"
-                                                    data-judul="{{ $assessment->judul }}"
-                                                    data-status="{{ $assessment->status }}"
-                                                    data-forms="{{ $assessment->forms->count() }}"
-                                                    data-fields="{{ $assessment->forms->sum(fn($form) => $form->fields->count()) }}"
-                                                    @selected($selectedAssessmentId === (string) $assessment->id)>
-                                                    {{ $assessment->kode_assessment }} - {{ $assessment->judul }}
-                                                </option>
-                                            @endforeach
-                                        </select>
-                                        @error('assessment_id')
+                                        <x-multiple-choice-table id="assessment-selector" name="assessment_ids"
+                                            :headers="['Kode', 'Judul', 'Status', 'Struktur']"
+                                            :items="$assessmentTableItems" :selected="$oldAssessmentIds"
+                                            description="Pilih satu atau banyak form assesment. Gunakan pencarian untuk mempercepat seleksi."
+                                            search-placeholder="Cari kode atau judul assesment..."
+                                            empty-message="Belum ada form assesment aktif yang bisa dipilih."
+                                            selected-title="Form Assesment Terpilih" />
+                                        @error('assessment_ids')
+                                            <div class="invalid-feedback d-block">{{ $message }}</div>
+                                        @enderror
+                                        @error('assessment_ids.*')
                                             <div class="invalid-feedback d-block">{{ $message }}</div>
                                         @enderror
                                     </div>
@@ -147,10 +206,11 @@
                                         <div class="col-md-6">
                                             <div class="form-group">
                                                 <label>Kapasitas Guru Per Sesi</label>
-                                                <input type="text" class="form-control" value="{{ $sessionCapacity }} guru"
-                                                    readonly>
+                                                <input type="text" class="form-control"
+                                                    value="{{ $sessionCapacity }} guru" readonly>
                                                 <small class="text-muted">
-                                                    Sistem otomatis membagi guru per {{ $sessionCapacity }} orang untuk setiap sesi.
+                                                    Sistem otomatis membagi guru per {{ $sessionCapacity }} orang untuk
+                                                    setiap sesi.
                                                 </small>
                                             </div>
                                         </div>
@@ -172,70 +232,40 @@
                                     <h4>Target Guru</h4>
                                 </div>
                                 <div class="card-body">
-                                    <div class="d-flex flex-wrap justify-content-between align-items-center mb-3">
-                                        <p class="mb-2 text-muted">
-                                            Pilih satu atau banyak guru. Jika jumlah target lebih dari {{ $batchThreshold }}
-                                            orang, distribusi otomatis diproses menggunakan batch job.
-                                        </p>
-                                        <div class="mb-2">
-                                            <button type="button" class="btn btn-outline-primary btn-sm" id="select-all-guru">
-                                                Pilih Semua
-                                            </button>
-                                            <button type="button" class="btn btn-outline-secondary btn-sm" id="clear-guru">
-                                                Kosongkan
-                                            </button>
-                                        </div>
-                                    </div>
+                                    <p class="mb-3 text-muted">
+                                        Pilih satu atau banyak guru. Jika jumlah target lebih dari {{ $batchThreshold }}
+                                        orang, distribusi otomatis diproses menggunakan batch job.
+                                    </p>
 
-                                    <div class="form-group mb-2">
-                                        <select name="guru_ids[]" id="guru_ids" multiple
-                                            class="form-control select2 @error('guru_ids') is-invalid @enderror @error('guru_ids.*') is-invalid @enderror">
-                                            @foreach ($guruList as $guru)
-                                                <option value="{{ $guru->id }}" @selected(in_array((string) $guru->id, $oldGuruIds, true))>
-                                                    {{ $guru->nama_lengkap }} | {{ $guru->satuan_pendidikan ?: 'Instansi belum diisi' }} |
-                                                    {{ $guru->kabupaten ?: 'Kabupaten belum diisi' }}
-                                                    @if ($guru->is_verif === 'sudah')
-                                                        | Terverifikasi
-                                                    @endif
-                                                </option>
-                                            @endforeach
-                                        </select>
-                                        @error('guru_ids')
-                                            <div class="invalid-feedback d-block">{{ $message }}</div>
-                                        @enderror
-                                        @error('guru_ids.*')
-                                            <div class="invalid-feedback d-block">{{ $message }}</div>
-                                        @enderror
-                                    </div>
-
-                                    <small class="text-muted">
-                                        Total guru terpilih:
-                                        <span class="font-weight-bold" id="selected-guru-count">{{ count($oldGuruIds) }}</span>
-                                    </small>
-                                    <div class="mt-2 text-muted">
-                                        Estimasi total sesi:
-                                        <span class="font-weight-bold" id="estimated-session-count">0</span>
-                                        sesi
-                                    </div>
+                                    <x-multiple-choice-table id="guru-selector" name="guru_ids"
+                                        :headers="['Nama Guru', 'Email', 'Instansi', 'Kabupaten', 'Verifikasi']"
+                                        :items="$guruTableItems" :selected="$oldGuruIds"
+                                        description="Setiap baris bisa dipilih langsung. Tombol pilih semua akan memilih semua data yang sedang tampil."
+                                        search-placeholder="Cari nama, email, instansi, atau kabupaten guru..."
+                                        empty-message="Belum ada data guru yang bisa dipilih."
+                                        selected-title="Guru Terpilih" />
+                                    @error('guru_ids')
+                                        <div class="invalid-feedback d-block">{{ $message }}</div>
+                                    @enderror
+                                    @error('guru_ids.*')
+                                        <div class="invalid-feedback d-block">{{ $message }}</div>
+                                    @enderror
                                 </div>
                             </div>
                         </div>
 
                         <div class="col-lg-4">
                             <div class="card card-body mb-4">
-                                <h6 class="text-primary mb-3">Ringkasan Assesment</h6>
+                                <h6 class="text-primary mb-3">Ringkasan Penugasan</h6>
                                 <div class="mb-3">
-                                    <div class="text-muted small">Kode</div>
-                                    <div class="summary-value" id="summary-kode">-</div>
+                                    <div class="text-muted small">Kode Penugasan</div>
+                                    <div class="summary-value">Otomatis saat simpan</div>
                                 </div>
                                 <div class="mb-3">
-                                    <div class="text-muted small">Judul</div>
-                                    <div class="summary-value" id="summary-judul">Pilih assesment terlebih dahulu</div>
+                                    <div class="text-muted small">Total Assesment Dipilih</div>
+                                    <div class="summary-value" id="summary-assessment-count">0</div>
                                 </div>
-                                <div class="mb-3">
-                                    <div class="text-muted small">Status</div>
-                                    <div class="summary-value" id="summary-status">-</div>
-                                </div>
+
                                 <div class="row">
                                     <div class="col-6">
                                         <div class="text-muted small">Total Form</div>
@@ -249,17 +279,31 @@
                                 <hr>
                                 <div class="row">
                                     <div class="col-6">
-                                        <div class="text-muted small">Kapasitas/Sesi</div>
-                                        <div class="summary-value" id="summary-session-capacity">{{ $sessionCapacity }}</div>
+                                        <div class="text-muted small">Target Guru</div>
+                                        <div class="summary-value" id="summary-guru-count">0</div>
                                     </div>
                                     <div class="col-6">
+                                        <div class="text-muted small">Kapasitas/Sesi</div>
+                                        <div class="summary-value" id="summary-session-capacity">
+                                            {{ $sessionCapacity }} guru
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row mt-3">
+                                    <div class="col-6">
                                         <div class="text-muted small">Durasi/Sesi</div>
-                                        <div class="summary-value" id="summary-session-duration">{{ $selectedDurationHours }}</div>
+                                        <div class="summary-value" id="summary-session-duration">
+                                            {{ $selectedDurationHours }} jam
+                                        </div>
+                                    </div>
+                                    <div class="col-6">
+                                        <div class="text-muted small">Estimasi Sesi</div>
+                                        <div class="summary-value" id="summary-total-sessions">0</div>
                                     </div>
                                 </div>
                                 <div class="mt-3">
-                                    <div class="text-muted small">Estimasi Total Sesi</div>
-                                    <div class="summary-value" id="summary-total-sessions">0</div>
+                                    <div class="text-muted small">Metode Distribusi</div>
+                                    <div class="summary-value" id="summary-distribution-method">-</div>
                                 </div>
                             </div>
 
@@ -285,73 +329,123 @@
 @endsection
 
 @push('scripts')
+    <script src="{{ asset('library/datatables/media/js/jquery.dataTables.min.js') }}"></script>
+    <script src="{{ asset('library/datatables.net-bs4/js/dataTables.bootstrap4.min.js') }}"></script>
+    <script src="{{ asset('library/datatables.net-select-bs4/js/select.bootstrap4.min.js') }}"></script>
+
     <script>
-        $(function() {
-            const $assessmentSelect = $('#assessment_id');
-            const $guruSelect = $('#guru_ids');
-            const $durationSelect = $('#durasi_sesi_jam');
+        (() => {
             const sessionCapacity = {{ $sessionCapacity }};
+            const defaultDurationHours = {{ $defaultSessionDurationHours }};
+            const batchThreshold = {{ $batchThreshold }};
+            let selectedAssessments = [];
+            let selectedGurus = [];
 
-            $('.select2').select2({
-                width: '100%',
-            });
+            function escapeHtml(value) {
+                const node = document.createElement('div');
+                node.textContent = value || '';
 
-            function updateSelectedGuruCount() {
-                const selectedGuru = $guruSelect.val() || [];
-                $('#selected-guru-count').text(selectedGuru.length);
-                updateSessionSummary(selectedGuru.length);
+                return node.innerHTML;
             }
 
-            function updateSessionSummary(totalGuru) {
-                const durationHours = Number($durationSelect.val() || {{ $defaultSessionDurationHours }});
-                const totalSessions = totalGuru > 0 ? Math.ceil(totalGuru / sessionCapacity) : 0;
+            function getSelectedDurationHours() {
+                const durationSelect = document.getElementById('durasi_sesi_jam');
 
-                $('#estimated-session-count').text(totalSessions);
-                $('#summary-session-capacity').text(sessionCapacity + ' guru');
-                $('#summary-session-duration').text(durationHours + ' jam');
-                $('#summary-total-sessions').text(totalSessions);
+                return Number((durationSelect ? durationSelect.value : '') || defaultDurationHours);
             }
 
             function updateAssessmentSummary() {
-                const selectedOption = $assessmentSelect.find('option:selected');
+                const summaryCount = document.getElementById('summary-assessment-count');
+                const summaryForms = document.getElementById('summary-forms');
+                const summaryFields = document.getElementById('summary-fields');
 
-                if (!selectedOption.val()) {
-                    $('#summary-kode').text('-');
-                    $('#summary-judul').text('Pilih assesment terlebih dahulu');
-                    $('#summary-status').text('-');
-                    $('#summary-forms').text('0');
-                    $('#summary-fields').text('0');
-                    return;
+                const totalForms = selectedAssessments.reduce((sum, item) => {
+                    const payload = item.payload || {};
+
+                    return sum + Number(payload.forms || 0);
+                }, 0);
+                const totalFields = selectedAssessments.reduce((sum, item) => {
+                    const payload = item.payload || {};
+
+                    return sum + Number(payload.fields || 0);
+                }, 0);
+
+                if (summaryCount) {
+                    summaryCount.textContent = selectedAssessments.length;
                 }
 
-                $('#summary-kode').text(selectedOption.data('kode') || '-');
-                $('#summary-judul').text(selectedOption.data('judul') || '-');
-                $('#summary-status').text((selectedOption.data('status') || '-').toString());
-                $('#summary-forms').text(selectedOption.data('forms') || 0);
-                $('#summary-fields').text(selectedOption.data('fields') || 0);
+                if (summaryForms) {
+                    summaryForms.textContent = totalForms;
+                }
+
+                if (summaryFields) {
+                    summaryFields.textContent = totalFields;
+                }
+
+
+
+
+
+
             }
 
-            $('#select-all-guru').on('click', function() {
-                const allGuruIds = $guruSelect.find('option').map(function() {
-                    return $(this).val();
-                }).get();
+            function updateGuruSummary() {
+                const totalGuru = selectedGurus.length;
+                const totalSessions = totalGuru > 0 ? Math.ceil(totalGuru / sessionCapacity) : 0;
+                const durationHours = getSelectedDurationHours();
+                const distributionMethod = totalGuru === 0 ? '-' : (totalGuru > batchThreshold ? 'Batch Job' : 'Langsung');
 
-                $guruSelect.val(allGuruIds).trigger('change');
+                const summaryGuruCount = document.getElementById('summary-guru-count');
+                const summarySessionCapacity = document.getElementById('summary-session-capacity');
+                const summarySessionDuration = document.getElementById('summary-session-duration');
+                const summaryTotalSessions = document.getElementById('summary-total-sessions');
+                const summaryDistributionMethod = document.getElementById('summary-distribution-method');
+
+                if (summaryGuruCount) {
+                    summaryGuruCount.textContent = totalGuru;
+                }
+
+                if (summarySessionCapacity) {
+                    summarySessionCapacity.textContent = sessionCapacity + ' guru';
+                }
+
+                if (summarySessionDuration) {
+                    summarySessionDuration.textContent = durationHours + ' jam';
+                }
+
+                if (summaryTotalSessions) {
+                    summaryTotalSessions.textContent = totalSessions;
+                }
+
+                if (summaryDistributionMethod) {
+                    summaryDistributionMethod.textContent = distributionMethod;
+                }
+            }
+
+            document.addEventListener('multiple-choice-table:change', function(event) {
+                if (event.detail.tableId === 'assessment-selector') {
+                    selectedAssessments = event.detail.selectedItems || [];
+                    updateAssessmentSummary();
+                }
+
+                if (event.detail.tableId === 'guru-selector') {
+                    selectedGurus = event.detail.selectedItems || [];
+                    updateGuruSummary();
+                }
             });
 
-            $('#clear-guru').on('click', function() {
-                $guruSelect.val([]).trigger('change');
-            });
+            document.addEventListener('DOMContentLoaded', function() {
+                const durationSelect = document.getElementById('durasi_sesi_jam');
 
-            $guruSelect.on('change', updateSelectedGuruCount);
-            $assessmentSelect.on('change', updateAssessmentSummary);
-            $durationSelect.on('change', function() {
-                const selectedGuru = $guruSelect.val() || [];
-                updateSessionSummary(selectedGuru.length);
-            });
+                if (durationSelect) {
+                    durationSelect.addEventListener('change', function() {
+                        updateGuruSummary();
+                    });
+                }
 
-            updateSelectedGuruCount();
-            updateAssessmentSummary();
-        });
+                updateAssessmentSummary();
+                updateGuruSummary();
+            });
+        })();
     </script>
 @endpush

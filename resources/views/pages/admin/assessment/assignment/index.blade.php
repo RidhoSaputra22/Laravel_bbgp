@@ -1,5 +1,10 @@
 @extends('layouts.app', ['title' => 'Data Penugasan Assesment'])
 
+@push('styles')
+    <link rel="stylesheet" href="{{ asset('library/datatables.net-bs4/css/dataTables.bootstrap4.min.css') }}">
+    <link rel="stylesheet" href="{{ asset('library/datatables.net-select-bs4/css/select.bootstrap4.min.css') }}">
+@endpush
+
 @section('content')
     @php
         $totalTargets = $datas->sum('total_target');
@@ -103,7 +108,7 @@
                             </div>
                         @else
                             <div class="table-responsive">
-                                <table class="table table-striped table-hover">
+                                <table class="table table-striped table-hover" id="table-assignment-index">
                                     <thead>
                                         <tr>
                                             <th class="text-center">#</th>
@@ -128,6 +133,7 @@
                                                     'gagal' => 'danger',
                                                 ][$data->status_distribusi] ?? 'secondary';
                                                 $deliveryType = $data->job_batch_id ? 'Batch Job' : 'Langsung';
+                                                $assessments = $data->assessments;
                                             @endphp
                                             <tr class="align-middle">
                                                 <td class="text-center">{{ $loop->iteration }}</td>
@@ -142,8 +148,14 @@
                                                     </small>
                                                 </td>
                                                 <td>
-                                                    <div class="font-weight-bold">{{ $data->assessment->judul }}</div>
-                                                    <small class="text-muted">{{ $data->assessment->kode_assessment }}</small>
+                                                    <div class="font-weight-bold">{{ $assessments->count() }} assesment</div>
+                                                    @forelse ($assessments as $assessment)
+                                                        <small class="d-block text-muted">
+                                                            {{ $assessment->kode_assessment }} - {{ $assessment->judul }}
+                                                        </small>
+                                                    @empty
+                                                        <small class="text-muted">Belum ada form assesment terhubung.</small>
+                                                    @endforelse
                                                 </td>
                                                 <td>
                                                     <div>
@@ -202,3 +214,34 @@
         </section>
     </div>
 @endsection
+
+@push('scripts')
+    <script src="{{ asset('library/datatables/media/js/jquery.dataTables.min.js') }}"></script>
+    <script src="{{ asset('library/datatables.net-bs4/js/dataTables.bootstrap4.min.js') }}"></script>
+    <script src="{{ asset('library/datatables.net-select-bs4/js/select.bootstrap4.min.js') }}"></script>
+
+    <script>
+        $(document).ready(function() {
+            const table = $('#table-assignment-index');
+
+            if (!table.length) {
+                return;
+            }
+
+            table.DataTable({
+                order: [],
+                pageLength: 10,
+                autoWidth: false,
+                columnDefs: [{
+                        targets: [0, 9],
+                        orderable: false,
+                        searchable: false,
+                    },
+                ],
+                language: {
+                    url: 'https://cdn.datatables.net/plug-ins/2.1.0/i18n/id.json',
+                },
+            });
+        });
+    </script>
+@endpush

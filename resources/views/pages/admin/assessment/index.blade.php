@@ -1,5 +1,10 @@
 @extends('layouts.app', ['title' => 'Data Assesment'])
 
+@push('styles')
+    <link rel="stylesheet" href="{{ asset('library/datatables.net-bs4/css/dataTables.bootstrap4.min.css') }}">
+    <link rel="stylesheet" href="{{ asset('library/datatables.net-select-bs4/css/select.bootstrap4.min.css') }}">
+@endpush
+
 @section('content')
     @php
         $totalForms = $datas->sum(function ($assessment) {
@@ -93,7 +98,7 @@
                             </div>
                         @else
                             <div class="table-responsive">
-                                <table class="table table-striped">
+                                <table class="table table-striped" id="table-assessment-index">
                                     <thead>
                                         <tr>
                                             <th class="text-center">#</th>
@@ -165,3 +170,34 @@
         </section>
     </div>
 @endsection
+
+@push('scripts')
+    <script src="{{ asset('library/datatables/media/js/jquery.dataTables.min.js') }}"></script>
+    <script src="{{ asset('library/datatables.net-bs4/js/dataTables.bootstrap4.min.js') }}"></script>
+    <script src="{{ asset('library/datatables.net-select-bs4/js/select.bootstrap4.min.js') }}"></script>
+
+    <script>
+        $(document).ready(function() {
+            const table = $('#table-assessment-index');
+
+            if (!table.length) {
+                return;
+            }
+
+            table.DataTable({
+                order: [],
+                pageLength: 10,
+                autoWidth: false,
+                columnDefs: [{
+                        targets: [0, 6],
+                        orderable: false,
+                        searchable: false,
+                    },
+                ],
+                language: {
+                    url: 'https://cdn.datatables.net/plug-ins/2.1.0/i18n/id.json',
+                },
+            });
+        });
+    </script>
+@endpush

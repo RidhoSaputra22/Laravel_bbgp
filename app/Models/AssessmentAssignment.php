@@ -10,7 +10,6 @@ class AssessmentAssignment extends Model
     use HasFactory;
 
     protected $fillable = [
-        'assessment_id',
         'kode_penugasan',
         'judul_penugasan',
         'deskripsi',
@@ -38,9 +37,12 @@ class AssessmentAssignment extends Model
         'total_ditugaskan' => 'integer',
     ];
 
-    public function assessment()
+    public function assessments()
     {
-        return $this->belongsTo(Assessment::class);
+        return $this->belongsToMany(Assessment::class, 'assessment_assignment_assessments')
+            ->withPivot('urutan')
+            ->withTimestamps()
+            ->orderBy('assessment_assignment_assessments.urutan');
     }
 
     public function creator()

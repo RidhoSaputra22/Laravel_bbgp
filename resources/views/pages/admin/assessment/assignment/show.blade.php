@@ -1,5 +1,10 @@
 @extends('layouts.app', ['title' => 'Detail Penugasan Assesment'])
 
+@push('styles')
+    <link rel="stylesheet" href="{{ asset('library/datatables.net-bs4/css/dataTables.bootstrap4.min.css') }}">
+    <link rel="stylesheet" href="{{ asset('library/datatables.net-select-bs4/css/select.bootstrap4.min.css') }}">
+@endpush
+
 @section('content')
     @php
         $statusBadge = [
@@ -9,9 +14,10 @@
             'gagal' => 'danger',
         ][$assignment->status_distribusi] ?? 'secondary';
 
-        $assessment = $assignment->assessment;
-        $totalForms = $assessment->forms->count();
-        $totalFields = $assessment->forms->sum(fn($form) => $form->fields->count());
+        $assessments = $assignment->assessments;
+        $totalAssessments = $assessments->count();
+        $totalForms = $assessments->sum(fn ($assessment) => $assessment->forms->count());
+        $totalFields = $assessments->sum(fn ($assessment) => $assessment->forms->sum(fn ($form) => $form->fields->count()));
     @endphp
 
     <div class="main-content">
@@ -135,6 +141,13 @@
                                     </small>
                                 </div>
                                 <div class="mb-3">
+                                    <div class="text-muted small">Form Assesment Dipilih</div>
+                                    <div>{{ $totalAssessments }} assesment</div>
+                                    <small class="text-muted">
+                                        {{ $totalForms }} form / {{ $totalFields }} pertanyaan
+                                    </small>
+                                </div>
+                                <div class="mb-3">
                                     <div class="text-muted small">Batch ID</div>
                                     <div>{{ $assignment->job_batch_id ?: 'Distribusi langsung' }}</div>
                                 </div>
@@ -152,34 +165,64 @@
                                 <h4>Assesment Yang Ditugaskan</h4>
                             </div>
                             <div class="card-body">
-                                <div class="mb-3">
-                                    <div class="text-muted small">Kode Assesment</div>
-                                    <div class="font-weight-bold">{{ $assessment->kode_assessment }}</div>
-                                </div>
-                                <div class="mb-3">
-                                    <div class="text-muted small">Judul</div>
-                                    <div class="font-weight-bold">{{ $assessment->judul }}</div>
-                                </div>
-                                <div class="mb-3">
-                                    <div class="text-muted small">Status</div>
-                                    <div>
-                                        <span
-                                            class="badge badge-{{ $assessment->status === 'publish' ? 'success' : ($assessment->status === 'draft' ? 'warning' : 'secondary') }}">
-                                            {{ ucfirst($assessment->status) }}
-                                        </span>
-                                        <span class="badge badge-{{ $assessment->is_active ? 'primary' : 'light' }}">
-                                            {{ $assessment->is_active ? 'Aktif' : 'Nonaktif' }}
-                                        </span>
+                                @if ($assessments->isEmpty())
+                                    <div class="alert alert-warning mb-0">
+                                        Penugasan ini belum memiliki form assesment terhubung.
                                     </div>
-                                </div>
-                                <div class="mb-0">
-                                    <div class="text-muted small">Struktur Assesment</div>
-                                    <div class="mb-3">{{ $totalForms }} form / {{ $totalFields }} pertanyaan</div>
-                                </div>
-                                <div class="mb-0">
-                                    <div class="text-muted small">Deskripsi</div>
-                                    <div>{{ $assessment->deskripsi ?: 'Tidak ada deskripsi assesment.' }}</div>
-                                </div>
+                                @else
+                                    <div class="mb-3">
+                                        <div class="text-muted small">Ringkasan Assesment</div>
+                                        <div class="font-weight-bold">{{ $totalAssessments }} assesment</div>
+                                        <small class="text-muted">
+                                            {{ $totalForms }} form / {{ $totalFields }} pertanyaan
+                                        </small>
+                                    </div>
+                                    <div class="table-responsive">
+                                        <table class="table table-striped" id="table-assignment-assessment">
+                                            <thead>
+                                                <tr>
+                                                    <th class="text-center">#</th>
+                                                    <th>Kode</th>
+                                                    <th>Judul</th>
+                                                    <th>Status</th>
+                                                    <th>Struktur</th>
+                                                    <th>Deskripsi</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @foreach ($assessments as $assessment)
+                                                    @php
+                                                        $assessmentStatusBadge = $assessment->status === 'publish'
+                                                            ? 'success'
+                                                            : ($assessment->status === 'draft' ? 'warning' : 'secondary');
+                                                    @endphp
+                                                    <tr>
+                                                        <td class="text-center">{{ $loop->iteration }}</td>
+                                                        <td class="font-weight-bold">{{ $assessment->kode_assessment }}</td>
+                                                        <td>{{ $assessment->judul }}</td>
+                                                        <td>
+                                                            <span class="badge badge-{{ $assessmentStatusBadge }}">
+                                                                {{ ucfirst($assessment->status) }}
+                                                            </span>
+                                                            <span
+                                                                class="badge badge-{{ $assessment->is_active ? 'primary' : 'light' }}">
+                                                                {{ $assessment->is_active ? 'Aktif' : 'Nonaktif' }}
+                                                            </span>
+                                                        </td>
+                                                        <td>
+                                                            {{ $assessment->forms->count() }} form /
+                                                            {{ $assessment->forms->sum(fn ($form) => $form->fields->count()) }}
+                                                            pertanyaan
+                                                        </td>
+                                                        <td>
+                                                            {{ \Illuminate\Support\Str::limit($assessment->deskripsi ?: 'Tidak ada deskripsi assesment.', 120) }}
+                                                        </td>
+                                                    </tr>
+                                                @endforeach
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                @endif
                             </div>
                         </div>
                     </div>
@@ -196,7 +239,7 @@
                             </div>
                         @else
                             <div class="table-responsive">
-                                <table class="table table-striped">
+                                <table class="table table-striped" id="table-assignment-session">
                                     <thead>
                                         <tr>
                                             <th class="text-center">#</th>
@@ -234,7 +277,7 @@
                             </div>
                         @else
                             <div class="table-responsive">
-                                <table class="table table-striped">
+                                <table class="table table-striped" id="table-assignment-target">
                                     <thead>
                                         <tr>
                                             <th class="text-center">#</th>
@@ -296,3 +339,39 @@
         </section>
     </div>
 @endsection
+
+@push('scripts')
+    <script src="{{ asset('library/datatables/media/js/jquery.dataTables.min.js') }}"></script>
+    <script src="{{ asset('library/datatables.net-bs4/js/dataTables.bootstrap4.min.js') }}"></script>
+    <script src="{{ asset('library/datatables.net-select-bs4/js/select.bootstrap4.min.js') }}"></script>
+
+    <script>
+        $(document).ready(function() {
+            function initDataTable(selector, nonSortableColumns) {
+                const table = $(selector);
+
+                if (!table.length) {
+                    return;
+                }
+
+                table.DataTable({
+                    order: [],
+                    pageLength: 10,
+                    autoWidth: false,
+                    columnDefs: [{
+                        targets: nonSortableColumns,
+                        orderable: false,
+                        searchable: false,
+                    }, ],
+                    language: {
+                        url: 'https://cdn.datatables.net/plug-ins/2.1.0/i18n/id.json',
+                    },
+                });
+            }
+
+            initDataTable('#table-assignment-assessment', [0]);
+            initDataTable('#table-assignment-session', [0]);
+            initDataTable('#table-assignment-target', [0]);
+        });
+    </script>
+@endpush

@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Jobs\ProcessAssessmentAssignmentTargetsJob;
 use App\Models\Assessment;
 use App\Models\AssessmentAssignment;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -24,17 +25,24 @@ class AssessmentAssignmentService
 
     public function createAssignment(array $payload, ?int $assignedBy = null): AssessmentAssignment
     {
+        $assessmentIds = $this->normalizeAssessmentIds($payload['assessment_ids'] ?? []);
         $guruIds = $this->normalizeGuruIds($payload['guru_ids'] ?? []);
         $sessionDurationHours = (int) ($payload['durasi_sesi_jam'] ?? self::DEFAULT_SESSION_DURATION_HOURS);
         $shouldBatch = count($guruIds) > self::BATCH_THRESHOLD;
 
-        $assignmentData = DB::transaction(function () use ($payload, $guruIds, $assignedBy, $shouldBatch, $sessionDurationHours) {
-            $assessment = Assessment::findOrFail($payload['assessment_id']);
+        $assignmentData = DB::transaction(function () use (
+            $payload,
+            $assessmentIds,
+            $guruIds,
+            $assignedBy,
+            $shouldBatch,
+            $sessionDurationHours
+        ) {
+            $assessmentSyncData = $this->buildAssessmentSyncData($assessmentIds);
             $totalSessions = $this->calculateTotalSessions(count($guruIds));
 
             $assignment = AssessmentAssignment::create([
-                'assessment_id' => $assessment->id,
-                'kode_penugasan' => $payload['kode_penugasan'] ?: $this->generateUniqueCode(),
+                'kode_penugasan' => $this->generateUniqueCode(),
                 'judul_penugasan' => $payload['judul_penugasan'],
                 'deskripsi' => $payload['deskripsi'] ?? null,
                 'tanggal_mulai' => $payload['tanggal_mulai'] ?? null,
@@ -47,6 +55,8 @@ class AssessmentAssignmentService
                 'total_ditugaskan' => 0,
                 'assigned_by' => $assignedBy ?: null,
             ]);
+
+            $assignment->assessments()->sync($assessmentSyncData);
 
             $sessionRows = $this->createSessions(
                 $assignment,
@@ -76,7 +86,7 @@ class AssessmentAssignmentService
             $assignment->refresh();
         }
 
-        return $assignment->load(['assessment', 'creator', 'sessions'])->loadCount('targets');
+        return $assignment->load(['assessments', 'creator', 'sessions'])->loadCount('targets');
     }
 
     public function processTargetChunk(int $assignmentId, array $targetRows): void
@@ -166,6 +176,11 @@ class AssessmentAssignmentService
         return array_values(array_unique(array_map('intval', $guruIds)));
     }
 
+    private function normalizeAssessmentIds(array $assessmentIds): array
+    {
+        return array_values(array_unique(array_map('intval', $assessmentIds)));
+    }
+
     private function generateUniqueCode(): string
     {
         do {
@@ -240,5 +255,33 @@ class AssessmentAssignmentService
         }
 
         return (int) ceil($totalTargets / self::TARGETS_PER_SESSION);
+    }
+
+    private function buildAssessmentSyncData(array $assessmentIds): array
+    {
+        if ($assessmentIds === []) {
+            return [];
+        }
+
+        $validAssessmentIds = Assessment::query()
+            ->whereKey($assessmentIds)
+            ->where('is_active', true)
+            ->whereIn('status', ['draft', 'publish'])
+            ->pluck('id')
+            ->map(fn ($id) => (int) $id)
+            ->all();
+
+        if (count($validAssessmentIds) !== count($assessmentIds)) {
+            throw (new ModelNotFoundException())->setModel(Assessment::class, $assessmentIds);
+        }
+
+        return collect($assessmentIds)
+            ->values()
+            ->mapWithKeys(fn (int $assessmentId, int $index) => [
+                $assessmentId => [
+                    'urutan' => $index + 1,
+                ],
+            ])
+            ->all();
     }
 }
