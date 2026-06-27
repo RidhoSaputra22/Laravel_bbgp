@@ -121,7 +121,7 @@
                 <form action="{{ route('assessment.assignment.store') }}" method="POST">
                     @csrf
 
-                    <div class="row">
+                    <div class="row ">
                         <div class="col-lg-8">
                             <div class="card">
                                 <div class="card-header">
@@ -271,8 +271,9 @@
                             </div>
                         </div>
 
-                        <div class="col-lg-4">
-                            <div class="card card-body mb-4">
+                        <div class="col-lg-4  ">
+                            <div class="sticky-top    ">
+                                 <div class="card card-body mb-4 sticky-top">
                                 <h6 class="text-primary mb-3">Ringkasan Penugasan</h6>
                                 <div class="mb-3">
                                     <div class="text-muted small">Kode Penugasan</div>
@@ -345,6 +346,9 @@
                                     </a>
                                 </div>
                             </div>
+
+                            </div>
+
                         </div>
                     </div>
                 </form>

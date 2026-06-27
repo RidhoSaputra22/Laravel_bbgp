@@ -4,183 +4,617 @@
     @php
         $snapshot = $attempt->structure_snapshot ?? [];
         $submittedAt = $attempt->submitted_at?->format('d M Y H:i');
+        $submittedAtLabel = $submittedAt ? $submittedAt . ' WITA' : '-';
         $durationMinutes = (int) ($summary['duration_minutes'] ?? 0);
         $completionPercentage = (int) ($summary['completion_percentage'] ?? 0);
+        $totalQuestions = (int) ($summary['total_questions'] ?? 0);
+        $requiredQuestions = (int) ($summary['required_questions'] ?? 0);
+        $answeredQuestions = (int) ($summary['answered_questions'] ?? 0);
+        $answeredRequiredQuestions = (int) ($summary['answered_required_questions'] ?? 0);
         $questionNumber = 0;
+        $sessionLabel = $meta['session_label'] ?? '-';
+        $sessionScheduleText = $meta['session_schedule_text'] ?? '-';
+        $submissionStatusLabel = $meta['label'] ?? 'Dikirim';
+        $submissionStatusTone = $meta['badge'] ?? 'success';
+        $assignmentDateText = $meta['date_text'] ?? '-';
+        $assessmentTotal = (int) ($meta['assessment_total'] ?? 0);
+        $formTotal = (int) ($meta['form_total'] ?? 0);
+        $description = $meta['description'] ?? 'Hasil assessment ini tersimpan pada portal peserta.';
+        $sessionDetails = [
+            [
+                'label' => 'Status Submission',
+                'value' => $submissionStatusLabel,
+            ],
+            [
+                'label' => 'Dikirim Pada',
+                'value' => $submittedAtLabel,
+            ],
+            [
+                'label' => 'Kode Penugasan',
+                'value' => $target->assignment->kode_penugasan ?: '-',
+            ],
+            [
+                'label' => 'Periode Penugasan',
+                'value' => $assignmentDateText,
+            ],
+            [
+                'label' => 'Label Sesi',
+                'value' => $sessionLabel,
+            ],
+            [
+                'label' => 'Jadwal Sesi',
+                'value' => $sessionScheduleText,
+            ],
+        ];
+        $participantDetails = [
+            [
+                'label' => 'Nama Peserta',
+                'value' => $guru->nama_lengkap ?: '-',
+            ],
+            [
+                'label' => 'NIK',
+                'value' => $guru->no_ktp ?: '-',
+            ],
+            [
+                'label' => 'Satuan Pendidikan',
+                'value' => $guru->satuan_pendidikan ?: '-',
+            ],
+            [
+                'label' => 'Email',
+                'value' => $guru->email ?: '-',
+            ],
+        ];
+        $resolveOptionMap = function (array $field): array {
+            return collect($field['opsi_field'] ?? [])
+                ->mapWithKeys(function ($option) {
+                    if (! is_array($option)) {
+                        $value = trim((string) $option);
+
+                        return $value !== '' ? [$value => $value] : [];
+                    }
+
+                    $value = trim((string) ($option['value'] ?? ''));
+                    $label = trim((string) ($option['label'] ?? $value));
+
+                    return $value !== '' ? [$value => $label] : [];
+                })
+                ->all();
+        };
+        $resolveSelectedValues = function (array $field, ?array $answer): array {
+            if (! $answer) {
+                return [];
+            }
+
+            if (($field['tipe_field'] ?? null) === 'checkbox') {
+                return collect(data_get($answer, 'payload.values', []))
+                    ->map(fn ($value) => trim((string) $value))
+                    ->filter(fn ($value) => $value !== '')
+                    ->values()
+                    ->all();
+            }
+
+            $textValue = trim((string) data_get($answer, 'text', ''));
+
+            return $textValue !== '' ? [$textValue] : [];
+        };
+        $formatDateAnswer = function (?string $value): string {
+            $value = trim((string) $value);
+
+            if ($value === '') {
+                return '';
+            }
+
+            try {
+                return \Illuminate\Support\Carbon::parse($value)->format('d M Y');
+            } catch (\Throwable $exception) {
+                return $value;
+            }
+        };
+        $resolveAnswerText = function (array $field, ?array $answer) use (
+            $resolveOptionMap,
+            $resolveSelectedValues,
+            $formatDateAnswer
+        ): string {
+            if (! $answer) {
+                return '';
+            }
+
+            $fieldType = $field['tipe_field'] ?? 'text';
+
+            if ($fieldType === 'checkbox') {
+                $optionMap = $resolveOptionMap($field);
+
+                return collect($resolveSelectedValues($field, $answer))
+                    ->map(fn ($value) => $optionMap[(string) $value] ?? (string) $value)
+                    ->implode(', ');
+            }
+
+            if (in_array($fieldType, ['radio', 'select'], true)) {
+                $selectedValue = $resolveSelectedValues($field, $answer)[0] ?? '';
+                $optionMap = $resolveOptionMap($field);
+
+                return $optionMap[(string) $selectedValue] ?? (string) $selectedValue;
+            }
+
+            if ($fieldType === 'file') {
+                return (string) (data_get($answer, 'payload.original_name') ?: data_get($answer, 'text', ''));
+            }
+
+            if ($fieldType === 'date') {
+                return $formatDateAnswer(data_get($answer, 'text'));
+            }
+
+            return trim((string) data_get($answer, 'text', ''));
+        };
+        $hasAnswer = function (array $field, ?array $answer) use ($resolveSelectedValues): bool {
+            if (! $answer) {
+                return false;
+            }
+
+            $fieldType = $field['tipe_field'] ?? 'text';
+
+            if ($fieldType === 'checkbox') {
+                return $resolveSelectedValues($field, $answer) !== [];
+            }
+
+            if ($fieldType === 'file') {
+                return filled(data_get($answer, 'file_url')) || filled(data_get($answer, 'text'));
+            }
+
+            return trim((string) data_get($answer, 'text', '')) !== '';
+        };
     @endphp
 
-    <section class="bg-gradient-to-b from-[#eef7fc] to-white py-14 lg:pb-20 lg:pt-[68px]">
-        <div class="container mx-auto px-4">
-            @if (session('assessment_portal_success'))
-                <x-assessment::ui.alert type="success" class="mb-4">
-                    {{ session('assessment_portal_success') }}
-                </x-assessment::ui.alert>
-            @endif
+    <div>
+        <div class="flex flex-col gap-4 bg-[#1376BD] px-5 py-4 text-white md:flex-row md:items-start md:justify-between">
+            <div>
+                <h1 class="text-xl font-medium">
+                    Hasil Assessment Peserta
+                </h1>
+                <p class="text-xs font-light">
+                    Ringkasan dan seluruh jawaban yang sudah Anda kirim tersedia pada halaman ini.
+                </p>
+            </div>
+            <div class="text-right text-sm">
+                <div class="font-bold">{{ $guru->nama_lengkap }}</div>
+                <div>
+                    {{ $guru->satuan_pendidikan ?: '-' }}
+                </div>
+            </div>
+        </div>
+    </div>
 
-            <x-assessment::ui.hero
-                class="mb-[30px] shadow-[0_28px_68px_rgba(18,58,96,0.22)]"
-                title="{{ $target->assignment->judul_penugasan }}"
-                description="Hasil pengisian Anda tersimpan pada portal assessment. Gunakan halaman ini untuk melihat ringkasan dan jawaban yang sudah dikirim."
-                pill="Assessment sudah berhasil dikirim"
-                pill-icon="fas fa-check-circle"
-                gradient="from-[#1068a6] to-[#123a60]"
-                titleClass="mb-2.5 text-[28px] font-bold leading-tight text-white lg:text-[34px]"
-                descriptionClass="leading-[1.8] text-white/[0.86]"
-                pillClass="mb-[18px] gap-2.5 px-4 py-2.5 text-sm font-bold sm:text-base"
-                rightCols="lg:col-span-4 lg:text-right"
-            >
-                <x-slot name="aside">
-                    <x-assessment::ui.button
-                        :href="route('assessment.portal.dashboard')"
-                        variant="white"
-                        icon="fas fa-th-large"
-                        class="font-bold"
-                    >
-                        Kembali ke Dashboard
-                    </x-assessment::ui.button>
-                </x-slot>
-            </x-assessment::ui.hero>
-
-            <x-assessment::ui.card class="mb-4 h-full">
-                <div class="mb-4 grid items-center gap-3 lg:grid-cols-12">
-                    <div class="lg:col-span-8">
-                        <h3 class="mb-1 text-xl font-bold text-slate-900">
-                            Ringkasan Hasil Assessment
-                        </h3>
-                        <p class="text-slate-500">
-                            Peserta: {{ $guru->nama_lengkap }} | Kode Penugasan:
+    <section class="grid grid-cols-1 gap-8 p-6 xl:grid-cols-[minmax(0,2fr)_minmax(320px,1fr)] md:gap-10 md:p-14">
+        <div class="space-y-8">
+            <x-assessment::ui.card>
+                <div class="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+                    <div class="space-y-3">
+                        <div class="font-mono text-sm font-bold text-[#1376bd]">
                             {{ $target->assignment->kode_penugasan }}
-                        </p>
+                        </div>
+
+                        <div>
+                            <h2 class="text-2xl font-bold text-[#0d3557] lg:text-[30px]">
+                                {{ $target->assignment->judul_penugasan }}
+                            </h2>
+                            <p class="mt-2 text-sm leading-relaxed text-slate-500">
+                                {{ $target->assignment->deskripsi ?: 'Hasil pengisian assessment Anda tersimpan dan dapat ditinjau kembali kapan saja pada portal peserta.' }}
+                            </p>
+                        </div>
+
+                        <div class="flex flex-wrap gap-2">
+                            <x-assessment::ui.status-badge tone="success" class="rounded-sm px-3 py-1.5">
+                                Assessment berhasil dikirim
+                            </x-assessment::ui.status-badge>
+
+                            <x-assessment::ui.status-badge :tone="$submissionStatusTone" class="rounded-sm px-3 py-1.5">
+                                {{ $submissionStatusLabel }}
+                            </x-assessment::ui.status-badge>
+                        </div>
                     </div>
 
-                    <div class="text-sm text-slate-500 lg:col-span-4 lg:text-right">
-                        <div>Dikirim pada: {{ $submittedAt ?: '-' }}</div>
-                        <div>Sesi: {{ $meta['session_label'] }}</div>
-                        <div>Jadwal: {{ $meta['session_schedule_text'] }}</div>
+                    <div class="flex flex-wrap gap-2">
+                        <x-assessment::ui.button
+                            :href="route('assessment.portal.dashboard')"
+                            icon="fas fa-th-large"
+                            class="font-bold"
+                        >
+                            Kembali ke Dashboard
+                        </x-assessment::ui.button>
                     </div>
                 </div>
 
-                <div class="grid gap-[14px] sm:grid-cols-2 xl:grid-cols-4">
-                    <x-assessment::ui.info-tile
-                        label="Total Soal"
-                        :value="$summary['total_questions'] ?? 0"
-                        valueClass="text-[28px] font-bold leading-none text-[#0d3557]"
-                    />
-                    <x-assessment::ui.info-tile
-                        label="Soal Wajib Terjawab"
-                        :value="($summary['answered_required_questions'] ?? 0).'/'.($summary['required_questions'] ?? 0)"
-                        valueClass="text-[28px] font-bold leading-none text-[#0d3557]"
-                    />
-                    <x-assessment::ui.info-tile
-                        label="Persentase Terisi"
-                        :value="$completionPercentage.'%'"
-                        valueClass="text-[28px] font-bold leading-none text-[#0d3557]"
-                    />
-                    <x-assessment::ui.info-tile
-                        label="Durasi Pengerjaan"
-                        :value="$durationMinutes.'m'"
-                        valueClass="text-[28px] font-bold leading-none text-[#0d3557]"
-                    />
+                <div class="mt-5 flex flex-wrap gap-x-[18px] gap-y-2.5 text-sm text-[#6a7e90]">
+                    <span class="inline-flex items-center gap-2">
+                        <i class="far fa-calendar-check"></i>
+                        Dikirim: {{ $submittedAtLabel }}
+                    </span>
+                    <span class="inline-flex items-center gap-2">
+                        <i class="fas fa-layer-group"></i>
+                        {{ $assessmentTotal }} assessment
+                    </span>
+                    <span class="inline-flex items-center gap-2">
+                        <i class="far fa-copy"></i>
+                        {{ $formTotal }} form
+                    </span>
+                    <span class="inline-flex items-center gap-2">
+                        <i class="far fa-clock"></i>
+                        {{ $sessionLabel }} | {{ $sessionScheduleText }}
+                    </span>
                 </div>
             </x-assessment::ui.card>
 
-            <div class="mb-4 grid gap-4 lg:grid-cols-12">
-                <div class="lg:col-span-5">
-                    <x-assessment::ui.card class="h-full">
-                        <h4 class="mb-3 text-lg font-bold text-slate-900">
-                            Breakdown per Assessment
-                        </h4>
+            <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                <x-assessment::ui.card>
+                    <div class="text-sm font-medium text-slate-500">
+                        Total Soal
+                    </div>
+                    <div class="mt-2 text-[30px] font-bold leading-none text-[#0d3557]">
+                        {{ $totalQuestions }}
+                    </div>
+                </x-assessment::ui.card>
 
-                        @forelse ($summary['assessment_breakdown'] ?? [] as $assessmentItem)
-                            <div class="border-t border-[#ebf1f6] py-[18px] first:border-t-0 first:pt-0">
-                                <div class="mb-2 flex flex-wrap justify-between gap-2">
-                                    <div>
-                                        <div class="font-bold text-slate-900">
-                                            {{ $assessmentItem['judul'] }}
-                                        </div>
-                                        <div class="text-sm text-slate-500">
-                                            {{ $assessmentItem['kode_assessment'] }}
-                                        </div>
-                                    </div>
+                <x-assessment::ui.card>
+                    <div class="text-sm font-medium text-slate-500">
+                        Soal Terjawab
+                    </div>
+                    <div class="mt-2 text-[30px] font-bold leading-none text-[#0d3557]">
+                        {{ $answeredQuestions }}/{{ $totalQuestions }}
+                    </div>
+                </x-assessment::ui.card>
 
-                                    <div class="mt-2 font-bold text-[#1376bd] sm:mt-0">
-                                        {{ $assessmentItem['answered_questions'] }}/{{ $assessmentItem['total_questions'] }} soal
-                                    </div>
-                                </div>
+                <x-assessment::ui.card>
+                    <div class="text-sm font-medium text-slate-500">
+                        Soal Wajib Terjawab
+                    </div>
+                    <div class="mt-2 text-[30px] font-bold leading-none text-[#0d3557]">
+                        {{ $answeredRequiredQuestions }}/{{ $requiredQuestions }}
+                    </div>
+                </x-assessment::ui.card>
 
-                                @foreach ($assessmentItem['forms'] ?? [] as $formItem)
-                                    <div class="mb-1 flex justify-between gap-3 text-sm text-slate-500">
-                                        <span>{{ $formItem['judul_form'] }}</span>
-                                        <span class="shrink-0">
-                                            {{ $formItem['answered_questions'] }}/{{ $formItem['total_questions'] }}
-                                        </span>
-                                    </div>
-                                @endforeach
-                            </div>
-                        @empty
-                            <p class="text-slate-500">
-                                Belum ada ringkasan assessment yang tersedia.
-                            </p>
-                        @endforelse
-                    </x-assessment::ui.card>
-                </div>
-
-                <div class="lg:col-span-7">
-                    <x-assessment::ui.card class="h-full">
-                        <h4 class="mb-3 text-lg font-bold text-slate-900">
-                            Informasi Pengiriman
-                        </h4>
-
-                        <x-assessment::ui.detail-row label="Status" :value="$meta['label']" :first="true" />
-                        <x-assessment::ui.detail-row label="Periode Penugasan" :value="$meta['date_text']" />
-                        <x-assessment::ui.detail-row label="Jadwal Sesi" :value="$meta['session_schedule_text']" />
-                        <x-assessment::ui.detail-row
-                            label="Jumlah Assessment"
-                            :value="$meta['assessment_total'].' assessment / '.$meta['form_total'].' form'"
-                        />
-                        <x-assessment::ui.detail-row
-                            label="Catatan"
-                            :value="$meta['description']"
-                            valueClass="text-slate-500"
-                        />
-                    </x-assessment::ui.card>
-                </div>
+                <x-assessment::ui.card>
+                    <div class="text-sm font-medium text-slate-500">
+                        Persentase Terisi
+                    </div>
+                    <div class="mt-2 text-[30px] font-bold leading-none text-[#0d3557]">
+                        {{ $completionPercentage }}%
+                    </div>
+                    <div class="mt-2 text-sm text-slate-500">
+                        Durasi pengerjaan {{ $durationMinutes }} menit
+                    </div>
+                </x-assessment::ui.card>
             </div>
 
-            @foreach ($snapshot['assessments'] ?? [] as $assessment)
-                <div class="mt-7">
-                    <x-assessment::ui.assessment-intro
-                        :code="$assessment['kode_assessment']"
-                        :title="$assessment['judul']"
-                        :description="$assessment['deskripsi'] ?? null"
-                        descriptionFallback="Ringkasan jawaban untuk assessment ini ditampilkan di bawah."
-                    />
+            @forelse ($snapshot['assessments'] ?? [] as $assessment)
+                @php
+                    $assessmentForms = collect($assessment['forms'] ?? []);
+                    $assessmentQuestionTotal = $assessmentForms->sum(
+                        fn ($form) => count($form['fields'] ?? []),
+                    );
+                @endphp
+
+                <div class="space-y-4">
+                    <x-assessment::ui.card>
+                        <div class="mb-2 text-sm uppercase text-slate-500">
+                            {{ $assessment['kode_assessment'] }}
+                        </div>
+
+                        <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                            <div>
+                                <h3 class="text-xl font-bold text-[#0d3557]">
+                                    {{ $assessment['judul'] }}
+                                </h3>
+                                <p class="mt-2 leading-relaxed text-[#6a7e90]">
+                                    {{ $assessment['deskripsi'] ?: 'Ringkasan jawaban untuk assessment ini ditampilkan pada bagian form di bawah.' }}
+                                </p>
+                            </div>
+
+                            <div class="grid min-w-[220px] grid-cols-2 gap-3 rounded-sm border border-[#dce8f1] bg-[#f8fbfe] px-4 py-3 text-sm text-slate-600">
+                                <div>
+                                    <div class="text-xs uppercase tracking-[0.14em] text-slate-400">
+                                        Form
+                                    </div>
+                                    <div class="mt-1 font-bold text-slate-900">
+                                        {{ $assessmentForms->count() }}
+                                    </div>
+                                </div>
+                                <div>
+                                    <div class="text-xs uppercase tracking-[0.14em] text-slate-400">
+                                        Soal
+                                    </div>
+                                    <div class="mt-1 font-bold text-slate-900">
+                                        {{ $assessmentQuestionTotal }}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        @if (!empty($assessment['petunjuk']))
+                            <div class="mt-4 rounded-sm border border-sky-200 bg-sky-50 px-4 py-3 text-sm leading-relaxed text-sky-800">
+                                <strong>Petunjuk:</strong> {{ $assessment['petunjuk'] }}
+                            </div>
+                        @endif
+                    </x-assessment::ui.card>
 
                     @foreach ($assessment['forms'] ?? [] as $form)
-                        <x-assessment::ui.card class="mb-[22px]" padding="p-6 sm:p-7">
-                            <h4 class="mb-1.5 text-lg font-bold text-[#0d3557]">
+                        <x-assessment::ui.card>
+                            <h4 class="text-lg font-bold text-[#0d3557]">
                                 {{ $form['judul_form'] }}
                             </h4>
-                            <p class="mb-4 text-slate-500">
+                            <p class="mt-2 text-sm leading-relaxed text-slate-500">
                                 {{ $form['deskripsi'] ?: 'Daftar jawaban yang Anda kirim untuk form ini.' }}
                             </p>
 
-                            @foreach ($form['fields'] ?? [] as $field)
-                                @php
-                                    $questionNumber++;
-                                    $answer = $answerLookup[$field['id']] ?? null;
-                                @endphp
+                            <div class="mt-5 space-y-4">
+                                @foreach ($form['fields'] ?? [] as $field)
+                                    @php
+                                        $questionNumber++;
+                                        $fieldId = (int) ($field['id'] ?? 0);
+                                        $fieldType = $field['tipe_field'] ?? 'text';
+                                        $answer = $answerLookup[$fieldId] ?? null;
+                                        $fieldHasAnswer = $hasAnswer($field, $answer);
+                                        $selectedValues = $resolveSelectedValues($field, $answer);
+                                        $resolvedAnswerText = $resolveAnswerText($field, $answer);
+                                        $fileUrl = data_get($answer, 'file_url');
+                                        $fileName = $resolvedAnswerText ?: 'Belum ada file yang diunggah';
+                                        $inputType = match ($fieldType) {
+                                            'number' => 'number',
+                                            'email' => 'email',
+                                            default => 'text',
+                                        };
+                                    @endphp
 
-                                <x-assessment::ui.result-field
-                                    :field="$field"
-                                    :answer="$answer"
-                                    :number="$questionNumber"
-                                />
-                            @endforeach
+                                    <div class="rounded-sm border border-[#dce8f1] bg-[#f8fbfe] p-4 sm:p-5">
+                                        <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                                            <div class="flex flex-wrap items-center gap-2">
+                                                <span class="inline-flex items-center rounded-full bg-[#eaf5fb] px-3 py-1 text-xs font-semibold tracking-[0.14em] text-[#0d5f98]">
+                                                    Soal {{ $questionNumber }}
+                                                </span>
+
+                                                <x-assessment::ui.status-badge
+                                                    :tone="($field['is_required'] ?? false) ? 'primary' : 'secondary'"
+                                                    class="rounded-sm px-2.5 py-1"
+                                                >
+                                                    {{ ($field['is_required'] ?? false) ? 'Wajib' : 'Opsional' }}
+                                                </x-assessment::ui.status-badge>
+
+                                                <x-assessment::ui.status-badge
+                                                    :tone="$fieldHasAnswer ? 'success' : 'warning'"
+                                                    class="rounded-sm px-2.5 py-1"
+                                                >
+                                                    {{ $fieldHasAnswer ? 'Terjawab' : 'Belum dijawab' }}
+                                                </x-assessment::ui.status-badge>
+                                            </div>
+
+                                            @if (!empty($answer['answered_at']))
+                                                <div class="text-xs text-slate-500">
+                                                    Tersimpan: {{ $answer['answered_at'] }} WITA
+                                                </div>
+                                            @endif
+                                        </div>
+
+                                        <div class="mt-4">
+                                            <h5 class="text-base font-semibold text-slate-900">
+                                                {{ $field['label'] }}
+                                            </h5>
+
+                                            @if (!empty($field['deskripsi']))
+                                                <p class="mt-1 text-sm leading-relaxed text-slate-500">
+                                                    {{ $field['deskripsi'] }}
+                                                </p>
+                                            @endif
+
+                                            @if (!empty($field['bantuan']))
+                                                <p class="mt-2 text-sm leading-relaxed text-slate-500">
+                                                    <i class="far fa-lightbulb mr-1"></i>
+                                                    {{ $field['bantuan'] }}
+                                                </p>
+                                            @endif
+                                        </div>
+
+                                        <div class="mt-4">
+                                            @switch($fieldType)
+                                                @case('textarea')
+                                                    <x-assessment::form.textarea
+                                                        :name="'result_answers_'.$fieldId"
+                                                        :value="$resolvedAnswerText"
+                                                        placeholder="Belum dijawab"
+                                                        rows="4"
+                                                        readonly
+                                                        disabled
+                                                    />
+                                                @break
+
+                                                @case('select')
+                                                    <x-assessment::form.select
+                                                        :name="'result_answers_'.$fieldId"
+                                                        placeholder="Belum dijawab"
+                                                        disabled
+                                                    >
+                                                        @foreach ($field['opsi_field'] ?? [] as $option)
+                                                            @php
+                                                                $optionValue = is_array($option)
+                                                                    ? (string) ($option['value'] ?? '')
+                                                                    : (string) $option;
+                                                                $optionLabel = is_array($option)
+                                                                    ? ($option['label'] ?? $optionValue)
+                                                                    : $optionValue;
+                                                            @endphp
+                                                            <option
+                                                                value="{{ $optionValue }}"
+                                                                @selected(($selectedValues[0] ?? '') === $optionValue)
+                                                            >
+                                                                {{ $optionLabel }}
+                                                            </option>
+                                                        @endforeach
+                                                    </x-assessment::form.select>
+                                                @break
+
+                                                @case('radio')
+                                                    <x-assessment::form.radio-group
+                                                        :name="'result_answers_'.$fieldId"
+                                                        :options="$field['opsi_field'] ?? []"
+                                                        :selected="$selectedValues"
+                                                        :id-prefix="'result-field-'.$fieldId"
+                                                        disabled
+                                                    />
+                                                @break
+
+                                                @case('checkbox')
+                                                    <x-assessment::form.checkbox-group
+                                                        :name="'result_answers_'.$fieldId"
+                                                        :options="$field['opsi_field'] ?? []"
+                                                        :selected="$selectedValues"
+                                                        :id-prefix="'result-field-'.$fieldId"
+                                                        disabled
+                                                    />
+                                                @break
+
+                                                @case('file')
+                                                    <div class="rounded-sm border border-[#d7e3ee] bg-white px-4 py-3">
+                                                        <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                                                            <div>
+                                                                <div class="text-sm font-semibold text-slate-700">
+                                                                    {{ $fileName }}
+                                                                </div>
+                                                                <div class="mt-1 text-sm text-slate-500">
+                                                                    {{ $fieldHasAnswer ? 'File jawaban tersedia pada submission ini.' : 'Peserta tidak mengunggah file pada pertanyaan ini.' }}
+                                                                </div>
+                                                            </div>
+
+                                                            @if ($fileUrl)
+                                                                <x-assessment::ui.button
+                                                                    :href="$fileUrl"
+                                                                    variant="outline"
+                                                                    icon="fas fa-download"
+                                                                    target="_blank"
+                                                                    rel="noopener"
+                                                                >
+                                                                    Lihat File
+                                                                </x-assessment::ui.button>
+                                                            @endif
+                                                        </div>
+                                                    </div>
+                                                @break
+
+                                                @default
+                                                    <x-assessment::form.input
+                                                        :name="'result_answers_'.$fieldId"
+                                                        :type="$inputType"
+                                                        :value="$resolvedAnswerText"
+                                                        placeholder="Belum dijawab"
+                                                        readonly
+                                                        disabled
+                                                    />
+                                            @endswitch
+
+                                            @unless ($fieldHasAnswer)
+                                                <p class="mt-3 text-sm text-amber-700">
+                                                    Jawaban untuk pertanyaan ini tidak tersedia pada submission.
+                                                </p>
+                                            @endunless
+                                        </div>
+                                    </div>
+                                @endforeach
+                            </div>
                         </x-assessment::ui.card>
                     @endforeach
                 </div>
-            @endforeach
+            @empty
+                <x-assessment::ui.card>
+                    <x-assessment::ui.empty-state
+                        icon="far fa-folder-open"
+                        title="Belum ada hasil assessment"
+                        description="Struktur assessment tidak ditemukan pada submission ini."
+                    />
+                </x-assessment::ui.card>
+            @endforelse
         </div>
+
+        <aside class="min-w-0 self-start space-y-4 xl:sticky xl:top-6">
+            <x-assessment::ui.card>
+                <div class="flex items-center gap-3 border-b border-slate-300 pb-4">
+                    <i class="fa fa-circle-check text-[#1376BD]" aria-hidden="true"></i>
+                    <h3 class="text-md font-medium text-slate-900">
+                        Informasi Pengiriman
+                    </h3>
+                </div>
+
+                <div class="mt-2">
+                    @foreach ($sessionDetails as $detail)
+                        <x-assessment::ui.detail-row
+                            :label="$detail['label']"
+                            :value="$detail['value']"
+                            valueClass="font-medium leading-relaxed text-slate-900"
+                            :first="$loop->first"
+                        />
+                    @endforeach
+                </div>
+
+                <div class="mt-2 rounded-sm border border-[#dce8f1] bg-[#f8fbfe] px-4 py-3 text-sm leading-relaxed text-slate-600">
+                    {{ $description }}
+                </div>
+            </x-assessment::ui.card>
+
+            <x-assessment::ui.card>
+                <div class="flex items-center gap-3 border-b border-slate-300 pb-4">
+                    <i class="fa fa-user text-[#1376BD]" aria-hidden="true"></i>
+                    <h3 class="text-md font-medium text-slate-900">
+                        Data Peserta
+                    </h3>
+                </div>
+
+                <div class="mt-2">
+                    @foreach ($participantDetails as $detail)
+                        <x-assessment::ui.detail-row
+                            :label="$detail['label']"
+                            :value="$detail['value']"
+                            valueClass="font-medium leading-relaxed text-slate-900"
+                            :first="$loop->first"
+                        />
+                    @endforeach
+                </div>
+            </x-assessment::ui.card>
+
+            <x-assessment::ui.card>
+                <h3 class="text-md font-medium text-slate-900">
+                    Breakdown per Assessment
+                </h3>
+
+                <div class="mt-4 space-y-4">
+                    @forelse ($summary['assessment_breakdown'] ?? [] as $assessmentItem)
+                        <div class="border-t border-[#ebf1f6] pt-4 first:border-t-0 first:pt-0">
+                            <div class="flex flex-wrap justify-between gap-2">
+                                <div>
+                                    <div class="font-bold text-slate-900">
+                                        {{ $assessmentItem['judul'] }}
+                                    </div>
+                                    <div class="text-sm text-slate-500">
+                                        {{ $assessmentItem['kode_assessment'] }}
+                                    </div>
+                                </div>
+
+                                <div class="font-bold text-[#1376bd]">
+                                    {{ $assessmentItem['answered_questions'] }}/{{ $assessmentItem['total_questions'] }} soal
+                                </div>
+                            </div>
+
+                            @foreach ($assessmentItem['forms'] ?? [] as $formItem)
+                                <div class="mt-2 flex justify-between gap-3 text-sm text-slate-500">
+                                    <span>{{ $formItem['judul_form'] }}</span>
+                                    <span class="shrink-0">
+                                        {{ $formItem['answered_questions'] }}/{{ $formItem['total_questions'] }}
+                                    </span>
+                                </div>
+                            @endforeach
+                        </div>
+                    @empty
+                        <p class="text-sm text-slate-500">
+                            Belum ada ringkasan assessment yang tersedia.
+                        </p>
+                    @endforelse
+                </div>
+            </x-assessment::ui.card>
+        </aside>
     </section>
 @endsection

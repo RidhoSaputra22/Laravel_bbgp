@@ -139,5 +139,9 @@ class AssessmentShowViewTest extends TestCase
 
         $response->assertSee('Jawaban wajib diisi.');
         $response->assertSee('initialIndex: 1', false);
+        $response->assertSee('data-assessment-panel="1"', false);
+        $response->assertSee('data-field-type="email"', false);
+        $response->assertSee('openFinishModal()', false);
+        $response->assertSee('validateAllAssessments()', false);
     }
 }

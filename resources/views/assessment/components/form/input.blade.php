@@ -14,7 +14,8 @@
 @php
     $id = $id ?: trim((string) preg_replace('/[^A-Za-z0-9_-]+/', '-', $name), '-');
     $errorKey = trim((string) preg_replace('/\[(.*?)\]/', '.$1', $name), '.');
-    $errorMessage = $error ?: $errors->first($errorKey);
+    $errorBag = $errors ?? null;
+    $errorMessage = $error ?: ($errorBag ? $errorBag->first($errorKey) : null);
 @endphp
 
 <div {{ $attributes->only('class')->class(['space-y-2 ']) }}>

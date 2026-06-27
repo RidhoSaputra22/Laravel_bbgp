@@ -22,9 +22,13 @@
         </x-assessment::ui.alert>
     @endif
 
-    @if ($errors->has('portal'))
+    @php
+        $errorBag = $errors ?? null;
+    @endphp
+
+    @if ($errorBag && $errorBag->has('portal'))
         <x-assessment::ui.alert type="danger" class="mb-4">
-            {{ $errors->first('portal') }}
+            {{ $errorBag->first('portal') }}
         </x-assessment::ui.alert>
     @endif
 

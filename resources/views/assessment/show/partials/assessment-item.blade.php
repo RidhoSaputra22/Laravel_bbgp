@@ -1,4 +1,5 @@
-<div x-show="isCurrent({{ $assessmentItem['index'] }})" style="display: none;" class="space-y-6">
+<div x-show="isCurrent({{ $assessmentItem['index'] }})" style="display: none;" class="space-y-6"
+    data-assessment-panel="{{ $assessmentItem['index'] }}">
     @include('assessment.show.partials.assessment-overview-card', ['assessment' => $assessment])
 
     @foreach ($assessment['forms'] ?? [] as $form)

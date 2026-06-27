@@ -26,7 +26,7 @@
                     </x-assessment::ui.button>
 
                     <x-assessment::ui.button type="button" icon="fas fa-flag-checkered" x-show="isLastAssessment()"
-                        x-bind:disabled="isSubmitting" @click="showFinishModal = true">
+                        x-bind:disabled="isSubmitting" @click="openFinishModal()">
                         Selesai Assessment
                     </x-assessment::ui.button>
 

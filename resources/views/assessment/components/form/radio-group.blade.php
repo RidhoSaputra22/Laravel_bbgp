@@ -6,6 +6,7 @@
     'label' => null,
     'description' => null,
     'required' => null,
+    'disabled' => false,
 ])
 
 @php
@@ -60,6 +61,6 @@
     @foreach ($normalizedOptions as $option)
         <x-assessment::form.choice-option :id="$idPrefix . '-' . $option['index']" type="radio" :name="$name"
             :value="$option['value']" :checked="$selectedValue !== null && $selectedValue === (string) $option['value']"
-            :label="$option['label']" :description="$option['description']" />
+            :label="$option['label']" :description="$option['description']" :disabled="$disabled" />
     @endforeach
 </div>
