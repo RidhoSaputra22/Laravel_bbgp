@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\Assesment\AuthController as AssessmentPortalAuthController;
+use App\Http\Controllers\Assesment\PortalController as AssessmentPortalController;
 use App\Http\Controllers\PenyewaanRuanganController;
 use App\Http\Controllers\RtlController;
 use App\Http\Controllers\SekolahController as AdminSekolahController;
@@ -100,6 +102,22 @@ Route::group(
         });
     }
 );
+
+Route::prefix('assesment')
+    ->name('assesment.')
+    ->group(function () {
+        Route::get('/', [AssessmentPortalController::class, 'landing'])->name('index');
+        Route::get('/auth', [AssessmentPortalAuthController::class, 'showLoginForm'])->name('auth');
+        Route::post('/auth', [AssessmentPortalAuthController::class, 'login'])->name('login');
+
+        Route::middleware('assessment.portal')->group(function () {
+            Route::get('/dashboard', [AssessmentPortalController::class, 'dashboard'])->name('dashboard');
+            Route::get('/show/{id}', [AssessmentPortalController::class, 'show'])->name('show');
+            Route::post('/show/{id}/submit', [AssessmentPortalController::class, 'submit'])->name('submit');
+            Route::get('/result/{id}', [AssessmentPortalController::class, 'result'])->name('result');
+            Route::post('/logout', [AssessmentPortalAuthController::class, 'logout'])->name('logout');
+        });
+    });
 
 //  Admin
 Route::group(

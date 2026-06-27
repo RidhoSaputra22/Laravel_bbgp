@@ -51,4 +51,14 @@ class Guru extends Model
     {
         return $this->hasMany(AssessmentAssignmentTarget::class);
     }
+
+    public function assessmentAttempts()
+    {
+        return $this->hasManyThrough(
+            AssessmentAttempt::class,
+            AssessmentAssignmentTarget::class,
+            'guru_id',
+            'assessment_assignment_target_id'
+        );
+    }
 }

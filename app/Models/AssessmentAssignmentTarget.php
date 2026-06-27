@@ -39,4 +39,9 @@ class AssessmentAssignmentTarget extends Model
     {
         return $this->belongsTo(AssessmentAssignmentSession::class, 'assessment_assignment_session_id');
     }
+
+    public function attempt()
+    {
+        return $this->hasOne(AssessmentAttempt::class, 'assessment_assignment_target_id');
+    }
 }

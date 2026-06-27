@@ -40,6 +40,7 @@
             }
 
             .multiple-choice-table__table-wrapper {
+
                 border: 1px solid #e4e6fc;
                 border-radius: .2rem;
                 overflow-x: auto;
@@ -382,7 +383,7 @@
         </div>
     </div>
 
-    <div class="multiple-choice-table__table-wrapper table-responsive">
+    <div class="multiple-choice-table__table-wrapper table-responsive px-3">
         <table class="table table-striped table-hover multiple-choice-table__table" id="{{ $id }}-table">
             <thead class="">
                 <tr>
