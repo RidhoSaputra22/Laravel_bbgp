@@ -1,4 +1,4 @@
-<aside class="relative sticky bottom-0 w-full">
+<aside class="sticky bottom-0 z-20 w-full xl:hidden">
     <x-assessment::ui.card class="overflow-hidden">
         <div class=" items-center justify-between gap-3 ">
             <h2 class="text-lg font-semibold">

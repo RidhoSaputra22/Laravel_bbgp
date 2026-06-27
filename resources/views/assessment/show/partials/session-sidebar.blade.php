@@ -1,4 +1,4 @@
-<aside class="min-w-0 space-y-6 lg:sticky lg:top-6 lg:self-start">
+<aside class="min-w-0 space-y-6 hidden xl:block lg:sticky lg:top-6 lg:self-start">
     <x-assessment::ui.card class="overflow-hidden">
         <div class=" items-center justify-between gap-3 ">
             <h2 class="text-lg font-semibold">
@@ -52,6 +52,6 @@
         @endif
 
     </x-assessment::ui.card>
-    
+
 
 </aside>

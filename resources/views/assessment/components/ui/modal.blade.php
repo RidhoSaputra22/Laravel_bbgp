@@ -24,7 +24,7 @@
 
     <div class="relative w-full {{ $maxWidth }}" x-transition>
         <x-assessment::ui.card class="overflow-hidden rounded-[28px] p-0 shadow-[0_28px_90px_rgba(15,23,42,0.35)]">
-            <div class="border-b border-slate-200 px-6 py-5">
+            <div class="border-b border-slate-200 px-2 py-3 sm:px-6 sm:py-5">
                 <div class="flex items-start justify-between gap-4">
                     <div>
                         @if ($title)
@@ -42,7 +42,7 @@
 
                     <button
                         type="button"
-                        class="inline-flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 text-slate-500 transition hover:bg-slate-200 hover:text-slate-700"
+                        class="inline-flex h-10 w-10 items-center justify-center rounded-full  text-slate-500 transition hover:bg-slate-200 hover:text-slate-700"
                         @click="{{ $closeAction }}"
                         aria-label="Tutup modal"
                     >
@@ -51,12 +51,12 @@
                 </div>
             </div>
 
-            <div class="px-6 py-5">
+            <div class="sm:px-6 sm:py-5 px-2 py-3">
                 {{ $slot }}
             </div>
 
             @isset($footer)
-                <div class="border-t border-slate-200 px-6 py-5">
+                <div class="border-t border-slate-200 px-2 py-3 sm:px-6 sm:py-5">
                     {{ $footer }}
                 </div>
             @endisset

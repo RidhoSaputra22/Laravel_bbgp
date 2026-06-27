@@ -17,7 +17,7 @@
     $errorMessage = $error ?: $errors->first($errorKey);
 @endphp
 
-<div {{ $attributes->only('class')->class(['space-y-2']) }}>
+<div {{ $attributes->only('class')->class(['space-y-2 ']) }}>
     <div>
         @if ($label)
             <label for="{{ $id }}" class="block text-sm font-semibold text-slate-700">

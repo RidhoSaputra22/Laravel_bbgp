@@ -5,8 +5,12 @@
                 currentAssessmentIndex: Number(config.initialIndex ?? 0),
                 totalAssessments: Number(config.totalAssessments ?? 0),
                 assessmentItems: Array.isArray(config.assessmentItems) ? config.assessmentItems : [],
+
                 showFinishModal: false,
                 isSubmitting: false,
+
+
+
                 submitConfirmedForm() {
                     if (this.isSubmitting) {
                         return;

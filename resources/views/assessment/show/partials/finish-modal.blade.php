@@ -1,9 +1,9 @@
 <x-assessment::ui.modal show="showFinishModal"
     close-action="if (!isSubmitting) { showFinishModal = false }" title="Konfirmasi Selesai Assessment"
     description="Setelah dikirim, semua jawaban akan diproses dan halaman akan beralih ke hasil assessment.">
-    <div class="space-y-4">
-        <div class="rounded-sm border border-[#dce9f4] bg-[#f8fbfe] p-4">
-            <div class="flex items-start gap-4">
+    <div class="space-y-4 **:text-sm ">
+        <div class=" rounded-sm border border-[#dce9f4] bg-[#f8fbfe] p-4">
+            <div class="flex flex-col items-center justify-center text-center sm:text-start sm:flex-row sm:items-start gap-4">
                 <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-sm bg-[#1376bd] text-white">
                     <i class="fas fa-paper-plane"></i>
                 </div>
