@@ -509,14 +509,7 @@
 
                             </div>
 
-                            <div class="form-group">
-                                <label>Bantuan / Keterangan</label>
-                                <textarea class="${getInputClass(bantuanName)}"
-                                    name="${bantuanName}"
-                                    rows="2"
-                                    placeholder="Catatan tambahan untuk pengguna">${escapeHtml(fieldData.bantuan)}</textarea>
-                                ${buildInvalidFeedback(bantuanName)}
-                            </div>
+
                         </div>
                     </div>
                 `;
