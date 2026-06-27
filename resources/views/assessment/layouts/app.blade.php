@@ -22,8 +22,6 @@
         </x-assessment::ui.alert>
     @endif
 
-
-
     @if ($errors->has('portal'))
         <x-assessment::ui.alert type="danger" class="mb-4">
             {{ $errors->first('portal') }}

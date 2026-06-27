@@ -10,7 +10,7 @@
 
 <label
     for="{{ $id }}"
-    class="block cursor-pointer rounded-2xl border border-[#dce8f1] bg-white px-4 py-[14px] transition hover:border-[#1376bd]/60"
+    class="block cursor-pointer rounded-sm border border-[#dce8f1] bg-white px-4 py-[14px] transition hover:border-[#1376bd]/60"
 >
     <span class="flex items-start gap-3">
         <input

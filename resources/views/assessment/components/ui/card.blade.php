@@ -1,9 +1,5 @@
-@props([
-    'padding' => 'p-6',
-    'rounded' => 'rounded-xs',
-    'shadow' => 'shadow-sm',
-])
 
-<div {{ $attributes->class(['bg-white', $rounded, $shadow, $padding]) }}>
+
+<div {{ $attributes->class(['bg-white p-6 rounded-sm shadow-sm']) }}>
     {{ $slot }}
 </div>
