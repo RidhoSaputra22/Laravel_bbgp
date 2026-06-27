@@ -1,12 +1,12 @@
 <?php
 
-namespace App\Http\Controllers\Assesment;
+namespace App\Http\Controllers\Assessment;
 
 use App\Http\Controllers\Controller;
 use App\Models\Guru;
-use App\Services\Assesment\AssessmentAttemptService;
-use App\Services\Assesment\AssessmentPortalAuthService;
-use App\Services\Assesment\AssessmentPortalService;
+use App\Services\Assessment\AssessmentAttemptService;
+use App\Services\Assessment\AssessmentPortalAuthService;
+use App\Services\Assessment\AssessmentPortalService;
 use Illuminate\Http\Request;
 
 class PortalController extends Controller
@@ -20,8 +20,8 @@ class PortalController extends Controller
     public function landing()
     {
         return $this->authService->isAuthenticated()
-            ? redirect()->route('assesment.dashboard')
-            : redirect()->route('assesment.auth.login');
+            ? redirect()->route('assessment.dashboard')
+            : redirect()->route('assessment.auth.login');
     }
 
     public function dashboard()
@@ -29,7 +29,7 @@ class PortalController extends Controller
         $guru = $this->requireGuru();
         $dashboardCards = $this->portalService->getDashboardTargets($guru);
 
-        return view('assesment.index', [
+        return view('assessment.index', [
             'menu' => 'assessment-portal',
             'guru' => $guru,
             'dashboardCards' => $dashboardCards,
@@ -43,12 +43,12 @@ class PortalController extends Controller
         $meta = $this->portalService->buildTargetMeta($target);
 
         if ($meta['status'] === 'submitted') {
-            return redirect()->route('assesment.result.result', $target->id);
+            return redirect()->route('assessment.result.result', $target->id);
         }
 
         if (! in_array($meta['status'], ['ready', 'in_progress'], true)) {
             return redirect()
-                ->route('assesment.dashboard')
+                ->route('assessment.dashboard')
                 ->withErrors([
                     'portal' => $meta['description'],
                 ]);
@@ -56,7 +56,7 @@ class PortalController extends Controller
 
         $attempt = $this->portalService->openAttempt($target);
 
-        return view('assesment.show.show', [
+        return view('assessment.show.show', [
             'menu' => 'assessment-portal',
             'guru' => $guru,
             'target' => $target->fresh(['assignment.assessments.forms.fields', 'session', 'attempt']),
@@ -73,7 +73,7 @@ class PortalController extends Controller
 
         if (! in_array($meta['status'], ['ready', 'in_progress'], true)) {
             return redirect()
-                ->route('assesment.dashboard')
+                ->route('assessment.dashboard')
                 ->withErrors([
                     'portal' => $meta['description'],
                 ]);
@@ -87,7 +87,7 @@ class PortalController extends Controller
         );
 
         return redirect()
-            ->route('assesment.result.result', $target->id)
+            ->route('assessment.result.result', $target->id)
             ->with('assessment_portal_success', 'Jawaban assessment berhasil dikirim.');
     }
 
@@ -98,18 +98,18 @@ class PortalController extends Controller
         $attempt = $target->attempt;
 
         if (! $attempt) {
-            return redirect()->route('assesment.show.show', $target->id);
+            return redirect()->route('assessment.show.show', $target->id);
         }
 
         if ($attempt->status !== 'submitted') {
             return redirect()
-                ->route('assesment.show.show', $target->id)
+                ->route('assessment.show.show', $target->id)
                 ->withErrors([
                     'portal' => 'Assessment ini belum selesai dikirim.',
                 ]);
         }
 
-        return view('assesment.result.result', [
+        return view('assessment.result.result', [
             'menu' => 'assessment-portal',
             'guru' => $guru,
             'target' => $target,

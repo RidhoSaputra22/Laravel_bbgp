@@ -1,4 +1,4 @@
-@extends('assesment.layouts.app')
+@extends('assessment.layouts.app')
 
 @section('content')
     @php
@@ -67,7 +67,7 @@
                                 Kabupaten/Kota: {{ $guru->kabupaten ?: '-' }}
                             </div>
 
-                            <form action="{{ route('assesment.logout') }}" method="POST">
+                            <form action="{{ route('assessment.logout') }}" method="POST">
                                 @csrf
 
                                 <button
@@ -193,7 +193,7 @@
                             <div class="flex flex-wrap gap-2">
                                 @if ($meta['status'] === 'submitted')
                                     <a
-                                        href="{{ route('assesment.result', $target->id) }}"
+                                        href="{{ route('assessment.result', $target->id) }}"
                                         class="inline-flex min-h-[44px] items-center justify-center rounded-xl bg-[#1376bd] px-4 py-2 text-sm font-bold text-white transition hover:bg-[#0f619c] focus:outline-none focus:ring-4 focus:ring-[#1376bd]/25"
                                     >
                                         <i class="fas fa-poll mr-2"></i>
@@ -201,7 +201,7 @@
                                     </a>
                                 @elseif (in_array($meta['status'], ['ready', 'in_progress'], true))
                                     <a
-                                        href="{{ route('assesment.show', $target->id) }}"
+                                        href="{{ route('assessment.show', $target->id) }}"
                                         class="inline-flex min-h-[44px] items-center justify-center rounded-xl bg-[#1376bd] px-4 py-2 text-sm font-bold text-white transition hover:bg-[#0f619c] focus:outline-none focus:ring-4 focus:ring-[#1376bd]/25"
                                     >
                                         <i class="fas fa-play-circle mr-2"></i>

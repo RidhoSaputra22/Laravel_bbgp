@@ -1,4 +1,4 @@
-@extends('layouts.app', ['title' => 'Data Penugasan Assesment'])
+@extends('layouts.app', ['title' => 'Data Penugasan Assessment'])
 
 @push('styles')
     <link rel="stylesheet" href="{{ asset('library/datatables.net-bs4/css/dataTables.bootstrap4.min.css') }}">
@@ -15,7 +15,7 @@
     <div class="main-content">
         <section class="section">
             <div class="section-header">
-                <h1>Data Penugasan Assesment</h1>
+                <h1>Data Penugasan Assessment</h1>
                 <div class="section-header-breadcrumb">
                     <a href="{{ route('assessment.assignment.create') }}" class="btn btn-primary">
                         <i class="fas fa-plus"></i> Buat Penugasan
@@ -97,9 +97,9 @@
                                 <div class="empty-state-icon bg-primary">
                                     <i class="fas fa-tasks"></i>
                                 </div>
-                                <h2>Belum ada penugasan assesment</h2>
+                                <h2>Belum ada penugasan assessment</h2>
                                 <p class="lead">
-                                    Data pada halaman ini diambil dari tabel penugasan assesment yang sudah dibuat
+                                    Data pada halaman ini diambil dari tabel penugasan assessment yang sudah dibuat
                                     admin untuk mendistribusikan form ke guru terpilih.
                                 </p>
                                 <a href="{{ route('assessment.assignment.create') }}" class="btn btn-primary mt-3">
@@ -148,13 +148,13 @@
                                                     </small>
                                                 </td>
                                                 <td>
-                                                    <div class="font-weight-bold">{{ $assessments->count() }} assesment</div>
+                                                    <div class="font-weight-bold">{{ $assessments->count() }} assessment</div>
                                                     @forelse ($assessments as $assessment)
                                                         <small class="d-block text-muted">
                                                             {{ $assessment->kode_assessment }} - {{ $assessment->judul }}
                                                         </small>
                                                     @empty
-                                                        <small class="text-muted">Belum ada form assesment terhubung.</small>
+                                                        <small class="text-muted">Belum ada form assessment terhubung.</small>
                                                     @endforelse
                                                 </td>
                                                 <td>

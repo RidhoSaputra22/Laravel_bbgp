@@ -1,4 +1,4 @@
-@extends('layouts.app', ['title' => 'Data Assesment'])
+@extends('layouts.app', ['title' => 'Data Assessment'])
 
 @push('styles')
     <link rel="stylesheet" href="{{ asset('library/datatables.net-bs4/css/dataTables.bootstrap4.min.css') }}">
@@ -21,10 +21,10 @@
     <div class="main-content">
         <section class="section">
             <div class="section-header">
-                <h1>Data Assesment</h1>
+                <h1>Data Assessment</h1>
                 <div class="section-header-breadcrumb">
                     <a href="{{ route('assessment.create') }}" class="btn btn-primary">
-                        <i class="fas fa-plus"></i> Tambah Assesment
+                        <i class="fas fa-plus"></i> Tambah Assessment
                     </a>
                 </div>
             </div>
@@ -38,7 +38,7 @@
                             </div>
                             <div class="card-wrap">
                                 <div class="card-header">
-                                    <h4>Total Assesment</h4>
+                                    <h4>Total Assessment</h4>
                                 </div>
                                 <div class="card-body">
                                     {{ $datas->count() }}
@@ -80,7 +80,7 @@
 
                 <div class="card">
                     <div class="card-header">
-                        <h4>Daftar Form Assesment Dinamis</h4>
+                        <h4>Daftar Form Assessment Dinamis</h4>
                     </div>
                     <div class="card-body">
                         @if ($datas->isEmpty())
@@ -88,12 +88,12 @@
                                 <div class="empty-state-icon bg-primary">
                                     <i class="fas fa-clipboard-list"></i>
                                 </div>
-                                <h2>Belum ada assesment</h2>
+                                <h2>Belum ada assessment</h2>
                                 <p class="lead">
-                                    Mulai buat assesment baru untuk menyusun form dan pertanyaandinamis.
+                                    Mulai buat assessment baru untuk menyusun form dan pertanyaandinamis.
                                 </p>
                                 <a href="{{ route('assessment.create') }}" class="btn btn-primary mt-3">
-                                    Tambah Assesment
+                                    Tambah Assessment
                                 </a>
                             </div>
                         @else
@@ -151,7 +151,7 @@
                                                         class="btn btn-warning btn-sm my-1">
                                                         <i class="fas fa-edit"></i>
                                                     </a>
-                                                    <button onclick="deleteData({{ $data->id }}, 'assesment')"
+                                                    <button onclick="deleteData({{ $data->id }}, 'assessment')"
                                                         class="btn btn-danger btn-sm my-1">
                                                         <i class="fas fa-trash-alt"></i>
                                                     </button>

@@ -1,9 +1,9 @@
 <?php
 
-namespace App\Http\Controllers\Assesment;
+namespace App\Http\Controllers\Assessment;
 
 use App\Http\Controllers\Controller;
-use App\Services\Assesment\AssessmentPortalAuthService;
+use App\Services\Assessment\AssessmentPortalAuthService;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
@@ -16,10 +16,10 @@ class AuthController extends Controller
     public function showLoginForm()
     {
         if ($this->authService->isAuthenticated()) {
-            return redirect()->route('assesment.dashboard');
+            return redirect()->route('assessment.dashboard');
         }
 
-        return view('assesment.auth.login', [
+        return view('assessment.auth.login', [
             'menu' => 'assessment-portal',
             'roleOptions' => $this->authService->roleOptions(),
         ]);
@@ -60,7 +60,7 @@ class AuthController extends Controller
         }
 
         return redirect()
-            ->route('assesment.dashboard')
+            ->route('assessment.dashboard')
             ->with('assessment_portal_success', 'Login assessment berhasil. Selamat mengerjakan.');
     }
 
@@ -69,7 +69,7 @@ class AuthController extends Controller
         $this->authService->logout();
 
         return redirect()
-            ->route('assesment.auth.login')
+            ->route('assessment.auth.login')
             ->with('assessment_portal_success', 'Anda berhasil keluar dari portal assessment.');
     }
 }

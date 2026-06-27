@@ -89,7 +89,7 @@ class AssessmentAssignmentController extends Controller
             return back()
                 ->withInput()
                 ->withErrors([
-                    'assignment' => 'Terjadi kesalahan saat memproses penugasan assesment.',
+                    'assignment' => 'Terjadi kesalahan saat memproses penugasan assessment.',
                 ]);
         }
     }
@@ -151,9 +151,9 @@ class AssessmentAssignmentController extends Controller
             ],
             [
                 'judul_penugasan.required' => 'Judul penugasan wajib diisi.',
-                'assessment_ids.required' => 'Minimal pilih satu form assesment.',
-                'assessment_ids.min' => 'Minimal pilih satu form assesment.',
-                'assessment_ids.*.exists' => 'Ada form assesment yang dipilih tetapi datanya tidak valid atau sudah nonaktif.',
+                'assessment_ids.required' => 'Minimal pilih satu form assessment.',
+                'assessment_ids.min' => 'Minimal pilih satu form assessment.',
+                'assessment_ids.*.exists' => 'Ada form assessment yang dipilih tetapi datanya tidak valid atau sudah nonaktif.',
                 'durasi_sesi_jam.required' => 'Durasi sesi assessment wajib dipilih.',
                 'durasi_sesi_jam.in' => 'Durasi sesi assessment harus sesuai pilihan yang tersedia.',
                 'guru_ids.required' => 'Minimal pilih satu guru untuk ditugasi.',

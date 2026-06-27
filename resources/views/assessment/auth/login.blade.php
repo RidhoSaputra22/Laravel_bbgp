@@ -1,4 +1,4 @@
-@extends('assesment.layouts.app')
+@extends('assessment.layouts.app')
 
 @section('content')
     <section
@@ -93,7 +93,7 @@
                                 </div>
                             @endif
 
-                            <form method="POST" action="{{ route('assesment.login') }}" class="space-y-5">
+                            <form method="POST" action="{{ route('assessment.login') }}" class="space-y-5">
                                 @csrf
 
                                 <div class="space-y-2">

@@ -1,4 +1,4 @@
-@extends('layouts.app', ['title' => 'Buat Penugasan Assesment'])
+@extends('layouts.app', ['title' => 'Buat Penugasan Assessment'])
 
 @push('styles')
     <link rel="stylesheet" href="{{ asset('library/datatables.net-bs4/css/dataTables.bootstrap4.min.css') }}">
@@ -102,7 +102,7 @@
     <div class="main-content">
         <section class="section">
             <div class="section-header">
-                <h1>Buat Penugasan Assesment</h1>
+                <h1>Buat Penugasan Assessment</h1>
                 <div class="section-header-breadcrumb">
                     <a href="{{ route('assessment.assignment.index') }}" class="btn btn-light">
                         <i class="fas fa-arrow-left"></i> Kembali
@@ -144,14 +144,14 @@
                                     </div>
 
                                     <div class="form-group">
-                                        <label>Form Assesment <span class="text-danger">*</span></label>
+                                        <label>Form Assessment <span class="text-danger">*</span></label>
                                         <x-multiple-choice-table id="assessment-selector" name="assessment_ids"
                                             :headers="['Kode', 'Judul', 'Status', 'Struktur']"
                                             :items="$assessmentTableItems" :selected="$oldAssessmentIds"
-                                            description="Pilih satu atau banyak form assesment. Gunakan pencarian untuk mempercepat seleksi."
-                                            search-placeholder="Cari kode atau judul assesment..."
-                                            empty-message="Belum ada form assesment aktif yang bisa dipilih."
-                                            selected-title="Form Assesment Terpilih" />
+                                            description="Pilih satu atau banyak form assessment. Gunakan pencarian untuk mempercepat seleksi."
+                                            search-placeholder="Cari kode atau judul assessment..."
+                                            empty-message="Belum ada form assessment aktif yang bisa dipilih."
+                                            selected-title="Form Assessment Terpilih" />
                                         @error('assessment_ids')
                                             <div class="invalid-feedback d-block">{{ $message }}</div>
                                         @enderror
@@ -262,7 +262,7 @@
                                     <div class="summary-value">Otomatis saat simpan</div>
                                 </div>
                                 <div class="mb-3">
-                                    <div class="text-muted small">Total Assesment Dipilih</div>
+                                    <div class="text-muted small">Total Assessment Dipilih</div>
                                     <div class="summary-value" id="summary-assessment-count">0</div>
                                 </div>
 

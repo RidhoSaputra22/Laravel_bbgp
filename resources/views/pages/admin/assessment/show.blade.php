@@ -1,10 +1,10 @@
-@extends('layouts.app', ['title' => 'Preview Assesment'])
+@extends('layouts.app', ['title' => 'Preview Assessment'])
 
 @section('content')
     <div class="main-content">
         <section class="section">
             <div class="section-header">
-                <h1>Preview Assesment</h1>
+                <h1>Preview Assessment</h1>
                 <div class="section-header-breadcrumb">
                     <a href="{{ route('assessment.index') }}" class="btn btn-light mr-2">
                         <i class="fas fa-arrow-left"></i> Kembali

@@ -1,4 +1,4 @@
-@extends('assesment.layouts.app')
+@extends('assessment.layouts.app')
 
 @section('content')
     @php
@@ -43,7 +43,7 @@
 
                     <div class="lg:col-span-4 lg:text-right">
                         <a
-                            href="{{ route('assesment.dashboard') }}"
+                            href="{{ route('assessment.dashboard') }}"
                             class="inline-flex min-h-[44px] items-center justify-center rounded-xl bg-white px-4 py-2 text-sm font-bold text-[#0c5a90] transition hover:bg-slate-100 focus:outline-none focus:ring-4 focus:ring-white/30"
                         >
                             <i class="fas fa-arrow-left mr-2"></i>
@@ -109,7 +109,7 @@
 
             <form
                 id="assessment-exam-form"
-                action="{{ route('assesment.submit', $target->id) }}"
+                action="{{ route('assessment.submit', $target->id) }}"
                 method="POST"
                 enctype="multipart/form-data"
             >

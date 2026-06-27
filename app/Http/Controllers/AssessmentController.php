@@ -80,7 +80,7 @@ class AssessmentController extends Controller
 
             return back()
                 ->withInput()
-                ->withErrors(['assessment' => 'Terjadi kesalahan saat menyimpan data assesment.']);
+                ->withErrors(['assessment' => 'Terjadi kesalahan saat menyimpan data assessment.']);
         }
     }
 
@@ -150,7 +150,7 @@ class AssessmentController extends Controller
 
             return back()
                 ->withInput()
-                ->withErrors(['assessment' => 'Terjadi kesalahan saat memperbarui data assesment.']);
+                ->withErrors(['assessment' => 'Terjadi kesalahan saat memperbarui data assessment.']);
         }
     }
 
@@ -233,9 +233,9 @@ class AssessmentController extends Controller
                 'forms.*.fields.*.is_active' => 'nullable|boolean',
             ],
             [
-                'kode_assessment.required' => 'Kode assesment wajib diisi.',
-                'kode_assessment.unique' => 'Kode assesment sudah digunakan.',
-                'judul.required' => 'Judul assesment wajib diisi.',
+                'kode_assessment.required' => 'Kode assessment wajib diisi.',
+                'kode_assessment.unique' => 'Kode assessment sudah digunakan.',
+                'judul.required' => 'Judul assessment wajib diisi.',
                 'forms.required' => 'Minimal harus ada satu form.',
                 'forms.*.judul_form.required' => 'Judul form wajib diisi.',
                 'forms.*.fields.required' => 'Setiap form minimal memiliki satu pertanyaan.',

@@ -53,7 +53,7 @@
                 <div class="card-body">
                     <div class="row align-items-start">
                         <div class="col-lg-3 col-md-6 mb-3">
-                            <div class="text-muted small">Kode Assesment</div>
+                            <div class="text-muted small">Kode Assessment</div>
                             <div class="font-weight-bold">{{ $assessment->kode_assessment }}</div>
                         </div>
                         <div class="col-lg-3 col-md-6 mb-3">

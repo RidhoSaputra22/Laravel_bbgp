@@ -2,7 +2,7 @@
 
 namespace App\Http\Middleware;
 
-use App\Services\Assesment\AssessmentPortalAuthService;
+use App\Services\Assessment\AssessmentPortalAuthService;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -21,7 +21,7 @@ class EnsureAssessmentPortalAuthenticated
         }
 
         return redirect()
-            ->route('assesment.auth.login')
+            ->route('assessment.auth.login')
             ->with('assessment_portal_notice', 'Silakan login terlebih dahulu untuk mengakses portal assessment.');
     }
 }

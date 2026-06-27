@@ -6,7 +6,7 @@
 
 @if ($errors->any())
     <div class="alert alert-danger">
-        <div class="font-weight-bold mb-2">Periksa kembali input assesment berikut:</div>
+        <div class="font-weight-bold mb-2">Periksa kembali input assessment berikut:</div>
         <ul class="mb-0">
             @foreach ($errors->all() as $error)
                 <li>{{ $error }}</li>
@@ -79,7 +79,7 @@
             <div class="row">
                 <div class="col-md-4">
                     <div class="form-group">
-                        <label>Kode Assesment <span class="assessment-required">*</span></label>
+                        <label>Kode Assessment <span class="assessment-required">*</span></label>
                         <input type="text" name="kode_assessment"
                             class="form-control @error('kode_assessment') is-invalid @enderror"
                             value="{{ old('kode_assessment', $assessment->kode_assessment) }}"
@@ -91,10 +91,10 @@
                 </div>
                 <div class="col-md-5">
                     <div class="form-group">
-                        <label>Judul Assesment <span class="assessment-required">*</span></label>
+                        <label>Judul Assessment <span class="assessment-required">*</span></label>
                         <input type="text" name="judul" class="form-control @error('judul') is-invalid @enderror"
                             value="{{ old('judul', $assessment->judul) }}"
-                            placeholder="Masukkan judul assesment" required>
+                            placeholder="Masukkan judul assessment" required>
                         @error('judul')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
@@ -123,7 +123,7 @@
                     <div class="form-group">
                         <label>Deskripsi</label>
                         <textarea name="deskripsi" class="form-control @error('deskripsi') is-invalid @enderror" rows="4"
-                            placeholder="Deskripsi singkat assesment">{{ old('deskripsi', $assessment->deskripsi) }}</textarea>
+                            placeholder="Deskripsi singkat assessment">{{ old('deskripsi', $assessment->deskripsi) }}</textarea>
                         @error('deskripsi')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
@@ -144,7 +144,7 @@
             <div class="custom-control custom-switch mt-2">
                 <input type="checkbox" class="custom-control-input" id="assessment-active" name="is_active"
                     value="1" @checked(old('is_active', $assessment->is_active))>
-                <label class="custom-control-label" for="assessment-active">Aktifkan assesment</label>
+                <label class="custom-control-label" for="assessment-active">Aktifkan assessment</label>
             </div>
         </div>
     </div>
@@ -157,7 +157,7 @@
             <div class="alert alert-light border">
                 <div class="font-weight-bold mb-2">Petunjuk Penggunaan</div>
                 <ul class="mb-0 pl-3">
-                    <li>Isi informasi assesment di bagian atas terlebih dahulu.</li>
+                    <li>Isi informasi assessment di bagian atas terlebih dahulu.</li>
                     <li>Klik <strong>Tambah Form</strong> di bagian bawah untuk membuat bagian form, lalu tambahkan field di bawah form terkait.</li>
                     <li>Untuk field <strong>Daftar Pilihan</strong> dan <strong>Kotak Centang</strong>, pisahkan opsi dengan koma atau baris baru.</li>
                     <li>Untuk field <strong>Pilihan Ganda</strong>, isi label dan value pada opsi yang tersedia.</li>
@@ -171,7 +171,7 @@
                     <i class="fas fa-layer-group"></i>
                 </div>
                 <h2>Belum ada form</h2>
-                <p class="lead">Tambahkan form pertama untuk mulai menyusun struktur assesment dinamis.</p>
+                <p class="lead">Tambahkan form pertama untuk mulai menyusun struktur assessment dinamis.</p>
             </div>
 
             <div id="form-builder-list"></div>
@@ -848,7 +848,7 @@
                 });
 
                 return {
-                    title: $('input[name="judul"]').val()?.trim() || 'Judul assesment belum diisi',
+                    title: $('input[name="judul"]').val()?.trim() || 'Judul assessment belum diisi',
                     code: $('input[name="kode_assessment"]').val()?.trim() || '-',
                     description: $('textarea[name="deskripsi"]').val()?.trim() || '',
                     instruction: $('textarea[name="petunjuk"]').val()?.trim() || '',
@@ -961,7 +961,7 @@
                         <div class="card-body">
                             <div class="d-flex justify-content-between align-items-start flex-wrap">
                                 <div class="mb-3">
-                                    <div class="text-muted small">Kode Assesment</div>
+                                    <div class="text-muted small">Kode Assessment</div>
                                     <div class="font-weight-bold">${escapeHtml(data.code)}</div>
                                 </div>
                                 <div class="mb-3">

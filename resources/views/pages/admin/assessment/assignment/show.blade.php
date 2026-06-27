@@ -1,4 +1,4 @@
-@extends('layouts.app', ['title' => 'Detail Penugasan Assesment'])
+@extends('layouts.app', ['title' => 'Detail Penugasan Assessment'])
 
 @push('styles')
     <link rel="stylesheet" href="{{ asset('library/datatables.net-bs4/css/dataTables.bootstrap4.min.css') }}">
@@ -23,7 +23,7 @@
     <div class="main-content">
         <section class="section">
             <div class="section-header">
-                <h1>Detail Penugasan Assesment</h1>
+                <h1>Detail Penugasan Assessment</h1>
                 <div class="section-header-breadcrumb">
                     <a href="{{ route('assessment.assignment.index') }}" class="btn btn-light mr-2">
                         <i class="fas fa-arrow-left"></i> Kembali
@@ -141,8 +141,8 @@
                                     </small>
                                 </div>
                                 <div class="mb-3">
-                                    <div class="text-muted small">Form Assesment Dipilih</div>
-                                    <div>{{ $totalAssessments }} assesment</div>
+                                    <div class="text-muted small">Form Assessment Dipilih</div>
+                                    <div>{{ $totalAssessments }} assessment</div>
                                     <small class="text-muted">
                                         {{ $totalForms }} form / {{ $totalFields }} pertanyaan
                                     </small>
@@ -162,17 +162,17 @@
                     <div class="col-lg-7">
                         <div class="card">
                             <div class="card-header">
-                                <h4>Assesment Yang Ditugaskan</h4>
+                                <h4>Assessment Yang Ditugaskan</h4>
                             </div>
                             <div class="card-body">
                                 @if ($assessments->isEmpty())
                                     <div class="alert alert-warning mb-0">
-                                        Penugasan ini belum memiliki form assesment terhubung.
+                                        Penugasan ini belum memiliki form assessment terhubung.
                                     </div>
                                 @else
                                     <div class="mb-3">
-                                        <div class="text-muted small">Ringkasan Assesment</div>
-                                        <div class="font-weight-bold">{{ $totalAssessments }} assesment</div>
+                                        <div class="text-muted small">Ringkasan Assessment</div>
+                                        <div class="font-weight-bold">{{ $totalAssessments }} assessment</div>
                                         <small class="text-muted">
                                             {{ $totalForms }} form / {{ $totalFields }} pertanyaan
                                         </small>
@@ -215,7 +215,7 @@
                                                             pertanyaan
                                                         </td>
                                                         <td>
-                                                            {{ \Illuminate\Support\Str::limit($assessment->deskripsi ?: 'Tidak ada deskripsi assesment.', 120) }}
+                                                            {{ \Illuminate\Support\Str::limit($assessment->deskripsi ?: 'Tidak ada deskripsi assessment.', 120) }}
                                                         </td>
                                                     </tr>
                                                 @endforeach

@@ -1,10 +1,10 @@
-@extends('layouts.app', ['title' => 'Edit Assesment'])
+@extends('layouts.app', ['title' => 'Edit Assessment'])
 
 @section('content')
     <div class="main-content">
         <section class="section">
             <div class="section-header">
-                <h1>Edit Assesment</h1>
+                <h1>Edit Assessment</h1>
                 <div class="section-header-breadcrumb">
                     <a href="{{ route('assessment.show', $assessment->id) }}" class="btn btn-info">
                         <i class="fas fa-eye"></i> Lihat Preview
@@ -19,8 +19,8 @@
                     'formBuilderData' => $formBuilderData,
                     'formAction' => route('assessment.update', $assessment->id),
                     'httpMethod' => 'PUT',
-                    'submitLabel' => 'Update Assesment',
-                    'pageTitle' => 'Edit Struktur Assesment',
+                    'submitLabel' => 'Update Assessment',
+                    'pageTitle' => 'Edit Struktur Assessment',
                 ])
             </div>
         </section>

@@ -1,7 +1,7 @@
 <?php
 
-use App\Http\Controllers\Assesment\AuthController as AssessmentPortalAuthController;
-use App\Http\Controllers\Assesment\PortalController as AssessmentPortalController;
+use App\Http\Controllers\Assessment\AuthController as AssessmentPortalAuthController;
+use App\Http\Controllers\Assessment\PortalController as AssessmentPortalController;
 use App\Http\Controllers\PenyewaanRuanganController;
 use App\Http\Controllers\RtlController;
 use App\Http\Controllers\SekolahController as AdminSekolahController;
@@ -103,8 +103,8 @@ Route::group(
     }
 );
 
-Route::prefix('assesment')
-    ->name('assesment.')
+Route::prefix('assessment')
+    ->name('assessment.')
     ->group(function () {
         Route::get('/', [AssessmentPortalController::class, 'landing'])->name('index');
         Route::get('/auth', [AssessmentPortalAuthController::class, 'showLoginForm'])->name('auth');
@@ -319,7 +319,7 @@ Route::group(
                 Route::post('/hapus/{id}', 'AkunController@destroy')->name('akun.hapus');
             });
 
-            Route::prefix('assesment')->group(function () {
+            Route::prefix('assessment')->group(function () {
                 Route::get('/', 'AssessmentController@index')->name('assessment.index');
                 Route::get('/create', 'AssessmentController@create')->name('assessment.create');
                 Route::post('/store', 'AssessmentController@store')->name('assessment.store');

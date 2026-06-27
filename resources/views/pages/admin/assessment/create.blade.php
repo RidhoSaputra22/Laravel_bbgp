@@ -1,10 +1,10 @@
-@extends('layouts.app', ['title' => 'Tambah Assesment'])
+@extends('layouts.app', ['title' => 'Tambah Assessment'])
 
 @section('content')
     <div class="main-content">
         <section class="section">
             <div class="section-header">
-                <h1>Tambah Assesment</h1>
+                <h1>Tambah Assessment</h1>
             </div>
 
             <div class="section-body">
@@ -14,8 +14,8 @@
                     'formBuilderData' => $formBuilderData,
                     'formAction' => route('assessment.store'),
                     'httpMethod' => 'POST',
-                    'submitLabel' => 'Simpan Assesment',
-                    'pageTitle' => 'Form Builder Assesment',
+                    'submitLabel' => 'Simpan Assessment',
+                    'pageTitle' => 'Form Builder Assessment',
                 ])
             </div>
         </section>

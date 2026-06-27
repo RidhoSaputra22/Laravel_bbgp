@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Services\Assesment;
+namespace App\Services\Assessment;
 
 use App\Models\AssessmentAttempt;
 use App\Models\AssessmentAttemptAnswer;
