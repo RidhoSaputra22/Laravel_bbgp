@@ -1,0 +1,13 @@
+<div x-show="isCurrent({{ $assessmentItem['index'] }})" style="display: none;" class="space-y-6">
+    @include('assessment.show.partials.assessment-overview-card', ['assessment' => $assessment])
+
+    @foreach ($assessment['forms'] ?? [] as $form)
+        @include('assessment.show.partials.assessment-form-card', ['form' => $form])
+    @endforeach
+
+    @include('assessment.show.partials.assessment-navigation-card', [
+        'assessmentItem' => $assessmentItem,
+        'isFirstAssessment' => $isFirstAssessment,
+        'isLastAssessment' => $isLastAssessment,
+    ])
+</div>

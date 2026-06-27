@@ -2,6 +2,8 @@
     'name',
     'id' => null,
     'label' => null,
+    'description' => null,
+    'hint' => null,
     'required' => false,
     'error' => null,
     'placeholder' => null,
@@ -15,28 +17,39 @@
 @endphp
 
 <div {{ $attributes->only('class')->class(['space-y-2']) }}>
-    @if ($label)
-        <label for="{{ $id }}" class="block text-sm font-medium text-slate-700">
-            {{ $label }}
-        </label>
-    @endif
+    <div>
+        @if ($label)
+            <label for="{{ $id }}" class="block text-sm font-semibold text-slate-700">
+                {{ $label }}
+                @if ($required)
+                    <span class="text-red-600">*</span>
+                @endif
+            </label>
+        @endif
 
-    <select
-        {{ $attributes->except('class') }}
-        id="{{ $id }}"
-        name="{{ $name }}"
-        @required($required)
+        @if ($description)
+            <p class="mt-1 block text-sm text-slate-700">
+                {{ $description }}
+            </p>
+        @endif
+    </div>
+
+    <select {{ $attributes->except('class') }} id="{{ $id }}" name="{{ $name }}" @required($required)
         @class([
-            'py-3 px-4 w-full rounded-sm border bg-white px-4 text-slate-800 outline-none transition focus:border-[#1376bd] focus:ring-4 focus:ring-[#1376bd]/15',
-            '' => $label,
+            'w-full rounded-sm border bg-white px-4 py-3 text-slate-800 outline-none transition focus:border-[#1376bd] focus:ring-4 focus:ring-[#1376bd]/15',
             'border-red-500 focus:border-red-500 focus:ring-red-500/15' => $errorMessage,
-            'border-[#d7e3ee]' => ! $errorMessage,
-        ])
-    >
+            'border-[#d7e3ee]' => !$errorMessage,
+        ])>
         @if (!is_null($placeholder))
             <option value="{{ $placeholderValue }}">{{ $placeholder }}</option>
         @endif
 
         {{ $slot }}
     </select>
+
+    @if ($hint)
+        <p class="block text-sm text-slate-700">
+            {{ $hint }}
+        </p>
+    @endif
 </div>

@@ -164,17 +164,6 @@
                                     <div class="row">
                                         <div class="col-md-4">
                                             <div class="form-group">
-                                                <label>Tanggal Mulai</label>
-                                                <input type="date" name="tanggal_mulai"
-                                                    class="form-control @error('tanggal_mulai') is-invalid @enderror"
-                                                    value="{{ old('tanggal_mulai') }}">
-                                                @error('tanggal_mulai')
-                                                    <div class="invalid-feedback">{{ $message }}</div>
-                                                @enderror
-                                            </div>
-                                        </div>
-                                        <div class="col-md-4">
-                                            <div class="form-group">
                                                 <label>Jam Mulai Sesi Awal</label>
                                                 <input type="time" name="jam_mulai" id="jam_mulai"
                                                     class="form-control @error('jam_mulai') is-invalid @enderror"
@@ -188,6 +177,18 @@
                                                 @enderror
                                             </div>
                                         </div>
+                                        <div class="col-md-4">
+                                            <div class="form-group">
+                                                <label>Tanggal Mulai</label>
+                                                <input type="date" name="tanggal_mulai"
+                                                    class="form-control @error('tanggal_mulai') is-invalid @enderror"
+                                                    value="{{ old('tanggal_mulai') }}">
+                                                @error('tanggal_mulai')
+                                                    <div class="invalid-feedback">{{ $message }}</div>
+                                                @enderror
+                                            </div>
+                                        </div>
+
                                         <div class="col-md-4">
                                             <div class="form-group">
                                                 <label>Tanggal Selesai</label>
