@@ -7,6 +7,20 @@
                 assessmentItems: Array.isArray(config.assessmentItems) ? config.assessmentItems : [],
                 showFinishModal: false,
                 isSubmitting: false,
+                submitConfirmedForm() {
+                    if (this.isSubmitting) {
+                        return;
+                    }
+
+                    const form = this.$refs.assessmentExamForm;
+
+                    if (!form) {
+                        return;
+                    }
+
+                    this.isSubmitting = true;
+                    form.submit();
+                },
                 handleSubmit(event) {
                     if (this.isSubmitting) {
                         return;
@@ -17,8 +31,7 @@
                         return;
                     }
 
-                    this.isSubmitting = true;
-                    event.target.submit();
+                    this.submitConfirmedForm();
                 },
                 isCurrent(index) {
                     return this.currentAssessmentIndex === index;

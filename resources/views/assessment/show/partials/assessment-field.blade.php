@@ -36,14 +36,16 @@
 
         @case('radio')
             <x-assessment::form.radio-group :label="$field['label']" :description="$field['deskripsi']" :name="$answerName" :options="$field['opsi_field'] ?? []"
-                :selected="\Illuminate\Support\Arr::wrap($oldValue)" :id-prefix="'field-' . $field['id']" />
+                :selected="\Illuminate\Support\Arr::wrap($oldValue)" :id-prefix="'field-' . $field['id']"
+                :required="(bool) $field['is_required']" />
 
 
         @break
 
         @case('checkbox')
             <x-assessment::form.checkbox-group :label="$field['label']" :description="$field['deskripsi']" :name="$answerName" :options="$field['opsi_field'] ?? []"
-                :selected="$checkboxValues" :id-prefix="'field-' . $field['id']" />
+                :selected="$checkboxValues" :id-prefix="'field-' . $field['id']"
+                :required="(bool) $field['is_required']" />
 
 
         @break

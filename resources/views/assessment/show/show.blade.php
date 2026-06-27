@@ -86,7 +86,12 @@
         $errorFieldKey = collect(array_keys($errors->getMessages()))->first(
             fn($key) => str_starts_with($key, 'answers.'),
         );
-        $errorFieldId = $errorFieldKey ? (int) str($errorFieldKey)->after('answers.')->before('.') : null;
+        $errorFieldId = null;
+
+        if (is_string($errorFieldKey) && preg_match('/^answers\.(\d+)(?:\.|$)/', $errorFieldKey, $matches) === 1) {
+            $errorFieldId = (int) $matches[1];
+        }
+
         $errorAssessmentIndex = $errorFieldId !== null ? $assessmentIndexByFieldId[$errorFieldId] ?? null : null;
         $oldActiveAssessmentIndex = old('active_assessment_index');
         $initialAssessmentIndex =
@@ -113,8 +118,9 @@
         assessmentItems: @js($assessmentNavigationItems),
     })" class="grid gap-8 p-6 lg:grid-cols-[minmax(0,2fr)_minmax(320px,1fr)] lg:gap-10 lg:p-14">
         <div class="space-y-8 lg:space-y-12" x-ref="assessmentFlowTop">
-            <form id="assessment-exam-form" action="{{ route('assessment.portal.submit', $target->id) }}" method="POST"
-                enctype="multipart/form-data" @submit.prevent="handleSubmit($event)">
+            <form id="assessment-exam-form" x-ref="assessmentExamForm"
+                action="{{ route('assessment.portal.submit', $target->id) }}" method="POST"
+                enctype="multipart/form-data" novalidate @submit.prevent="handleSubmit($event)">
                 @csrf
                 <input type="hidden" name="active_assessment_index" x-model="currentAssessmentIndex">
 
@@ -148,6 +154,15 @@
             'sessionDetails' => $sessionDetails,
         ])
     </section>
+
+      @include('assessment.show.partials.session-bottom-nav', [
+            'assessmentCount' => $assessmentCount,
+            'meta' => $meta,
+            'countdownTitle' => $countdownTitle,
+            'countdownTargetAt' => $countdownTargetAt,
+            'countdownCaption' => $countdownCaption,
+            'sessionDetails' => $sessionDetails,
+        ])
 
     @include('assessment.show.partials.scripts')
 @endsection

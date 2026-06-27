@@ -21,35 +21,6 @@
             </div>
         </div>
 
-        <div class="grid gap-3 sm:grid-cols-3">
-            <div class="rounded-sm bg-[#f4f9fc] p-4">
-                <div class="text-xs font-semibold uppercase tracking-[0.14em] text-[#72879b]">
-                    Total Assessment
-                </div>
-                <div class="mt-2 text-3xl font-bold text-[#0d3557]">
-                    {{ $assessmentCount }}
-                </div>
-            </div>
-
-            <div class="rounded-sm bg-[#f4f9fc] p-4">
-                <div class="text-xs font-semibold uppercase tracking-[0.14em] text-[#72879b]">
-                    Total Soal
-                </div>
-                <div class="mt-2 text-3xl font-bold text-[#0d3557]">
-                    {{ $totalQuestions }}
-                </div>
-            </div>
-
-            <div class="rounded-sm bg-[#f4f9fc] p-4">
-                <div class="text-xs font-semibold uppercase tracking-[0.14em] text-[#72879b]">
-                    Soal Wajib
-                </div>
-                <div class="mt-2 text-3xl font-bold text-[#0d3557]">
-                    {{ $requiredQuestions }}
-                </div>
-            </div>
-        </div>
-
         <p class="text-sm leading-relaxed text-slate-500">
             Tekan tombol kirim jika Anda siap menyelesaikan seluruh assessment pada penugasan ini.
         </p>
@@ -57,12 +28,13 @@
 
     <x-slot name="footer">
         <div class="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
-            <x-assessment::ui.button type="button" variant="outline" class="rounded-xl px-5 py-3"
+            <x-assessment::ui.button type="button" variant="outline"
                 x-bind:disabled="isSubmitting" @click="showFinishModal = false">
                 Kembali Cek Jawaban
             </x-assessment::ui.button>
 
-            <x-assessment::ui.button type="submit" class="rounded-xl px-5 py-3" x-bind:disabled="isSubmitting">
+            <x-assessment::ui.button type="button"  x-bind:disabled="isSubmitting"
+                @click="submitConfirmedForm()">
                 <span x-show="!isSubmitting" class="inline-flex items-center">
                     <i class="fas fa-paper-plane mr-2"></i>
                     Ya, Kirim Jawaban
