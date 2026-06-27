@@ -20,8 +20,8 @@ class PortalController extends Controller
     public function landing()
     {
         return $this->authService->isAuthenticated()
-            ? redirect()->route('assessment.dashboard')
-            : redirect()->route('assessment.auth.login');
+            ? redirect()->route('assessment.portal.dashboard')
+            : redirect()->route('assessment.portal.auth');
     }
 
     public function dashboard()
@@ -43,12 +43,12 @@ class PortalController extends Controller
         $meta = $this->portalService->buildTargetMeta($target);
 
         if ($meta['status'] === 'submitted') {
-            return redirect()->route('assessment.result.result', $target->id);
+            return redirect()->route('assessment.portal.result', $target->id);
         }
 
         if (! in_array($meta['status'], ['ready', 'in_progress'], true)) {
             return redirect()
-                ->route('assessment.dashboard')
+                ->route('assessment.portal.dashboard')
                 ->withErrors([
                     'portal' => $meta['description'],
                 ]);
@@ -73,7 +73,7 @@ class PortalController extends Controller
 
         if (! in_array($meta['status'], ['ready', 'in_progress'], true)) {
             return redirect()
-                ->route('assessment.dashboard')
+                ->route('assessment.portal.dashboard')
                 ->withErrors([
                     'portal' => $meta['description'],
                 ]);
@@ -87,7 +87,7 @@ class PortalController extends Controller
         );
 
         return redirect()
-            ->route('assessment.result.result', $target->id)
+            ->route('assessment.portal.result', $target->id)
             ->with('assessment_portal_success', 'Jawaban assessment berhasil dikirim.');
     }
 
@@ -98,12 +98,12 @@ class PortalController extends Controller
         $attempt = $target->attempt;
 
         if (! $attempt) {
-            return redirect()->route('assessment.show.show', $target->id);
+            return redirect()->route('assessment.portal.show', $target->id);
         }
 
         if ($attempt->status !== 'submitted') {
             return redirect()
-                ->route('assessment.show.show', $target->id)
+                ->route('assessment.portal.show', $target->id)
                 ->withErrors([
                     'portal' => 'Assessment ini belum selesai dikirim.',
                 ]);

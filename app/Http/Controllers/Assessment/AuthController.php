@@ -16,7 +16,7 @@ class AuthController extends Controller
     public function showLoginForm()
     {
         if ($this->authService->isAuthenticated()) {
-            return redirect()->route('assessment.dashboard');
+            return redirect()->route('assessment.portal.dashboard');
         }
 
         return view('assessment.auth.login', [
@@ -60,7 +60,7 @@ class AuthController extends Controller
         }
 
         return redirect()
-            ->route('assessment.dashboard')
+            ->route('assessment.portal.dashboard')
             ->with('assessment_portal_success', 'Login assessment berhasil. Selamat mengerjakan.');
     }
 
@@ -69,7 +69,7 @@ class AuthController extends Controller
         $this->authService->logout();
 
         return redirect()
-            ->route('assessment.auth.login')
+            ->route('assessment.portal.auth')
             ->with('assessment_portal_success', 'Anda berhasil keluar dari portal assessment.');
     }
 }

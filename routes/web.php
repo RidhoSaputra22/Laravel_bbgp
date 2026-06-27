@@ -104,7 +104,7 @@ Route::group(
 );
 
 Route::prefix('assessment')
-    ->name('assessment.')
+    ->name('assessment.portal.')
     ->group(function () {
         Route::get('/', [AssessmentPortalController::class, 'landing'])->name('index');
         Route::get('/auth', [AssessmentPortalAuthController::class, 'showLoginForm'])->name('auth');

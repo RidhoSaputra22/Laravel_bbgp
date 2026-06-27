@@ -86,7 +86,7 @@
                               href="{{ route('user.data-sekolah') }}">Input Data Sekolah</a></li>
 
                         <li class="nav-item {{ $menu == 'assessment-portal' ? 'active' : '' }}"><a class="nav-link"
-                              href="{{ route('assessment.index') }}">Assessment</a></li>
+                              href="{{ route('assessment.portal.index') }}">Assessment</a></li>
 
                         {{-- <li class="nav-item {{ $menu == 'statistik' ? 'active' : '' }}"><a class="nav-link" href="{{ route('user.statistik') }}">Statistik</a></li> --}}
 

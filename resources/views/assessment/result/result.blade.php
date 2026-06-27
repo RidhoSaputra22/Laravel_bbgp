@@ -9,47 +9,39 @@
         $questionNumber = 0;
     @endphp
 
-    <section class="bg-gradient-to-b from-[#eef7fc] to-white py-14 lg:py-[68px] lg:pb-20">
+    <section class="bg-gradient-to-b from-[#eef7fc] to-white py-14 lg:pb-20 lg:pt-[68px]">
         <div class="container mx-auto px-4">
             @if (session('assessment_portal_success'))
-                <div class="mb-4 rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800">
+                <x-assessment::ui.alert type="success" class="mb-4">
                     {{ session('assessment_portal_success') }}
-                </div>
+                </x-assessment::ui.alert>
             @endif
 
-            <div
-                class="mb-[30px] rounded-[30px] bg-gradient-to-br from-[#1068a6] to-[#123a60] p-[26px] text-white shadow-[0_28px_68px_rgba(18,58,96,0.22)] lg:p-[34px]">
-                <div class="grid items-center gap-6 lg:grid-cols-12 lg:gap-8">
-                    <div class="lg:col-span-8">
-                        <div
-                            class="mb-[18px] inline-flex items-center gap-2.5 rounded-full bg-white/[0.14] px-4 py-2.5 text-sm font-bold sm:text-base">
-                            <i class="fas fa-check-circle"></i>
-                            Assessment sudah berhasil dikirim
-                        </div>
+            <x-assessment::ui.hero
+                class="mb-[30px] shadow-[0_28px_68px_rgba(18,58,96,0.22)]"
+                title="{{ $target->assignment->judul_penugasan }}"
+                description="Hasil pengisian Anda tersimpan pada portal assessment. Gunakan halaman ini untuk melihat ringkasan dan jawaban yang sudah dikirim."
+                pill="Assessment sudah berhasil dikirim"
+                pill-icon="fas fa-check-circle"
+                gradient="from-[#1068a6] to-[#123a60]"
+                titleClass="mb-2.5 text-[28px] font-bold leading-tight text-white lg:text-[34px]"
+                descriptionClass="leading-[1.8] text-white/[0.86]"
+                pillClass="mb-[18px] gap-2.5 px-4 py-2.5 text-sm font-bold sm:text-base"
+                rightCols="lg:col-span-4 lg:text-right"
+            >
+                <x-slot name="aside">
+                    <x-assessment::ui.button
+                        :href="route('assessment.portal.dashboard')"
+                        variant="white"
+                        icon="fas fa-th-large"
+                        class="font-bold"
+                    >
+                        Kembali ke Dashboard
+                    </x-assessment::ui.button>
+                </x-slot>
+            </x-assessment::ui.hero>
 
-                        <h1 class="mb-2.5 text-[28px] font-bold leading-tight text-white lg:text-[34px]">
-                            {{ $target->assignment->judul_penugasan }}
-                        </h1>
-
-                        <p class="leading-[1.8] text-white/[0.86]">
-                            Hasil pengisian Anda tersimpan pada portal assessment. Gunakan halaman ini untuk melihat
-                            ringkasan dan jawaban yang sudah dikirim.
-                        </p>
-                    </div>
-
-                    <div class="lg:col-span-4 lg:text-right">
-                        <a
-                            href="{{ route('assessment.dashboard') }}"
-                            class="inline-flex min-h-[44px] items-center justify-center rounded-xl bg-white px-4 py-2 text-sm font-bold text-[#0d5f98] transition hover:bg-slate-100 focus:outline-none focus:ring-4 focus:ring-white/30"
-                        >
-                            <i class="fas fa-th-large mr-2"></i>
-                            Kembali ke Dashboard
-                        </a>
-                    </div>
-                </div>
-            </div>
-
-            <div class="mb-4 h-full rounded-[24px] bg-white p-6 shadow-[0_18px_48px_rgba(14,63,101,0.10)]">
+            <x-assessment::ui.card class="mb-4 h-full">
                 <div class="mb-4 grid items-center gap-3 lg:grid-cols-12">
                     <div class="lg:col-span-8">
                         <h3 class="mb-1 text-xl font-bold text-slate-900">
@@ -68,39 +60,32 @@
                 </div>
 
                 <div class="grid gap-[14px] sm:grid-cols-2 xl:grid-cols-4">
-                    <div class="rounded-[18px] bg-[#f5f9fc] p-[18px]">
-                        <div class="mb-1.5 text-[13px] text-[#6f8496]">Total Soal</div>
-                        <div class="text-[28px] font-bold leading-none text-[#0d3557]">
-                            {{ $summary['total_questions'] ?? 0 }}
-                        </div>
-                    </div>
-
-                    <div class="rounded-[18px] bg-[#f5f9fc] p-[18px]">
-                        <div class="mb-1.5 text-[13px] text-[#6f8496]">Soal Wajib Terjawab</div>
-                        <div class="text-[28px] font-bold leading-none text-[#0d3557]">
-                            {{ $summary['answered_required_questions'] ?? 0 }}/{{ $summary['required_questions'] ?? 0 }}
-                        </div>
-                    </div>
-
-                    <div class="rounded-[18px] bg-[#f5f9fc] p-[18px]">
-                        <div class="mb-1.5 text-[13px] text-[#6f8496]">Persentase Terisi</div>
-                        <div class="text-[28px] font-bold leading-none text-[#0d3557]">
-                            {{ $completionPercentage }}%
-                        </div>
-                    </div>
-
-                    <div class="rounded-[18px] bg-[#f5f9fc] p-[18px]">
-                        <div class="mb-1.5 text-[13px] text-[#6f8496]">Durasi Pengerjaan</div>
-                        <div class="text-[28px] font-bold leading-none text-[#0d3557]">
-                            {{ $durationMinutes }}m
-                        </div>
-                    </div>
+                    <x-assessment::ui.info-tile
+                        label="Total Soal"
+                        :value="$summary['total_questions'] ?? 0"
+                        valueClass="text-[28px] font-bold leading-none text-[#0d3557]"
+                    />
+                    <x-assessment::ui.info-tile
+                        label="Soal Wajib Terjawab"
+                        :value="($summary['answered_required_questions'] ?? 0).'/'.($summary['required_questions'] ?? 0)"
+                        valueClass="text-[28px] font-bold leading-none text-[#0d3557]"
+                    />
+                    <x-assessment::ui.info-tile
+                        label="Persentase Terisi"
+                        :value="$completionPercentage.'%'"
+                        valueClass="text-[28px] font-bold leading-none text-[#0d3557]"
+                    />
+                    <x-assessment::ui.info-tile
+                        label="Durasi Pengerjaan"
+                        :value="$durationMinutes.'m'"
+                        valueClass="text-[28px] font-bold leading-none text-[#0d3557]"
+                    />
                 </div>
-            </div>
+            </x-assessment::ui.card>
 
             <div class="mb-4 grid gap-4 lg:grid-cols-12">
                 <div class="lg:col-span-5">
-                    <div class="h-full rounded-[24px] bg-white p-6 shadow-[0_18px_48px_rgba(14,63,101,0.10)]">
+                    <x-assessment::ui.card class="h-full">
                         <h4 class="mb-3 text-lg font-bold text-slate-900">
                             Breakdown per Assessment
                         </h4>
@@ -136,56 +121,41 @@
                                 Belum ada ringkasan assessment yang tersedia.
                             </p>
                         @endforelse
-                    </div>
+                    </x-assessment::ui.card>
                 </div>
 
                 <div class="lg:col-span-7">
-                    <div class="h-full rounded-[24px] bg-white p-6 shadow-[0_18px_48px_rgba(14,63,101,0.10)]">
+                    <x-assessment::ui.card class="h-full">
                         <h4 class="mb-3 text-lg font-bold text-slate-900">
                             Informasi Pengiriman
                         </h4>
 
-                        <div class="border-t border-[#ebf1f6] py-[18px] first:border-t-0 first:pt-0">
-                            <div class="mb-1 text-sm text-slate-500">Status</div>
-                            <div class="font-bold text-slate-900">{{ $meta['label'] }}</div>
-                        </div>
-
-                        <div class="border-t border-[#ebf1f6] py-[18px]">
-                            <div class="mb-1 text-sm text-slate-500">Periode Penugasan</div>
-                            <div class="font-bold text-slate-900">{{ $meta['date_text'] }}</div>
-                        </div>
-
-                        <div class="border-t border-[#ebf1f6] py-[18px]">
-                            <div class="mb-1 text-sm text-slate-500">Jumlah Assessment</div>
-                            <div class="font-bold text-slate-900">
-                                {{ $meta['assessment_total'] }} assessment / {{ $meta['form_total'] }} form
-                            </div>
-                        </div>
-
-                        <div class="border-t border-[#ebf1f6] pt-[18px]">
-                            <div class="mb-1 text-sm text-slate-500">Catatan</div>
-                            <div class="text-slate-500">{{ $meta['description'] }}</div>
-                        </div>
-                    </div>
+                        <x-assessment::ui.detail-row label="Status" :value="$meta['label']" :first="true" />
+                        <x-assessment::ui.detail-row label="Periode Penugasan" :value="$meta['date_text']" />
+                        <x-assessment::ui.detail-row
+                            label="Jumlah Assessment"
+                            :value="$meta['assessment_total'].' assessment / '.$meta['form_total'].' form'"
+                        />
+                        <x-assessment::ui.detail-row
+                            label="Catatan"
+                            :value="$meta['description']"
+                            valueClass="text-slate-500"
+                        />
+                    </x-assessment::ui.card>
                 </div>
             </div>
 
             @foreach ($snapshot['assessments'] ?? [] as $assessment)
                 <div class="mt-7">
-                    <div class="mb-[18px] rounded-[22px] bg-white px-6 py-6 shadow-[0_14px_36px_rgba(15,59,95,0.08)] sm:px-[26px]">
-                        <div class="mb-2 text-sm uppercase text-slate-500">
-                            {{ $assessment['kode_assessment'] }}
-                        </div>
-                        <h3 class="mb-1.5 text-xl font-bold text-[#0d3557]">
-                            {{ $assessment['judul'] }}
-                        </h3>
-                        <p class="leading-relaxed text-slate-500">
-                            {{ $assessment['deskripsi'] ?: 'Ringkasan jawaban untuk assessment ini ditampilkan di bawah.' }}
-                        </p>
-                    </div>
+                    <x-assessment::ui.assessment-intro
+                        :code="$assessment['kode_assessment']"
+                        :title="$assessment['judul']"
+                        :description="$assessment['deskripsi'] ?? null"
+                        descriptionFallback="Ringkasan jawaban untuk assessment ini ditampilkan di bawah."
+                    />
 
                     @foreach ($assessment['forms'] ?? [] as $form)
-                        <div class="mb-[22px] rounded-[24px] bg-white p-6 shadow-[0_18px_48px_rgba(14,63,101,0.10)] sm:p-7">
+                        <x-assessment::ui.card class="mb-[22px]" padding="p-6 sm:p-7">
                             <h4 class="mb-1.5 text-lg font-bold text-[#0d3557]">
                                 {{ $form['judul_form'] }}
                             </h4>
@@ -197,60 +167,15 @@
                                 @php
                                     $questionNumber++;
                                     $answer = $answerLookup[$field['id']] ?? null;
-                                    $payloadType = data_get($answer, 'payload.type');
-                                    $checkboxValues = data_get($answer, 'payload.values', []);
                                 @endphp
 
-                                <div class="mb-4 rounded-[18px] border border-[#e6eef5] bg-[#fbfdff] p-5 last:mb-0">
-                                    <div
-                                        class="mb-3 inline-flex items-center gap-2 rounded-full bg-[#eaf5fb] px-[14px] py-2 text-[13px] font-bold text-[#0d5f98]">
-                                        <i class="fas fa-check"></i>
-                                        Soal {{ $questionNumber }}
-                                    </div>
-
-                                    <div class="mb-2 text-xl font-bold leading-[1.5] text-[#0d3557]">
-                                        {{ $field['label'] }}
-                                    </div>
-
-                                    @if (!empty($field['deskripsi']))
-                                        <div class="mb-3 leading-[1.8] text-[#6d8092]">
-                                            {{ $field['deskripsi'] }}
-                                        </div>
-                                    @endif
-
-                                    @if ($answer)
-                                        <div class="break-words rounded-2xl bg-[#eef6fb] px-[18px] py-4 leading-[1.8] text-[#0f3557]">
-                                            @if ($payloadType === 'checkbox')
-                                                <div class="flex flex-wrap gap-2">
-                                                    @foreach ($checkboxValues as $value)
-                                                        <span
-                                                            class="inline-flex rounded-full bg-[#dff0fb] px-3 py-2 font-semibold text-[#0c5a90]">
-                                                            {{ $value }}
-                                                        </span>
-                                                    @endforeach
-                                                </div>
-                                            @elseif ($payloadType === 'file' && data_get($answer, 'file_url'))
-                                                <a
-                                                    href="{{ data_get($answer, 'file_url') }}"
-                                                    target="_blank"
-                                                    rel="noopener noreferrer"
-                                                    class="inline-flex min-h-[42px] items-center justify-center rounded-xl border border-[#1376bd] px-4 py-2 font-semibold text-[#1376bd] transition hover:bg-[#1376bd] hover:text-white focus:outline-none focus:ring-4 focus:ring-[#1376bd]/20"
-                                                >
-                                                    <i class="fas fa-paperclip mr-2"></i>
-                                                    {{ data_get($answer, 'payload.original_name', 'Lihat lampiran') }}
-                                                </a>
-                                            @else
-                                                {{ $answer['text'] }}
-                                            @endif
-                                        </div>
-                                    @else
-                                        <div class="rounded-2xl bg-slate-100 px-[18px] py-4 leading-[1.8] text-[#6b7d8f]">
-                                            Pertanyaan ini tidak diisi.
-                                        </div>
-                                    @endif
-                                </div>
+                                <x-assessment::ui.result-field
+                                    :field="$field"
+                                    :answer="$answer"
+                                    :number="$questionNumber"
+                                />
                             @endforeach
-                        </div>
+                        </x-assessment::ui.card>
                     @endforeach
                 </div>
             @endforeach

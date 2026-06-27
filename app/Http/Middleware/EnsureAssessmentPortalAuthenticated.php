@@ -21,7 +21,7 @@ class EnsureAssessmentPortalAuthenticated
         }
 
         return redirect()
-            ->route('assessment.auth.login')
+            ->route('assessment.portal.auth')
             ->with('assessment_portal_notice', 'Silakan login terlebih dahulu untuk mengakses portal assessment.');
     }
 }

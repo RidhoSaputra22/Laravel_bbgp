@@ -2,15 +2,14 @@
 
 @section('content')
     <section
-        class="bg-center bg-cover pt-[72px] pb-[52px] text-white lg:pt-24 lg:pb-[72px]"
+        class="bg-center bg-cover pb-[52px] pt-[72px] text-white lg:pb-[72px] lg:pt-24"
         style="background-image: linear-gradient(135deg, rgba(19, 118, 189, 0.95), rgba(8, 58, 97, 0.95)), url('{{ asset('landing/images/slider-main/bg1.jpg') }}');"
     >
         <div class="container mx-auto px-4">
             <div class="grid items-center gap-8 lg:grid-cols-12 lg:gap-10">
                 <div class="lg:col-span-6">
                     <div class="mb-8 lg:mb-0 lg:pr-6">
-                        <span
-                            class="mb-6 inline-flex items-center gap-2.5 rounded-full bg-white/[0.14] px-[18px] py-2.5 text-sm font-semibold text-white sm:text-base">
+                        <span class="mb-6 inline-flex items-center gap-2.5 rounded-full bg-white/[0.14] px-[18px] py-2.5 text-sm font-semibold text-white sm:text-base">
                             <i class="fas fa-layer-group"></i>
                             Portal Assessment BBGTK Sulawesi Selatan
                         </span>
@@ -25,41 +24,28 @@
                         </p>
 
                         <ul class="mt-8 space-y-4">
-                            <li class="flex items-start gap-[14px] text-white/[0.92]">
-                                <i
-                                    class="fas fa-random mt-0.5 inline-flex h-[38px] w-[38px] shrink-0 items-center justify-center rounded-full bg-white/[0.12]">
-                                </i>
+                            <x-assessment::ui.feature-item icon="fas fa-random">
+                                Urutan soal ditampilkan acak per peserta agar pengerjaan lebih terjaga.
+                            </x-assessment::ui.feature-item>
 
-                                <div class="leading-relaxed">
-                                    Urutan soal ditampilkan acak per peserta agar pengerjaan lebih terjaga.
-                                </div>
-                            </li>
+                            <x-assessment::ui.feature-item icon="fas fa-clipboard-check">
+                                Setelah selesai, hasil pengisian dapat dibuka kembali melalui portal yang sama.
+                            </x-assessment::ui.feature-item>
 
-                            <li class="flex items-start gap-[14px] text-white/[0.92]">
-                                <i
-                                    class="fas fa-clipboard-check mt-0.5 inline-flex h-[38px] w-[38px] shrink-0 items-center justify-center rounded-full bg-white/[0.12]">
-                                </i>
-
-                                <div class="leading-relaxed">
-                                    Setelah selesai, hasil pengisian dapat dibuka kembali melalui portal yang sama.
-                                </div>
-                            </li>
-
-                            <li class="flex items-start gap-[14px] text-white/[0.92]">
-                                <i
-                                    class="fas fa-shield-alt mt-0.5 inline-flex h-[38px] w-[38px] shrink-0 items-center justify-center rounded-full bg-white/[0.12]">
-                                </i>
-
-                                <div class="leading-relaxed">
-                                    Tampilan mengikuti landing page sistem tanpa menambah library baru di project.
-                                </div>
-                            </li>
+                            <x-assessment::ui.feature-item icon="fas fa-shield-alt">
+                                Tampilan mengikuti landing page sistem tanpa menambah library baru di project.
+                            </x-assessment::ui.feature-item>
                         </ul>
                     </div>
                 </div>
 
                 <div class="lg:col-span-5 lg:col-start-8">
-                    <div class="overflow-hidden rounded-[28px] bg-white shadow-[0_24px_70px_rgba(2,35,64,0.25)]">
+                    <x-assessment::ui.card
+                        padding="p-0"
+                        rounded="rounded-[28px]"
+                        shadow="shadow-[0_24px_70px_rgba(2,35,64,0.25)]"
+                        class="overflow-hidden"
+                    >
                         <div class="p-[34px]">
                             <div class="mb-2.5 text-[28px] font-bold text-[#0b3557]">
                                 Login Assessment
@@ -70,96 +56,79 @@
                             </div>
 
                             @if (session('assessment_portal_notice'))
-                                <div
-                                    class="mb-5 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+                                <x-assessment::ui.alert type="warning" class="mb-5">
                                     {{ session('assessment_portal_notice') }}
-                                </div>
+                                </x-assessment::ui.alert>
                             @endif
 
                             @if (session('assessment_portal_success'))
-                                <div
-                                    class="mb-5 rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800">
+                                <x-assessment::ui.alert type="success" class="mb-5">
                                     {{ session('assessment_portal_success') }}
-                                </div>
+                                </x-assessment::ui.alert>
                             @endif
 
                             @if ($errors->any())
-                                <div class="mb-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+                                <x-assessment::ui.alert type="danger" class="mb-5">
                                     <ul class="list-disc space-y-1 pl-5">
                                         @foreach ($errors->all() as $error)
                                             <li>{{ $error }}</li>
                                         @endforeach
                                     </ul>
-                                </div>
+                                </x-assessment::ui.alert>
                             @endif
 
-                            <form method="POST" action="{{ route('assessment.login') }}" class="space-y-5">
+                            <form method="POST" action="{{ route('assessment.portal.login') }}" class="space-y-5">
                                 @csrf
 
-                                <div class="space-y-2">
-                                    <label for="assessment-nik" class="block text-sm font-medium text-slate-700">
-                                        NIK
-                                    </label>
+                                <x-assessment::form.input
+                                    id="assessment-nik"
+                                    name="nik"
+                                    label="NIK"
+                                    :value="old('nik')"
+                                    placeholder="Masukkan NIK"
+                                    :required="true"
+                                    :error="$errors->first('nik')"
+                                />
 
-                                    <input
-                                        id="assessment-nik"
-                                        type="text"
-                                        name="nik"
-                                        value="{{ old('nik') }}"
-                                        placeholder="Masukkan NIK"
-                                        required
-                                        class="min-h-[52px] w-full rounded-[14px] border border-[#d8e3ee] bg-white px-4 text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-[#1376bd] focus:ring-4 focus:ring-[#1376bd]/15 @error('nik') border-red-500 focus:border-red-500 focus:ring-red-500/15 @enderror"
-                                    >
-                                </div>
+                                <x-assessment::form.input
+                                    id="assessment-password"
+                                    type="password"
+                                    name="password"
+                                    label="Password"
+                                    placeholder="Masukkan password akun"
+                                    :required="true"
+                                    :error="$errors->first('password')"
+                                />
 
-                                <div class="space-y-2">
-                                    <label for="assessment-password" class="block text-sm font-medium text-slate-700">
-                                        Password
-                                    </label>
-
-                                    <input
-                                        id="assessment-password"
-                                        type="password"
-                                        name="password"
-                                        placeholder="Masukkan password akun"
-                                        required
-                                        class="min-h-[52px] w-full rounded-[14px] border border-[#d8e3ee] bg-white px-4 text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-[#1376bd] focus:ring-4 focus:ring-[#1376bd]/15 @error('password') border-red-500 focus:border-red-500 focus:ring-red-500/15 @enderror"
-                                    >
-                                </div>
-
-                                <div class="space-y-2">
-                                    <label for="assessment-role" class="block text-sm font-medium text-slate-700">
-                                        Peran Peserta
-                                    </label>
-
-                                    <select
-                                        id="assessment-role"
-                                        name="role"
-                                        required
-                                        class="min-h-[52px] w-full rounded-[14px] border border-[#d8e3ee] bg-white px-4 text-slate-800 outline-none transition focus:border-[#1376bd] focus:ring-4 focus:ring-[#1376bd]/15 @error('role') border-red-500 focus:border-red-500 focus:ring-red-500/15 @enderror"
-                                    >
-                                        <option value="">Pilih peran peserta</option>
-
-                                        @foreach ($roleOptions as $value => $label)
-                                            <option value="{{ $value }}" @selected(old('role') === $value)>
-                                                {{ $label }}
-                                            </option>
-                                        @endforeach
-                                    </select>
-                                </div>
-
-                                <button
-                                    type="submit"
-                                    class="flex min-h-[52px] w-full items-center justify-center rounded-[14px] border border-[#1376bd] bg-[#1376bd] px-5 text-sm font-bold tracking-[0.2px] text-white transition hover:bg-[#0f619c] focus:outline-none focus:ring-4 focus:ring-[#1376bd]/25"
+                                <x-assessment::form.select
+                                    id="assessment-role"
+                                    name="role"
+                                    label="Peran Peserta"
+                                    placeholder="Pilih peran peserta"
+                                    :required="true"
+                                    :error="$errors->first('role')"
                                 >
-                                    <i class="fas fa-sign-in-alt mr-2"></i>
+                                    @foreach ($roleOptions as $value => $label)
+                                        <option value="{{ $value }}" @selected(old('role') === $value)>
+                                            {{ $label }}
+                                        </option>
+                                    @endforeach
+                                </x-assessment::form.select>
+
+                                <x-assessment::ui.button
+                                    type="submit"
+                                    icon="fas fa-sign-in-alt"
+                                    minHeight="min-h-[52px]"
+                                    rounded="rounded-[14px]"
+                                    paddingX="px-5"
+                                    class="w-full font-bold tracking-[0.2px]"
+                                >
                                     Masuk ke Portal
-                                </button>
+                                </x-assessment::ui.button>
                             </form>
                         </div>
 
-                        <div
-                            class="flex flex-wrap justify-between gap-x-4 gap-y-2 bg-[#f5f9fc] px-[34px] pb-7 pt-[18px] text-sm text-[#61778a]">
+                        <div class="flex flex-wrap justify-between gap-x-4 gap-y-2 bg-[#f5f9fc] px-[34px] pb-7 pt-[18px] text-sm text-[#61778a]">
                             <span>Gunakan akun peserta yang sama dengan sistem BBGTK.</span>
 
                             <a
@@ -169,7 +138,7 @@
                                 Kembali ke beranda
                             </a>
                         </div>
-                    </div>
+                    </x-assessment::ui.card>
                 </div>
             </div>
         </div>
@@ -177,7 +146,11 @@
 
     <section class="relative z-10 -mt-[26px]">
         <div class="container mx-auto px-4">
-            <div class="rounded-[22px] bg-white px-7 py-[26px] shadow-[0_18px_48px_rgba(12,53,87,0.14)]">
+            <x-assessment::ui.card
+                padding="px-7 py-[26px]"
+                rounded="rounded-[22px]"
+                shadow="shadow-[0_18px_48px_rgba(12,53,87,0.14)]"
+            >
                 <div class="grid items-center gap-4 lg:grid-cols-12">
                     <div class="lg:col-span-8">
                         <h4 class="mb-2 text-xl font-semibold text-[#0b3557]">
@@ -191,15 +164,17 @@
                     </div>
 
                     <div class="lg:col-span-4 lg:text-right">
-                        <a
-                            href="{{ route('login') }}"
-                            class="inline-flex min-h-[44px] items-center justify-center rounded-xl border border-[#1376bd] px-5 py-2.5 font-semibold text-[#1376bd] transition hover:bg-[#1376bd] hover:text-white focus:outline-none focus:ring-4 focus:ring-[#1376bd]/20"
+                        <x-assessment::ui.button
+                            :href="route('login')"
+                            variant="outline"
+                            paddingX="px-5"
+                            paddingY="py-2.5"
                         >
                             Login Umum Sistem
-                        </a>
+                        </x-assessment::ui.button>
                     </div>
                 </div>
-            </div>
+            </x-assessment::ui.card>
         </div>
     </section>
 @endsection
