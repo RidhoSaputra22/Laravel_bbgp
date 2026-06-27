@@ -7,6 +7,7 @@
 ])
 
 @php
+    $answerName = 'answers[' . $field['id'] . ']';
     $inputType = match ($field['tipe_field']) {
         'number' => 'number',
         'date' => 'date',
@@ -39,14 +40,14 @@
     @switch($field['tipe_field'])
         @case('textarea')
             <x-assessment::form.textarea :label="$field['label']" :description="$field['deskripsi']" :hint="$field['bantuan']"
-                :name="'answers[' . $field['id'] . ']'" :value="$oldValue"
+                :name="$answerName" :value="$oldValue"
                 :placeholder="$field['placeholder'] ?: 'Tuliskan jawaban Anda'" :required="(bool) $field['is_required']"
                 :error="$error" />
         @break
 
         @case('select')
             <x-assessment::form.select :label="$field['label']" :description="$field['deskripsi']" :hint="$field['bantuan']"
-                :name="'answers[' . $field['id'] . ']'" placeholder="Pilih jawaban"
+                :name="$answerName" placeholder="Pilih jawaban"
                 :required="(bool) $field['is_required']" :error="$error">
                 @foreach ($field['opsi_field'] ?? [] as $option)
                     <option value="{{ $option['value'] }}" @selected((string) $oldValue === (string) $option['value'])>
@@ -57,34 +58,23 @@
         @break
 
         @case('radio')
-            <div class="space-y-3">
-                @foreach ($field['opsi_field'] ?? [] as $optionIndex => $option)
-                    <x-assessment::form.choice-option :id="'field-' . $field['id'] . '-' . $optionIndex" type="radio"
-                        :name="'answers[' . $field['id'] . ']'" :value="$option['value']"
-                        :checked="(string) $oldValue === (string) $option['value']" :label="$option['label']"
-                        :description="$option['value']" />
-                @endforeach
-            </div>
+            <x-assessment::form.radio-group :name="$answerName" :options="$field['opsi_field'] ?? []"
+                :selected="\Illuminate\Support\Arr::wrap($oldValue)" :id-prefix="'field-' . $field['id']" />
         @break
 
         @case('checkbox')
-            <div class="space-y-3">
-                @foreach ($field['opsi_field'] ?? [] as $optionIndex => $option)
-                    <x-assessment::form.choice-option :id="'field-' . $field['id'] . '-' . $optionIndex" type="checkbox"
-                        :name="'answers[' . $field['id'] . '][]'" :value="$option['value']"
-                        :checked="in_array((string) $option['value'], $checkboxValues, true)" :label="$option['label']" />
-                @endforeach
-            </div>
+            <x-assessment::form.checkbox-group :name="$answerName" :options="$field['opsi_field'] ?? []"
+                :selected="$checkboxValues" :id-prefix="'field-' . $field['id']" />
         @break
 
         @case('file')
             <x-assessment::form.file-input :label="$field['label']" :description="$field['deskripsi']" :hint="$field['bantuan']"
-                :name="'answers[' . $field['id'] . ']'" :required="(bool) $field['is_required']" :error="$error" />
+                :name="$answerName" :required="(bool) $field['is_required']" :error="$error" />
         @break
 
         @default
             <x-assessment::form.input :label="$field['label']" :description="$field['deskripsi']" :hint="$field['bantuan']"
-                :type="$inputType" :name="'answers[' . $field['id'] . ']'" :value="$oldValue"
+                :type="$inputType" :name="$answerName" :value="$oldValue"
                 :placeholder="$field['placeholder'] ?: 'Masukkan jawaban Anda'"
                 :required="(bool) $field['is_required']" :error="$error" />
     @endswitch
