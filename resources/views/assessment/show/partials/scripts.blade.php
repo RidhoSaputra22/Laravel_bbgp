@@ -4,6 +4,7 @@
             return {
                 currentAssessmentIndex: Number(config.initialIndex ?? 0),
                 totalAssessments: Number(config.totalAssessments ?? 0),
+                assessmentItems: Array.isArray(config.assessmentItems) ? config.assessmentItems : [],
                 showFinishModal: false,
                 isSubmitting: false,
                 handleSubmit(event) {
@@ -21,6 +22,21 @@
                 },
                 isCurrent(index) {
                     return this.currentAssessmentIndex === index;
+                },
+                currentAssessmentMeta() {
+                    return this.assessmentItems[this.currentAssessmentIndex] ?? {
+                        index: 0,
+                        form_count: 0,
+                        question_count: 0,
+                    };
+                },
+                isFirstAssessment() {
+                    return this.currentAssessmentIndex <= 0;
+                },
+                isLastAssessment() {
+                    return this.totalAssessments > 0
+                        ? this.currentAssessmentIndex >= this.totalAssessments - 1
+                        : true;
                 },
                 progressWidth() {
                     if (this.totalAssessments <= 0) {

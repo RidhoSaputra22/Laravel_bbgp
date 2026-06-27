@@ -16,7 +16,7 @@
     ];
 
     $buttonClasses = [
-        'inline-flex items-center justify-center text-sm font-semibold transition focus:outline-none focus:ring-4 px-3 py-2 rounded-sm ',
+        'cursor-pointer inline-flex items-center justify-center text-sm font-semibold transition focus:outline-none focus:ring-4 px-3 py-2 rounded-sm ',
 
         $variants[$variant] ?? $variants['primary'],
     ];

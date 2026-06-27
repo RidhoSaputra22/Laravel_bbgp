@@ -74,6 +74,15 @@
             }
         }
 
+        $assessmentNavigationItems = collect($assessmentItems)
+            ->map(fn($assessmentItem) => [
+                'index' => $assessmentItem['index'],
+                'form_count' => $assessmentItem['form_count'],
+                'question_count' => $assessmentItem['question_count'],
+            ])
+            ->values()
+            ->all();
+
         $errorFieldKey = collect(array_keys($errors->getMessages()))->first(
             fn($key) => str_starts_with($key, 'answers.'),
         );
@@ -101,6 +110,7 @@
     <section x-data="assessmentExamFlow({
         initialIndex: {{ $initialAssessmentIndex }},
         totalAssessments: {{ $assessmentCount }},
+        assessmentItems: @js($assessmentNavigationItems),
     })" class="grid gap-8 p-6 lg:grid-cols-[minmax(0,2fr)_minmax(320px,1fr)] lg:gap-10 lg:p-14">
         <div class="space-y-8 lg:space-y-12" x-ref="assessmentFlowTop">
             <form id="assessment-exam-form" action="{{ route('assessment.portal.submit', $target->id) }}" method="POST"
@@ -116,8 +126,6 @@
                     @include('assessment.show.partials.assessment-item', [
                         'assessmentItem' => $assessmentItem,
                         'assessment' => $assessmentItem['data'],
-                        'isFirstAssessment' => $loop->first,
-                        'isLastAssessment' => $loop->last,
                     ])
                 @endforeach
 

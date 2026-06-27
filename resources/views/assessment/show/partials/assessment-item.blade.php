@@ -5,9 +5,5 @@
         @include('assessment.show.partials.assessment-form-card', ['form' => $form])
     @endforeach
 
-    @include('assessment.show.partials.assessment-navigation-card', [
-        'assessmentItem' => $assessmentItem,
-        'isFirstAssessment' => $isFirstAssessment,
-        'isLastAssessment' => $isLastAssessment,
-    ])
+
 </div>
