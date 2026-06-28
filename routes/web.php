@@ -333,6 +333,8 @@ Route::group(
                     Route::get('/create', 'AssessmentAssignmentController@create')->name('assessment.assignment.create');
                     Route::post('/store', 'AssessmentAssignmentController@store')->name('assessment.assignment.store');
                     Route::get('/show/{id}', 'AssessmentAssignmentController@show')->name('assessment.assignment.show');
+                    Route::get('/review/{targetId}', 'AssessmentAttemptReviewController@show')->name('assessment.assignment.review.show');
+                    Route::put('/review/{targetId}', 'AssessmentAttemptReviewController@update')->name('assessment.assignment.review.update');
                 });
             });
 

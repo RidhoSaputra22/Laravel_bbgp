@@ -14,6 +14,7 @@ class AssessmentAttempt extends Model
         'status',
         'structure_snapshot',
         'result_summary',
+        'scoring_summary',
         'total_questions',
         'required_questions',
         'answered_questions',
@@ -26,6 +27,7 @@ class AssessmentAttempt extends Model
     protected $casts = [
         'structure_snapshot' => 'array',
         'result_summary' => 'array',
+        'scoring_summary' => 'array',
         'started_at' => 'datetime',
         'submitted_at' => 'datetime',
         'last_answered_at' => 'datetime',

@@ -14,6 +14,10 @@ use Illuminate\Validation\ValidationException;
 
 class AssessmentAttemptService
 {
+    public function __construct(
+        private readonly AssessmentScoringService $scoringService
+    ) {}
+
     public function submit(AssessmentAttempt $attempt, array $answers, array $files): AssessmentAttempt
     {
         if ($attempt->status === 'submitted') {
@@ -61,16 +65,20 @@ class AssessmentAttemptService
             }
 
             $freshAnswers = $attempt->answers()->get();
+            $attempt->setRelation('answers', $freshAnswers);
+
             $summary = $this->buildSummaryFromSnapshot(
                 $snapshot,
                 $freshAnswers,
                 $attempt->started_at ?: $submittedAt,
                 $submittedAt
             );
+            $scoringSummary = $this->scoringService->buildSummary($attempt);
 
             $attempt->forceFill([
                 'status' => 'submitted',
                 'result_summary' => $summary,
+                'scoring_summary' => $scoringSummary,
                 'answered_questions' => (int) $summary['answered_questions'],
                 'answered_required_questions' => (int) $summary['answered_required_questions'],
                 'submitted_at' => $submittedAt,
@@ -110,6 +118,36 @@ class AssessmentAttemptService
         );
     }
 
+    public function buildScoringSummary(AssessmentAttempt $attempt): array
+    {
+        if ($attempt->scoring_summary) {
+            return $attempt->scoring_summary;
+        }
+
+        $summary = $this->scoringService->buildSummary($attempt->loadMissing('answers'));
+
+        if ($attempt->exists) {
+            $attempt->forceFill([
+                'scoring_summary' => $summary,
+            ])->save();
+        }
+
+        return $summary;
+    }
+
+    public function refreshScoringSummary(AssessmentAttempt $attempt): array
+    {
+        $summary = $this->scoringService->buildSummary($attempt->loadMissing('answers'));
+
+        if ($attempt->exists) {
+            $attempt->forceFill([
+                'scoring_summary' => $summary,
+            ])->save();
+        }
+
+        return $summary;
+    }
+
     public function buildAnswerLookup(AssessmentAttempt $attempt): array
     {
         return $attempt->answers
@@ -119,7 +157,14 @@ class AssessmentAttemptService
                         'text' => $answer->answer_text,
                         'payload' => $answer->answer_payload ?? [],
                         'file_path' => $answer->answer_file_path,
-                        'file_url' => $answer->answer_file_path ? asset('upload/'.$answer->answer_file_path) : null,
+                        'file_url' => $answer->answer_file_path ? asset('storage/'.$answer->answer_file_path) : null,
+                        'rows' => data_get($answer->answer_payload ?? [], 'rows', []),
+                        'columns' => data_get($answer->answer_payload ?? [], 'columns', []),
+                        'assessor_score' => $answer->assessor_score,
+                        'assessor_notes' => $answer->assessor_notes,
+                        'assessor_score_label' => $answer->assessor_score
+                            ? \App\Enum\LevelKompetensi::tryFrom((int) $answer->assessor_score)?->label()
+                            : null,
                         'answered_at' => $answer->answered_at?->format('d M Y H:i'),
                     ],
                 ];
@@ -219,6 +264,35 @@ class AssessmentAttemptService
                     'answer_payload' => [
                         'type' => 'checkbox',
                         'values' => $selectedValues,
+                    ],
+                    'answer_file_path' => null,
+                ];
+
+                continue;
+            }
+
+            if ($fieldType === 'repeater') {
+                $normalizedRepeater = $this->normalizeRepeaterAnswer($field, $answers[$fieldId] ?? null);
+
+                if ($normalizedRepeater['message']) {
+                    $messages[$fieldKey] = $normalizedRepeater['message'];
+
+                    continue;
+                }
+
+                if ($normalizedRepeater['rows'] === []) {
+                    continue;
+                }
+
+                $normalized[(int) $fieldId] = [
+                    'assessment_id' => $field['assessment_id'],
+                    'assessment_form_id' => $field['assessment_form_id'],
+                    'answer_text' => count($normalizedRepeater['rows']).' entri',
+                    'answer_payload' => [
+                        'type' => 'repeater',
+                        'rows' => $normalizedRepeater['rows'],
+                        'columns' => $normalizedRepeater['columns'],
+                        'row_count' => count($normalizedRepeater['rows']),
                     ],
                     'answer_file_path' => null,
                 ];
@@ -331,6 +405,156 @@ class AssessmentAttemptService
         }
 
         return $normalized;
+    }
+
+    private function normalizeRepeaterAnswer(array $field, mixed $value): array
+    {
+        $config = is_array($field['opsi_field'] ?? null) ? $field['opsi_field'] : [];
+        $columns = collect($config['columns'] ?? [])
+            ->filter(fn ($column) => is_array($column))
+            ->map(function (array $column) {
+                $columnName = trim((string) ($column['nama_field'] ?? ''));
+                $columnLabel = trim((string) ($column['label'] ?? ''));
+
+                return [
+                    'label' => $columnLabel !== '' ? $columnLabel : $columnName,
+                    'nama_field' => $columnName,
+                    'tipe_field' => trim((string) ($column['tipe_field'] ?? 'text')) ?: 'text',
+                    'opsi_field' => is_array($column['opsi_field'] ?? null) ? $column['opsi_field'] : [],
+                    'placeholder' => trim((string) ($column['placeholder'] ?? '')),
+                    'is_required' => (bool) ($column['is_required'] ?? false),
+                ];
+            })
+            ->filter(fn ($column) => $column['nama_field'] !== '')
+            ->values()
+            ->all();
+
+        if ($columns === []) {
+            return [
+                'rows' => [],
+                'columns' => [],
+                'message' => "Konfigurasi tabel untuk pertanyaan {$field['label']} belum valid.",
+            ];
+        }
+
+        $rows = collect(is_array($value) ? $value : [])
+            ->filter(fn ($row) => is_array($row))
+            ->values();
+        $normalizedRows = [];
+        $minRows = max((int) ($config['min_rows'] ?? 0), 0);
+        $maxRows = max((int) ($config['max_rows'] ?? 0), 0);
+
+        foreach ($rows as $rowIndex => $row) {
+            $normalizedRow = [];
+            $hasContent = false;
+
+            foreach ($columns as $column) {
+                $columnName = $column['nama_field'];
+                $columnValue = is_array($row[$columnName] ?? null)
+                    ? ''
+                    : trim((string) ($row[$columnName] ?? ''));
+
+                if ($columnValue !== '') {
+                    $hasContent = true;
+                }
+
+                if ($columnValue !== '') {
+                    if ($column['tipe_field'] === 'email' && ! filter_var($columnValue, FILTER_VALIDATE_EMAIL)) {
+                        return [
+                            'rows' => [],
+                            'columns' => $columns,
+                            'message' => "Kolom {$column['label']} pada baris ".($rowIndex + 1)." untuk pertanyaan {$field['label']} tidak valid.",
+                        ];
+                    }
+
+                    if ($column['tipe_field'] === 'number' && ! is_numeric($columnValue)) {
+                        return [
+                            'rows' => [],
+                            'columns' => $columns,
+                            'message' => "Kolom {$column['label']} pada baris ".($rowIndex + 1)." untuk pertanyaan {$field['label']} harus berupa angka.",
+                        ];
+                    }
+
+                    if ($column['tipe_field'] === 'date') {
+                        try {
+                            $date = Carbon::createFromFormat('Y-m-d', $columnValue);
+                        } catch (\Throwable $exception) {
+                            $date = null;
+                        }
+
+                        if (! $date || $date->format('Y-m-d') !== $columnValue) {
+                            return [
+                                'rows' => [],
+                                'columns' => $columns,
+                                'message' => "Kolom {$column['label']} pada baris ".($rowIndex + 1)." untuk pertanyaan {$field['label']} tidak valid.",
+                            ];
+                        }
+                    }
+
+                    if ($column['tipe_field'] === 'select') {
+                        $allowedValues = collect($column['opsi_field'] ?? [])
+                            ->map(fn ($optionValue) => (string) $optionValue)
+                            ->all();
+
+                        if ($allowedValues !== [] && ! in_array($columnValue, $allowedValues, true)) {
+                            return [
+                                'rows' => [],
+                                'columns' => $columns,
+                                'message' => "Pilihan {$column['label']} pada baris ".($rowIndex + 1)." untuk pertanyaan {$field['label']} tidak valid.",
+                            ];
+                        }
+                    }
+                }
+
+                $normalizedRow[$columnName] = $columnValue;
+            }
+
+            if (! $hasContent) {
+                continue;
+            }
+
+            foreach ($columns as $column) {
+                if ($column['is_required'] && ($normalizedRow[$column['nama_field']] ?? '') === '') {
+                    return [
+                        'rows' => [],
+                        'columns' => $columns,
+                        'message' => "Kolom {$column['label']} pada baris ".($rowIndex + 1)." untuk pertanyaan {$field['label']} wajib diisi.",
+                    ];
+                }
+            }
+
+            $normalizedRows[] = $normalizedRow;
+        }
+
+        if ((bool) ($field['is_required'] ?? false) && $normalizedRows === []) {
+            return [
+                'rows' => [],
+                'columns' => $columns,
+                'message' => "Minimal isi satu baris pada pertanyaan {$field['label']}.",
+            ];
+        }
+
+        if ($minRows > 0 && count($normalizedRows) < $minRows) {
+            return [
+                'rows' => [],
+                'columns' => $columns,
+                'message' => "Pertanyaan {$field['label']} minimal harus memiliki {$minRows} baris terisi.",
+            ];
+        }
+
+        if ($maxRows > 0 && count($normalizedRows) > $maxRows) {
+            return [
+                'rows' => [],
+                'columns' => $columns,
+                'message' => "Pertanyaan {$field['label']} maksimal hanya boleh memiliki {$maxRows} baris terisi.",
+            ];
+        }
+
+        return [
+            'rows' => $normalizedRows,
+            'columns' => $columns,
+            'message' => null,
+        ];
     }
 
     private function prepareAnswerForPersistence(AssessmentAttempt $attempt, array $normalizedAnswer): array
@@ -462,7 +686,13 @@ class AssessmentAttemptService
             return true;
         }
 
-        return collect($payload['values'] ?? [])->filter(fn ($value) => filled($value))->isNotEmpty();
+        if (collect($payload['values'] ?? [])->filter(fn ($value) => filled($value))->isNotEmpty()) {
+            return true;
+        }
+
+        return collect($payload['rows'] ?? [])
+            ->filter(fn ($row) => is_array($row) && collect($row)->filter(fn ($value) => filled($value))->isNotEmpty())
+            ->isNotEmpty();
     }
 
     private function flattenFields(array $snapshot): array

@@ -2,6 +2,8 @@
 
 namespace Database\Seeders;
 
+use App\Enum\AssessmentInstrumentType;
+use App\Enum\KompetensiGuru;
 use App\Models\Assessment;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Str;
@@ -19,6 +21,7 @@ class AssessmentStudiKasusSeeder extends Seeder
                 'judul' => 'Studi Kasus Pemetaan Kompetensi Guru',
                 'deskripsi' => 'Assessment berbasis studi kasus untuk memetakan kompetensi pedagogik, kepribadian, sosial, dan profesional guru.',
                 'petunjuk' => 'Bacalah setiap kasus dengan saksama. Jawablah seluruh pertanyaan secara analitis, sistematis, dan sesuai dengan konteks tugas seorang guru.',
+                'instrument_type' => AssessmentInstrumentType::STUDI_KASUS->value,
                 'status' => 'publish',
                 'is_active' => true,
                 'forms' => [
@@ -26,6 +29,10 @@ class AssessmentStudiKasusSeeder extends Seeder
                         'judul_form' => 'Studi Kasus 1 – Kompetensi Pedagogik',
                         'kode_form' => 'FORM-SK-PEDAGOGIK',
                         'deskripsi' => "Fokus: Pembelajaran berpusat pada peserta didik.\n\nKasus:\nSeorang guru mengajar dengan metode ceramah hampir di setiap pertemuan. Siswa cenderung pasif, hanya mencatat dan mendengarkan. Hasil asesmen menunjukkan sebagian besar siswa memahami materi secara dangkal dan kesulitan menerapkan konsep dalam situasi nyata. Guru merasa metode tersebut sudah efektif karena materi dapat disampaikan dengan cepat.",
+                        'kompetensi' => KompetensiGuru::PEDAGOGIK->value,
+                        'indikator_kode' => 'SK-PED',
+                        'indikator_label' => 'Analisis studi kasus pedagogik',
+                        'is_scoreable' => true,
                         'urutan' => 1,
                         'is_active' => true,
                         'fields' => [
@@ -96,6 +103,10 @@ class AssessmentStudiKasusSeeder extends Seeder
                         'judul_form' => 'Studi Kasus 2 – Kompetensi Kepribadian',
                         'kode_form' => 'FORM-SK-KEPRIBADIAN',
                         'deskripsi' => "Fokus: Integritas, emosi, dan refleksi diri.\n\nKasus:\nSeorang guru diketahui memberikan perlakuan berbeda kepada siswa tertentu karena faktor kedekatan pribadi. Selain itu, guru tersebut mudah terpancing emosi ketika siswa melakukan kesalahan kecil di kelas. Meskipun demikian, guru merasa tindakannya wajar dan belum melakukan refleksi terhadap perilakunya.",
+                        'kompetensi' => KompetensiGuru::KEPRIBADIAN->value,
+                        'indikator_kode' => 'SK-KEP',
+                        'indikator_label' => 'Analisis studi kasus kepribadian',
+                        'is_scoreable' => true,
                         'urutan' => 2,
                         'is_active' => true,
                         'fields' => [
@@ -166,6 +177,10 @@ class AssessmentStudiKasusSeeder extends Seeder
                         'judul_form' => 'Studi Kasus 3 – Kompetensi Sosial',
                         'kode_form' => 'FORM-SK-SOSIAL',
                         'deskripsi' => "Fokus: Kolaborasi dan keterlibatan pihak lain.\n\nKasus:\nDi sebuah sekolah, guru jarang berkolaborasi dengan rekan sejawat. Komunikasi dengan orang tua hanya dilakukan saat pembagian rapor. Selain itu, potensi lingkungan sekitar belum dimanfaatkan sebagai sumber belajar. Akibatnya, pembelajaran kurang kontekstual dan dukungan terhadap siswa menjadi terbatas.",
+                        'kompetensi' => KompetensiGuru::SOSIAL->value,
+                        'indikator_kode' => 'SK-SOS',
+                        'indikator_label' => 'Analisis studi kasus sosial',
+                        'is_scoreable' => true,
                         'urutan' => 3,
                         'is_active' => true,
                         'fields' => [
@@ -236,6 +251,10 @@ class AssessmentStudiKasusSeeder extends Seeder
                         'judul_form' => 'Studi Kasus 4 – Kompetensi Profesional',
                         'kode_form' => 'FORM-SK-PROFESIONAL',
                         'deskripsi' => "Fokus: Penguasaan materi dan implementasi kurikulum.\n\nKasus:\nSeorang guru mengajar sesuai buku teks tanpa mengembangkan materi lebih lanjut. Pembelajaran tidak dikaitkan dengan konteks kehidupan siswa dan tidak sepenuhnya mengacu pada capaian pembelajaran dalam kurikulum. Akibatnya, siswa kurang memahami relevansi materi yang dipelajari.",
+                        'kompetensi' => KompetensiGuru::PROFESIONAL->value,
+                        'indikator_kode' => 'SK-PRO',
+                        'indikator_label' => 'Analisis studi kasus profesional',
+                        'is_scoreable' => true,
                         'urutan' => 4,
                         'is_active' => true,
                         'fields' => [
@@ -316,6 +335,7 @@ class AssessmentStudiKasusSeeder extends Seeder
                     'slug' => Str::slug($item['judul']),
                     'deskripsi' => $item['deskripsi'],
                     'petunjuk' => $item['petunjuk'],
+                    'instrument_type' => $item['instrument_type'] ?? null,
                     'status' => $item['status'],
                     'is_active' => $item['is_active'],
                 ]

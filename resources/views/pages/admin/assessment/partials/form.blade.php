@@ -1,6 +1,8 @@
 @php
     $builderSeed = old('forms', $formBuilderData ?? []);
     $competencyLevels = \App\Enum\LevelKompetensi::options();
+    $instrumentTypes = \App\Enum\AssessmentInstrumentType::options();
+    $teacherCompetencies = \App\Enum\KompetensiGuru::options();
     $fieldTypeBadges = $fieldTypes ?? [];
     $validationErrors = $errors->getMessages();
 @endphp
@@ -138,7 +140,25 @@
             </div>
 
             <div class="row">
-                <div class="col-md-6">
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <label>Jenis Instrumen Penilaian</label>
+                        <select name="instrument_type"
+                            class="form-control @error('instrument_type') is-invalid @enderror">
+                            <option value="">Pilih jenis instrumen</option>
+                            @foreach ($instrumentTypes as $value => $label)
+                                <option value="{{ $value }}"
+                                    @selected(old('instrument_type', $assessment->instrument_type) === $value)>
+                                    {{ $label }}
+                                </option>
+                            @endforeach
+                        </select>
+                        @error('instrument_type')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                    </div>
+                </div>
+                <div class="col-md-4">
                     <div class="form-group">
                         <label>Deskripsi</label>
                         <textarea name="deskripsi" class="form-control assessment-meta-textarea @error('deskripsi') is-invalid @enderror" rows="6"
@@ -148,7 +168,7 @@
                         @enderror
                     </div>
                 </div>
-                <div class="col-md-6">
+                <div class="col-md-4">
                     <div class="form-group">
                         <label>Petunjuk Pengisian</label>
                         <textarea name="petunjuk" class="form-control assessment-meta-textarea @error('petunjuk') is-invalid @enderror" rows="6"
@@ -178,8 +198,10 @@
                 <ul class="mb-0 pl-3">
                     <li>Isi informasi assessment di bagian atas terlebih dahulu.</li>
                     <li>Klik <strong>Tambah Form</strong> di bagian bawah untuk membuat bagian form, lalu tambahkan field di bawah form terkait.</li>
+                    <li>Pilih <strong>jenis instrumen</strong> di level assessment, lalu atur <strong>kompetensi</strong>, <strong>indikator</strong>, dan status <strong>masuk penilaian</strong> di setiap form.</li>
                     <li>Untuk field <strong>Daftar Pilihan</strong> dan <strong>Kotak Centang</strong>, pisahkan opsi dengan koma atau baris baru.</li>
                     <li>Untuk field <strong>Pilihan Ganda</strong>, isi <strong>kode jawaban</strong>, <strong>isi jawaban</strong>, dan <strong>level kompetensi</strong> pada setiap opsi.</li>
+                    <li>Untuk field <strong>Tabel Berulang</strong>, isi konfigurasi JSON kolom tabel sesuai contoh yang tersedia.</li>
                     <li>Nama field akan dibuat otomatis dari label yang Anda isi.</li>
                     <li>Aktifkan hanya form dan field yang ingin ditampilkan ke pengguna.</li>
                 </ul>
@@ -219,10 +241,12 @@
         $(document).ready(function() {
             const assessmentFieldTypes = @json($fieldTypes);
             const competencyLevels = @json($competencyLevels);
+            const teacherCompetencies = @json($teacherCompetencies);
             const initialForms = @json($builderSeed);
             const validationErrors = @json($validationErrors);
             const textOptionFieldTypes = ['select', 'checkbox'];
             const multipleChoiceFieldType = 'radio';
+            const repeaterFieldType = 'repeater';
             const columnOptions = ['col-md-12', 'col-md-8', 'col-md-6', 'col-md-4'];
             const $previewPanel = $('#assessment-preview-panel');
             const $previewContent = $('#assessment-preview-content');
@@ -299,6 +323,17 @@
                     const selected = value === selectedValue ? 'selected' : '';
                     return `<option value="${value}" ${selected}>${value}</option>`;
                 }).join('');
+            };
+
+            const buildTeacherCompetencyOptions = (selectedValue) => {
+                let optionsHtml = '<option value="">Pilih kompetensi</option>';
+
+                Object.entries(teacherCompetencies).forEach(([value, label]) => {
+                    const selected = value === selectedValue ? 'selected' : '';
+                    optionsHtml += `<option value="${escapeHtml(value)}" ${selected}>${escapeHtml(label)}</option>`;
+                });
+
+                return optionsHtml;
             };
 
             const generateChoiceLabel = (index) => {
@@ -432,6 +467,31 @@
                 return normalizedOptions;
             };
 
+            const buildDefaultRepeaterConfigText = () => JSON.stringify({
+                min_rows: 1,
+                max_rows: 10,
+                columns: [{
+                        label: 'Kolom 1',
+                        nama_field: 'kolom_1',
+                        tipe_field: 'text',
+                        placeholder: 'Isi kolom 1',
+                        is_required: true
+                    },
+                    {
+                        label: 'Kolom 2',
+                        nama_field: 'kolom_2',
+                        tipe_field: 'text',
+                        placeholder: 'Isi kolom 2',
+                        is_required: false
+                    },
+                ],
+            }, null, 2);
+
+            const normalizeRepeaterConfigText = (value) => {
+                const rawValue = String(value || '').trim();
+                return rawValue || buildDefaultRepeaterConfigText();
+            };
+
             const buildRadioOptionRow = (formIndex, fieldIndex, optionIndex, optionData = {}) => {
                 const normalizedOption = normalizeRadioOptionShape(optionData);
                 const optionText = normalizedOption.label || '';
@@ -501,6 +561,7 @@
                 const placeholderName = `${fieldPrefix}[placeholder]`;
                 const urutanName = `${fieldPrefix}[urutan]`;
                 const opsiFieldTextName = `${fieldPrefix}[opsi_field_text]`;
+                const repeaterConfigName = `${fieldPrefix}[repeater_config_text]`;
                 const radioOptionsName = `${fieldPrefix}[radio_options]`;
                 const bantuanName = `${fieldPrefix}[bantuan]`;
                 const lebarKolomName = `${fieldPrefix}[lebar_kolom]`;
@@ -521,6 +582,11 @@
                     'multiple-choice-wrapper',
                     showMultipleChoiceOptions ? '' : 'd-none',
 
+                );
+                const repeaterWrapperClass = joinClasses(
+                    'form-group',
+                    'repeater-option-wrapper',
+                    fieldType === repeaterFieldType ? '' : 'd-none',
                 );
 
                 return `
@@ -637,6 +703,43 @@
 
                             </div>
 
+                            <div class="${repeaterWrapperClass}">
+                                <label>${buildRequiredLabel('Konfigurasi Tabel Berulang (JSON)')}</label>
+                                <textarea class="${getInputClass(repeaterConfigName)} repeater-config-input"
+                                    name="${repeaterConfigName}"
+                                    rows="10"
+                                    placeholder='{"min_rows":1,"max_rows":10,"columns":[{"label":"Kolom 1","nama_field":"kolom_1","tipe_field":"text","is_required":true}]}'">${escapeHtml(normalizeRepeaterConfigText(fieldData.repeater_config_text))}</textarea>
+                                ${buildInvalidFeedback(repeaterConfigName)}
+                                <small class="text-muted d-block mt-2">
+                                    Gunakan JSON untuk mendefinisikan <code>min_rows</code>, <code>max_rows</code>,
+                                    dan daftar <code>columns</code>. Setiap kolom minimal memiliki
+                                    <code>label</code>, <code>nama_field</code>, dan <code>tipe_field</code>.
+                                </small>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-8">
+                                    <div class="form-group">
+                                        <label>Bantuan / Petunjuk Tambahan</label>
+                                        <textarea class="${getInputClass(bantuanName)}"
+                                            name="${bantuanName}"
+                                            rows="2"
+                                            placeholder="Tambahkan bantuan singkat untuk peserta">${escapeHtml(fieldData.bantuan)}</textarea>
+                                        ${buildInvalidFeedback(bantuanName)}
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label>Lebar Kolom</label>
+                                        <select class="${getInputClass(lebarKolomName)}"
+                                            name="${lebarKolomName}">
+                                            ${buildColumnOptions(fieldData.lebar_kolom || 'col-md-12')}
+                                        </select>
+                                        ${buildInvalidFeedback(lebarKolomName)}
+                                    </div>
+                                </div>
+                            </div>
+
 
                         </div>
                     </div>
@@ -649,6 +752,9 @@
                 const kodeFormName = `${formPrefix}[kode_form]`;
                 const urutanName = `${formPrefix}[urutan]`;
                 const deskripsiName = `${formPrefix}[deskripsi]`;
+                const kompetensiName = `${formPrefix}[kompetensi]`;
+                const indikatorKodeName = `${formPrefix}[indikator_kode]`;
+                const indikatorLabelName = `${formPrefix}[indikator_label]`;
                 const fieldsName = `${formPrefix}[fields]`;
                 const formCardClass = joinClasses(
                     'card',
@@ -669,6 +775,13 @@
                                         name="forms[${formIndex}][is_active]"
                                         value="1" ${formData.is_active === undefined || normalizeChecked(formData.is_active) ? 'checked' : ''}>
                                     <label class="custom-control-label" for="form-active-${formIndex}">Aktif</label>
+                                </div>
+                                <div class="custom-control custom-switch">
+                                    <input type="checkbox" class="custom-control-input"
+                                        id="form-scoreable-${formIndex}"
+                                        name="forms[${formIndex}][is_scoreable]"
+                                        value="1" ${formData.is_scoreable === undefined || normalizeChecked(formData.is_scoreable) ? 'checked' : ''}>
+                                    <label class="custom-control-label" for="form-scoreable-${formIndex}">Masuk penilaian</label>
                                 </div>
                                 <button type="button" class="btn btn-outline-danger btn-sm btn-remove-form">
                                     <i class="fas fa-trash-alt"></i> Hapus Form
@@ -705,6 +818,39 @@
                                             name="${urutanName}"
                                             value="${escapeHtml(formData.urutan || formIndex + 1)}">
                                         ${buildInvalidFeedback(urutanName)}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label>Kompetensi</label>
+                                        <select class="${getInputClass(kompetensiName)}"
+                                            name="${kompetensiName}">
+                                            ${buildTeacherCompetencyOptions(formData.kompetensi || '')}
+                                        </select>
+                                        ${buildInvalidFeedback(kompetensiName)}
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label>Kode Indikator</label>
+                                        <input type="text" class="${getInputClass(indikatorKodeName)}"
+                                            name="${indikatorKodeName}"
+                                            value="${escapeHtml(formData.indikator_kode)}"
+                                            placeholder="Contoh: 1.1">
+                                        ${buildInvalidFeedback(indikatorKodeName)}
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label>Label Indikator</label>
+                                        <input type="text" class="${getInputClass(indikatorLabelName)}"
+                                            name="${indikatorLabelName}"
+                                            value="${escapeHtml(formData.indikator_label)}"
+                                            placeholder="Contoh: Lingkungan belajar aman dan nyaman">
+                                        ${buildInvalidFeedback(indikatorLabelName)}
                                     </div>
                                 </div>
                             </div>
@@ -836,6 +982,7 @@
                 const selectedType = $fieldCard.find('.field-type-select').val();
                 const showTextOptions = textOptionFieldTypes.includes(selectedType);
                 const showMultipleChoiceOptions = selectedType === multipleChoiceFieldType;
+                const showRepeaterOptions = selectedType === repeaterFieldType;
 
                 $fieldCard.find('.standard-option-wrapper')
                     .toggleClass('d-none', !showTextOptions)
@@ -846,6 +993,11 @@
                     .toggleClass('d-none', !showMultipleChoiceOptions)
                     .find('input, select')
                     .prop('disabled', !showMultipleChoiceOptions);
+
+                $fieldCard.find('.repeater-option-wrapper')
+                    .toggleClass('d-none', !showRepeaterOptions)
+                    .find('textarea')
+                    .prop('disabled', !showRepeaterOptions);
 
                 if (showMultipleChoiceOptions) {
                     ensureMultipleChoiceOptions($fieldCard);
@@ -875,6 +1027,20 @@
                     .filter(Boolean);
             };
 
+            const parseRepeaterConfig = (value) => {
+                if (!value) {
+                    return null;
+                }
+
+                try {
+                    const parsed = JSON.parse(value);
+
+                    return parsed && typeof parsed === 'object' ? parsed : null;
+                } catch (error) {
+                    return null;
+                }
+            };
+
             const collectFieldPayload = ($fieldCard, fieldIndex) => {
                 const fieldType = $fieldCard.find('select[name$="[tipe_field]"]').val() || 'text';
 
@@ -886,6 +1052,8 @@
                     bantuan: $fieldCard.find('textarea[name$="[bantuan]"]').val()?.trim() || '',
                     opsi_field_text: textOptionFieldTypes.includes(fieldType) ?
                         $fieldCard.find('textarea[name$="[opsi_field_text]"]').val()?.trim() || '' : null,
+                    repeater_config_text: fieldType === repeaterFieldType ?
+                        $fieldCard.find('textarea[name$="[repeater_config_text]"]').val()?.trim() || '' : null,
                     radio_options: fieldType === multipleChoiceFieldType ? getMultipleChoiceOptions($fieldCard) : [],
                     lebar_kolom: $fieldCard.find('select[name$="[lebar_kolom]"]').val() || 'col-md-12',
                     urutan: Number($fieldCard.find('input[name$="[urutan]"]').val() || fieldIndex + 1),
@@ -905,6 +1073,10 @@
                         judul_form: $formCard.find('input[name$="[judul_form]"]').val()?.trim() || '',
                         kode_form: $formCard.find('input[name$="[kode_form]"]').val()?.trim() || '',
                         deskripsi: $formCard.find('.form-description-input').first().val()?.trim() || '',
+                        kompetensi: $formCard.find('select[name$="[kompetensi]"]').val()?.trim() || '',
+                        indikator_kode: $formCard.find('input[name$="[indikator_kode]"]').val()?.trim() || '',
+                        indikator_label: $formCard.find('input[name$="[indikator_label]"]').val()?.trim() || '',
+                        is_scoreable: $formCard.find('input[name$="[is_scoreable]"]').first().is(':checked'),
                         urutan: Number($formCard.find('input[name$="[urutan]"]').val() || formIndex + 1),
                         is_active: $formCard.find('input[name$="[is_active]"]').first().is(':checked'),
                         fields: fields,
@@ -978,7 +1150,9 @@
                                 helpText: field.bantuan || '',
                                 options: field.tipe_field === multipleChoiceFieldType ?
                                     (field.radio_options || []) :
-                                    parseOptionText(field.opsi_field_text),
+                                    (field.tipe_field === repeaterFieldType ?
+                                        parseRepeaterConfig(field.repeater_config_text) :
+                                        parseOptionText(field.opsi_field_text)),
                                 widthClass: field.lebar_kolom || 'col-md-12',
                                 required: normalizeChecked(field.is_required),
                             }));
@@ -987,6 +1161,11 @@
                             title: form.judul_form || 'Child form tanpa judul',
                             code: form.kode_form || '-',
                             description: form.deskripsi || '',
+                            kompetensi: form.kompetensi || '',
+                            kompetensiLabel: teacherCompetencies[form.kompetensi || ''] || '',
+                            indikatorKode: form.indikator_kode || '',
+                            indikatorLabel: form.indikator_label || '',
+                            isScoreable: normalizeChecked(form.is_scoreable),
                             fields: activeFields,
                         };
                     })
@@ -1062,6 +1241,66 @@
                             </label>
                         `;
                     }).join('');
+                } else if (field.type === repeaterFieldType) {
+                    const config = field.options && typeof field.options === 'object' ? field.options : null;
+                    const columns = Array.isArray(config?.columns) ? config.columns : [];
+
+                    if (!columns.length) {
+                        inputHtml = `
+                            <div class="alert alert-light border mb-0">
+                                Konfigurasi tabel belum tersedia.
+                            </div>
+                        `;
+                    } else {
+                        const headerHtml = columns.map((column) => {
+                            return `<th>${escapeHtml(column.label || column.nama_field || 'Kolom')}</th>`;
+                        }).join('');
+                        const cellHtml = columns.map((column) => {
+                            const type = column.tipe_field || 'text';
+
+                            if (type === 'select') {
+                                const options = Array.isArray(column.opsi_field) ? column.opsi_field : [];
+                                const optionsHtml = options.map((option) => {
+                                    return `<option value="${escapeHtml(option)}">${escapeHtml(option)}</option>`;
+                                }).join('');
+
+                                return `
+                                    <td>
+                                        <select class="form-control" disabled>
+                                            <option value="">Pilih</option>
+                                            ${optionsHtml}
+                                        </select>
+                                    </td>
+                                `;
+                            }
+
+                            if (type === 'textarea') {
+                                return '<td><textarea class="form-control" rows="2" disabled></textarea></td>';
+                            }
+
+                            return `
+                                <td>
+                                    <input type="${['text', 'email', 'number', 'date'].includes(type) ? type : 'text'}"
+                                        class="form-control"
+                                        placeholder="${escapeHtml(column.placeholder || '')}"
+                                        readonly>
+                                </td>
+                            `;
+                        }).join('');
+
+                        inputHtml = `
+                            <div class="table-responsive">
+                                <table class="table table-bordered mb-0">
+                                    <thead>
+                                        <tr>${headerHtml}</tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>${cellHtml}</tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        `;
+                    }
                 } else if (field.type === 'checkbox') {
                     const options = field.options.length ? field.options : ['Belum ada opsi'];
 
@@ -1174,6 +1413,15 @@
                                 <div>
                                     <h4 class="mb-1">${escapeHtml(form.title)}</h4>
                                     <small class="text-muted">Bagian ${index + 1} • ${escapeHtml(form.code)}</small>
+                                    ${(form.kompetensiLabel || form.indikatorKode || form.isScoreable !== undefined) ? `
+                                        <div class="mt-2">
+                                            ${form.kompetensiLabel ? `<span class="badge badge-info mr-1">${escapeHtml(form.kompetensiLabel)}</span>` : ''}
+                                            ${form.indikatorKode ? `<span class="badge badge-light border mr-1">Indikator ${escapeHtml(form.indikatorKode)}</span>` : ''}
+                                            <span class="badge badge-${form.isScoreable ? 'success' : 'secondary'}">
+                                                ${form.isScoreable ? 'Masuk penilaian' : 'Hanya pengumpulan data'}
+                                            </span>
+                                        </div>
+                                    ` : ''}
                                 </div>
                             </div>
                             <div class="card-body">

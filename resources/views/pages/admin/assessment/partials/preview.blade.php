@@ -1,4 +1,7 @@
 @php
+    $instrumentLabel = $assessment->instrument_type
+        ? \App\Enum\AssessmentInstrumentType::tryFrom($assessment->instrument_type)?->label()
+        : null;
     $statusBadge =
         [
             'publish' => 'success',
@@ -73,6 +76,9 @@
                                 <span class="badge badge-{{ $assessment->is_active ? 'primary' : 'light' }}">
                                     {{ $assessment->is_active ? 'Aktif' : 'Nonaktif' }}
                                 </span>
+                                @if ($instrumentLabel)
+                                    <span class="badge badge-info">{{ $instrumentLabel }}</span>
+                                @endif
                             </div>
                         </div>
                     </div>
@@ -113,6 +119,23 @@
                                 <h4 class="mb-1">{{ $form->judul_form }}</h4>
                                 <small class="text-muted">Bagian {{ $loop->iteration }} •
                                     {{ $form->kode_form }}</small>
+                                @if ($form->kompetensi || $form->indikator_kode)
+                                    <div class="mt-2">
+                                        @if ($form->kompetensi)
+                                            <span class="badge badge-info">
+                                                {{ \App\Enum\KompetensiGuru::tryFrom($form->kompetensi)?->label() ?: ucfirst($form->kompetensi) }}
+                                            </span>
+                                        @endif
+                                        @if ($form->indikator_kode)
+                                            <span class="badge badge-light border">
+                                                Indikator {{ $form->indikator_kode }}
+                                            </span>
+                                        @endif
+                                        <span class="badge badge-{{ $form->is_scoreable ? 'success' : 'secondary' }}">
+                                            {{ $form->is_scoreable ? 'Masuk penilaian' : 'Hanya pengumpulan data' }}
+                                        </span>
+                                    </div>
+                                @endif
                             </div>
                         </div>
                         <div class="card-body">
@@ -220,6 +243,54 @@
                                                             Pilih file
                                                         </label>
                                                     </div>
+                                                @break
+
+                                                @case('repeater')
+                                                    @php
+                                                        $columns = collect(data_get($field->opsi_field, 'columns', []))
+                                                            ->filter(fn($column) => is_array($column))
+                                                            ->values();
+                                                    @endphp
+                                                    @if ($columns->isEmpty())
+                                                        <div class="alert alert-light border mb-0">
+                                                            Konfigurasi tabel belum tersedia.
+                                                        </div>
+                                                    @else
+                                                        <div class="table-responsive">
+                                                            <table class="table table-bordered">
+                                                                <thead>
+                                                                    <tr>
+                                                                        @foreach ($columns as $column)
+                                                                            <th>{{ $column['label'] ?? $column['nama_field'] }}</th>
+                                                                        @endforeach
+                                                                    </tr>
+                                                                </thead>
+                                                                <tbody>
+                                                                    <tr>
+                                                                        @foreach ($columns as $column)
+                                                                            <td>
+                                                                                @if (($column['tipe_field'] ?? 'text') === 'select')
+                                                                                    <select class="form-control" disabled>
+                                                                                        <option value="">Pilih</option>
+                                                                                        @foreach (($column['opsi_field'] ?? []) as $option)
+                                                                                            <option value="{{ $option }}">{{ $option }}</option>
+                                                                                        @endforeach
+                                                                                    </select>
+                                                                                @elseif (($column['tipe_field'] ?? 'text') === 'textarea')
+                                                                                    <textarea class="form-control" rows="2" disabled></textarea>
+                                                                                @else
+                                                                                    <input
+                                                                                        type="{{ in_array(($column['tipe_field'] ?? 'text'), ['text', 'email', 'number', 'date'], true) ? ($column['tipe_field'] ?? 'text') : 'text' }}"
+                                                                                        class="form-control" value=""
+                                                                                        placeholder="{{ $column['placeholder'] ?? '' }}" readonly>
+                                                                                @endif
+                                                                            </td>
+                                                                        @endforeach
+                                                                    </tr>
+                                                                </tbody>
+                                                            </table>
+                                                        </div>
+                                                    @endif
                                                 @break
 
                                                 @default

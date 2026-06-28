@@ -4,10 +4,15 @@ namespace App\Services\Assessment;
 
 use App\Models\AssessmentAssignmentTarget;
 use App\Models\AssessmentFormField;
+use App\Support\Assessment\AssessmentStructureMetadataResolver;
 use App\Support\Assessment\ChoiceOptionNormalizer;
 
 class AssessmentQuestionRandomizerService
 {
+    public function __construct(
+        private readonly AssessmentStructureMetadataResolver $metadataResolver
+    ) {}
+
     public function buildSnapshot(AssessmentAssignmentTarget $target): array
     {
         $assignment = $target->assignment;
@@ -16,10 +21,33 @@ class AssessmentQuestionRandomizerService
             ->filter(fn ($assessment) => (bool) $assessment->is_active)
             ->values()
             ->map(function ($assessment) {
+                $assessmentMeta = $this->metadataResolver->decorateAssessment([
+                    'id' => $assessment->id,
+                    'kode_assessment' => $assessment->kode_assessment,
+                    'judul' => $assessment->judul,
+                    'deskripsi' => $assessment->deskripsi,
+                    'petunjuk' => $assessment->petunjuk,
+                    'instrument_type' => $assessment->instrument_type,
+                ]);
                 $forms = $assessment->forms
                     ->filter(fn ($form) => (bool) $form->is_active)
                     ->values()
-                    ->map(function ($form) use ($assessment) {
+                    ->map(function ($form) use ($assessment, $assessmentMeta) {
+                        $formMeta = $this->metadataResolver->decorateForm([
+                            'id' => $form->id,
+                            'judul_form' => $form->judul_form,
+                            'kode_form' => $form->kode_form,
+                            'deskripsi' => $form->deskripsi,
+                            'kompetensi' => $form->kompetensi,
+                            'indikator_kode' => $form->indikator_kode,
+                            'indikator_label' => $form->indikator_label,
+                            'is_scoreable' => $form->is_scoreable,
+                            'fields' => $form->fields->map(fn ($field) => [
+                                'label' => $field->label,
+                                'deskripsi' => $field->deskripsi,
+                                'bantuan' => $field->bantuan,
+                            ])->all(),
+                        ], $assessmentMeta);
                         $fields = $form->fields
                             ->filter(fn ($field) => (bool) $field->is_active)
                             ->shuffle()
@@ -32,11 +60,16 @@ class AssessmentQuestionRandomizerService
                         }
 
                         return [
-                            'id' => $form->id,
+                            'id' => $formMeta['id'],
                             'assessment_id' => $assessment->id,
-                            'judul_form' => $form->judul_form,
-                            'kode_form' => $form->kode_form,
-                            'deskripsi' => $form->deskripsi,
+                            'judul_form' => $formMeta['judul_form'],
+                            'kode_form' => $formMeta['kode_form'],
+                            'deskripsi' => $formMeta['deskripsi'],
+                            'kompetensi' => $formMeta['kompetensi'],
+                            'kompetensi_label' => $formMeta['kompetensi_label'],
+                            'indikator_kode' => $formMeta['indikator_kode'],
+                            'indikator_label' => $formMeta['indikator_label'],
+                            'is_scoreable' => (bool) ($formMeta['is_scoreable'] ?? false),
                             'fields' => $fields,
                         ];
                     })
@@ -49,11 +82,13 @@ class AssessmentQuestionRandomizerService
                 }
 
                 return [
-                    'id' => $assessment->id,
-                    'kode_assessment' => $assessment->kode_assessment,
-                    'judul' => $assessment->judul,
-                    'deskripsi' => $assessment->deskripsi,
-                    'petunjuk' => $assessment->petunjuk,
+                    'id' => $assessmentMeta['id'],
+                    'kode_assessment' => $assessmentMeta['kode_assessment'],
+                    'judul' => $assessmentMeta['judul'],
+                    'deskripsi' => $assessmentMeta['deskripsi'],
+                    'petunjuk' => $assessmentMeta['petunjuk'],
+                    'instrument_type' => $assessmentMeta['instrument_type'],
+                    'instrument_label' => $assessmentMeta['instrument_label'],
                     'forms' => $forms,
                 ];
             })
@@ -92,9 +127,18 @@ class AssessmentQuestionRandomizerService
             'tipe_field' => $field->tipe_field,
             'placeholder' => $field->placeholder,
             'bantuan' => $field->bantuan,
-            'opsi_field' => $this->normalizeOptions($field->opsi_field),
+            'opsi_field' => $this->mapFieldOptions($field),
             'is_required' => (bool) $field->is_required,
         ];
+    }
+
+    private function mapFieldOptions(AssessmentFormField $field): array
+    {
+        if ($field->tipe_field === 'repeater') {
+            return is_array($field->opsi_field) ? $field->opsi_field : [];
+        }
+
+        return $this->normalizeOptions($field->opsi_field);
     }
 
     private function normalizeOptions(?array $options): array

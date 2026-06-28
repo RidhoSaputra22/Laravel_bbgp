@@ -116,6 +116,7 @@ class PortalController extends Controller
             'attempt' => $attempt,
             'meta' => $this->portalService->buildTargetMeta($target),
             'summary' => $this->attemptService->buildResultSummary($attempt),
+            'scoringSummary' => $this->attemptService->buildScoringSummary($attempt),
             'answerLookup' => $this->attemptService->buildAnswerLookup($attempt),
         ]);
     }

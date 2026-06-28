@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Enum\AssessmentInstrumentType;
+use App\Enum\KompetensiGuru;
 use App\Enum\LevelKompetensi;
 use App\Models\Assessment;
 use App\Support\Assessment\ChoiceOptionNormalizer;
@@ -68,6 +70,7 @@ class AssessmentController extends Controller
                 'slug' => $this->generateUniqueSlug($validated['judul']),
                 'deskripsi' => $validated['deskripsi'] ?? null,
                 'petunjuk' => $validated['petunjuk'] ?? null,
+                'instrument_type' => $validated['instrument_type'] ?? null,
                 'status' => $validated['status'],
                 'is_active' => (bool) ($validated['is_active'] ?? false),
             ]);
@@ -137,6 +140,7 @@ class AssessmentController extends Controller
                 'slug' => $this->generateUniqueSlug($validated['judul'], $assessment->id),
                 'deskripsi' => $validated['deskripsi'] ?? null,
                 'petunjuk' => $validated['petunjuk'] ?? null,
+                'instrument_type' => $validated['instrument_type'] ?? null,
                 'status' => $validated['status'],
                 'is_active' => (bool) ($validated['is_active'] ?? false),
             ]);
@@ -191,6 +195,7 @@ class AssessmentController extends Controller
             'radio' => 'Pilihan Ganda',
             'checkbox' => 'Kotak Centang',
             'file' => 'Unggah File',
+            'repeater' => 'Tabel Berulang',
         ];
     }
 
@@ -211,12 +216,25 @@ class AssessmentController extends Controller
                 'judul' => 'required|string|max:255',
                 'deskripsi' => 'nullable|string',
                 'petunjuk' => 'nullable|string',
+                'instrument_type' => [
+                    'nullable',
+                    'string',
+                    Rule::in(array_keys(AssessmentInstrumentType::options())),
+                ],
                 'status' => 'required|in:draft,publish,nonaktif',
                 'is_active' => 'nullable|boolean',
                 'forms' => 'required|array|min:1',
                 'forms.*.judul_form' => 'required|string|max:255',
                 'forms.*.kode_form' => 'nullable|string|max:100',
                 'forms.*.deskripsi' => 'nullable|string',
+                'forms.*.kompetensi' => [
+                    'nullable',
+                    'string',
+                    Rule::in(array_keys(KompetensiGuru::options())),
+                ],
+                'forms.*.indikator_kode' => 'nullable|string|max:100',
+                'forms.*.indikator_label' => 'nullable|string|max:255',
+                'forms.*.is_scoreable' => 'nullable|boolean',
                 'forms.*.urutan' => 'nullable|integer|min:1',
                 'forms.*.is_active' => 'nullable|boolean',
                 'forms.*.fields' => 'required|array|min:1',
@@ -230,6 +248,7 @@ class AssessmentController extends Controller
                 'forms.*.fields.*.placeholder' => 'nullable|string|max:255',
                 'forms.*.fields.*.bantuan' => 'nullable|string',
                 'forms.*.fields.*.opsi_field_text' => 'nullable|string',
+                'forms.*.fields.*.repeater_config_text' => 'nullable|string',
                 'forms.*.fields.*.radio_options' => 'nullable|array',
                 'forms.*.fields.*.radio_options.*.label' => 'nullable|string|max:1000',
                 'forms.*.fields.*.radio_options.*.value' => 'nullable|string|max:255',
@@ -265,6 +284,13 @@ class AssessmentController extends Controller
 
             foreach ($forms as $formIndex => $form) {
                 $usedFieldNames = [];
+
+                if ((bool) ($form['is_scoreable'] ?? true) && blank($form['kompetensi'] ?? null)) {
+                    $validator->errors()->add(
+                        "forms.$formIndex.kompetensi",
+                        'Kompetensi wajib dipilih untuk form yang ikut dihitung pada penilaian.'
+                    );
+                }
 
                 foreach (($form['fields'] ?? []) as $fieldIndex => $field) {
                     $namaField = $this->generateFieldNameFromLabel($field['label'] ?? '');
@@ -346,6 +372,17 @@ class AssessmentController extends Controller
                             'Opsi wajib diisi untuk field daftar pilihan atau kotak centang.'
                         );
                     }
+
+                    if (($field['tipe_field'] ?? '') === 'repeater') {
+                        $repeaterValidation = $this->validateRepeaterConfigText($field['repeater_config_text'] ?? null);
+
+                        if (! $repeaterValidation['valid']) {
+                            $validator->errors()->add(
+                                "forms.$formIndex.fields.$fieldIndex.repeater_config_text",
+                                $repeaterValidation['message']
+                            );
+                        }
+                    }
                 }
             }
         });
@@ -360,6 +397,10 @@ class AssessmentController extends Controller
                 'judul_form' => $formData['judul_form'],
                 'kode_form' => $formData['kode_form'] ?: 'FORM-'.str_pad((string) ($formIndex + 1), 2, '0', STR_PAD_LEFT),
                 'deskripsi' => $formData['deskripsi'] ?? null,
+                'kompetensi' => $formData['kompetensi'] ?? null,
+                'indikator_kode' => $formData['indikator_kode'] ?? null,
+                'indikator_label' => $formData['indikator_label'] ?? null,
+                'is_scoreable' => (bool) ($formData['is_scoreable'] ?? true),
                 'urutan' => (int) ($formData['urutan'] ?? ($formIndex + 1)),
                 'is_active' => (bool) ($formData['is_active'] ?? false),
             ]);
@@ -393,7 +434,7 @@ class AssessmentController extends Controller
     {
         $fieldType = $fieldData['tipe_field'] ?? null;
 
-        if (! in_array($fieldType, ['select', 'radio', 'checkbox'], true)) {
+        if (! in_array($fieldType, ['select', 'radio', 'checkbox', 'repeater'], true)) {
             return null;
         }
 
@@ -411,11 +452,67 @@ class AssessmentController extends Controller
             return $options === [] ? null : $options;
         }
 
+        if ($fieldType === 'repeater') {
+            return $this->parseRepeaterConfigText($fieldData['repeater_config_text'] ?? null);
+        }
+
         $rawOptions = $fieldData['opsi_field_text'] ?? null;
         $options = preg_split('/[\r\n,]+/', (string) $rawOptions);
         $options = array_values(array_filter(array_map('trim', $options)));
 
         return $options === [] ? null : $options;
+    }
+
+    private function parseRepeaterConfigText(?string $rawConfig): ?array
+    {
+        $decoded = json_decode((string) $rawConfig, true);
+
+        if (json_last_error() !== JSON_ERROR_NONE || ! is_array($decoded)) {
+            return null;
+        }
+
+        $columns = collect($decoded['columns'] ?? [])
+            ->filter(fn ($column) => is_array($column))
+            ->map(function (array $column) {
+                return [
+                    'label' => trim((string) ($column['label'] ?? '')),
+                    'nama_field' => trim((string) ($column['nama_field'] ?? '')),
+                    'tipe_field' => trim((string) ($column['tipe_field'] ?? 'text')) ?: 'text',
+                    'placeholder' => trim((string) ($column['placeholder'] ?? '')),
+                    'opsi_field' => is_array($column['opsi_field'] ?? null) ? $column['opsi_field'] : [],
+                    'is_required' => (bool) ($column['is_required'] ?? false),
+                ];
+            })
+            ->filter(fn ($column) => $column['label'] !== '' && $column['nama_field'] !== '')
+            ->values()
+            ->all();
+
+        if ($columns === []) {
+            return null;
+        }
+
+        return [
+            'min_rows' => max((int) ($decoded['min_rows'] ?? 0), 0),
+            'max_rows' => max((int) ($decoded['max_rows'] ?? 0), 0),
+            'columns' => $columns,
+        ];
+    }
+
+    private function validateRepeaterConfigText(?string $rawConfig): array
+    {
+        $parsedConfig = $this->parseRepeaterConfigText($rawConfig);
+
+        if (! $parsedConfig) {
+            return [
+                'valid' => false,
+                'message' => 'Konfigurasi tabel berulang wajib berupa JSON valid dan minimal memiliki satu kolom.',
+            ];
+        }
+
+        return [
+            'valid' => true,
+            'message' => null,
+        ];
     }
 
     private function generateOptionLabel(int $index): string
@@ -481,6 +578,10 @@ class AssessmentController extends Controller
                 'judul_form' => $form->judul_form,
                 'kode_form' => $form->kode_form,
                 'deskripsi' => $form->deskripsi,
+                'kompetensi' => $form->kompetensi,
+                'indikator_kode' => $form->indikator_kode,
+                'indikator_label' => $form->indikator_label,
+                'is_scoreable' => $form->is_scoreable,
                 'urutan' => $form->urutan,
                 'is_active' => $form->is_active,
                 'fields' => $form->fields->map(function ($field) {
@@ -502,7 +603,12 @@ class AssessmentController extends Controller
                         'tipe_field' => $field->tipe_field,
                         'placeholder' => $field->placeholder,
                         'bantuan' => $field->bantuan,
-                        'opsi_field_text' => $field->tipe_field === 'radio' ? null : ($field->opsi_field ? implode(', ', $field->opsi_field) : null),
+                        'repeater_config_text' => $field->tipe_field === 'repeater' && is_array($field->opsi_field)
+                            ? json_encode($field->opsi_field, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)
+                            : null,
+                        'opsi_field_text' => in_array($field->tipe_field, ['radio', 'repeater'], true)
+                            ? null
+                            : ($field->opsi_field ? implode(', ', $field->opsi_field) : null),
                         'radio_options' => $radioOptions,
                         'lebar_kolom' => $field->lebar_kolom,
                         'urutan' => $field->urutan,

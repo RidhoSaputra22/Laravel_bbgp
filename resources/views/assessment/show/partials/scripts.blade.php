@@ -1,5 +1,75 @@
 @push('scripts')
     <script>
+        window.assessmentRepeaterField = function(config) {
+            return {
+                columns: Array.isArray(config.columns) ? config.columns : [],
+                minRows: Number(config.minRows ?? 0),
+                maxRows: Number(config.maxRows ?? 0),
+                rows: [],
+
+                init() {
+                    const initialRows = Array.isArray(config.initialRows) ? config.initialRows : [];
+
+                    if (initialRows.length) {
+                        this.rows = initialRows.map((row, index) => this.normalizeRow(row, index));
+                    } else {
+                        const initialCount = Math.max(this.minRows, 1);
+
+                        this.rows = Array.from({
+                            length: initialCount
+                        }, (_, index) => this.buildRow(index));
+                    }
+                },
+                buildRow(seed = 0) {
+                    const row = {
+                        _key: `${Date.now()}-${Math.random()}-${seed}`,
+                    };
+
+                    this.columns.forEach((column) => {
+                        row[column.nama_field] = '';
+                    });
+
+                    return row;
+                },
+                normalizeRow(row, seed = 0) {
+                    const normalizedRow = this.buildRow(seed);
+
+                    this.columns.forEach((column) => {
+                        const value = row?.[column.nama_field];
+                        normalizedRow[column.nama_field] = typeof value === 'string' || typeof value === 'number' ?
+                            String(value) : '';
+                    });
+
+                    return normalizedRow;
+                },
+                fieldName(rowIndex, columnName) {
+                    const prefix = String(config.fieldNamePrefix || 'answers');
+
+                    return `${prefix}[${rowIndex}][${columnName}]`;
+                },
+                canAdd() {
+                    return this.maxRows <= 0 || this.rows.length < this.maxRows;
+                },
+                canRemove() {
+                    return this.rows.length > Math.max(this.minRows, 1);
+                },
+                addRow() {
+                    if (!this.canAdd()) {
+                        return;
+                    }
+
+                    this.rows.push(this.buildRow(this.rows.length));
+                },
+                removeRow(index) {
+                    if (!this.canRemove()) {
+                        return;
+                    }
+
+                    this.rows.splice(index, 1);
+                },
+            };
+        };
+
         window.assessmentExamFlow = function(config) {
             return {
                 currentAssessmentIndex: Number(config.initialIndex ?? 0),
@@ -224,6 +294,53 @@
                             message = `File untuk pertanyaan ${fieldLabel} wajib diunggah.`;
                         } else if (uploadedFile && uploadedFile.size > 5 * 1024 * 1024) {
                             message = `File untuk pertanyaan ${fieldLabel} maksimal 5 MB.`;
+                        }
+                    } else if (fieldType === 'repeater') {
+                        const repeaterInputs = Array.from(fieldWrapper.querySelectorAll(
+                            'input, select, textarea'
+                        ));
+                        const rows = new Map();
+
+                        repeaterInputs.forEach((input) => {
+                            const name = input.getAttribute('name') || '';
+                            const match = name.match(/\[(\d+)\]\[([^\]]+)\]$/);
+
+                            if (!match) {
+                                return;
+                            }
+
+                            const rowIndex = match[1];
+                            const items = rows.get(rowIndex) || [];
+                            items.push(input);
+                            rows.set(rowIndex, items);
+                        });
+
+                        const filledRows = Array.from(rows.values()).filter((inputs) => {
+                            return inputs.some((input) => String(input.value || '').trim() !== '');
+                        });
+
+                        if (isRequired && filledRows.length === 0) {
+                            message = `Minimal isi satu baris pada pertanyaan ${fieldLabel}.`;
+                        } else {
+                            for (const [index, inputs] of Array.from(rows.entries())) {
+                                const hasContent = inputs.some((input) => String(input.value || '').trim() !== '');
+
+                                if (!hasContent) {
+                                    continue;
+                                }
+
+                                const missingRequiredInput = inputs.find((input) => {
+                                    return input.dataset.repeaterRequired === '1'
+                                        && String(input.value || '').trim() === '';
+                                });
+
+                                if (missingRequiredInput) {
+                                    const columnLabel = missingRequiredInput.dataset.repeaterLabel || 'Kolom';
+                                    message =
+                                        `${columnLabel} pada baris ${Number(index) + 1} untuk pertanyaan ${fieldLabel} wajib diisi.`;
+                                    break;
+                                }
+                            }
                         }
                     } else {
                         const input = fieldType === 'textarea'

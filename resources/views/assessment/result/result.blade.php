@@ -20,6 +20,7 @@
         $assessmentTotal = (int) ($meta['assessment_total'] ?? 0);
         $formTotal = (int) ($meta['form_total'] ?? 0);
         $description = $meta['description'] ?? 'Hasil assessment ini tersimpan pada portal peserta.';
+        $answerHelper = \App\Support\Assessment\AssessmentAnswerViewHelper::class;
         $sessionDetails = [
             [
                 'label' => 'Status Submission',
@@ -64,111 +65,6 @@
                 'value' => $guru->email ?: '-',
             ],
         ];
-        $resolveOptionMap = function (array $field): array {
-            return collect($field['opsi_field'] ?? [])
-                ->flatMap(function ($option, $index) {
-                    if (! is_array($option)) {
-                        $value = trim((string) $option);
-
-                        return $value !== '' ? [$value => $value] : [];
-                    }
-
-                    $normalizedOption = \App\Support\Assessment\ChoiceOptionNormalizer::normalize($option, $index);
-                    $label = trim((string) ($normalizedOption['label'] ?? ''));
-
-                    return collect($normalizedOption['aliases'] ?? [])
-                        ->mapWithKeys(function ($value) use ($label) {
-                            $value = trim((string) $value);
-
-                            return $value !== '' ? [$value => $label] : [];
-                        })
-                        ->all();
-                })
-                ->all();
-        };
-        $resolveSelectedValues = function (array $field, ?array $answer): array {
-            if (! $answer) {
-                return [];
-            }
-
-            if (($field['tipe_field'] ?? null) === 'checkbox') {
-                return collect(data_get($answer, 'payload.values', []))
-                    ->map(fn ($value) => trim((string) $value))
-                    ->filter(fn ($value) => $value !== '')
-                    ->values()
-                    ->all();
-            }
-
-            $textValue = trim((string) data_get($answer, 'text', ''));
-
-            return $textValue !== '' ? [$textValue] : [];
-        };
-        $formatDateAnswer = function (?string $value): string {
-            $value = trim((string) $value);
-
-            if ($value === '') {
-                return '';
-            }
-
-            try {
-                return \Illuminate\Support\Carbon::parse($value)->format('d M Y');
-            } catch (\Throwable $exception) {
-                return $value;
-            }
-        };
-        $resolveAnswerText = function (array $field, ?array $answer) use (
-            $resolveOptionMap,
-            $resolveSelectedValues,
-            $formatDateAnswer
-        ): string {
-            if (! $answer) {
-                return '';
-            }
-
-            $fieldType = $field['tipe_field'] ?? 'text';
-
-            if ($fieldType === 'checkbox') {
-                $optionMap = $resolveOptionMap($field);
-
-                return collect($resolveSelectedValues($field, $answer))
-                    ->map(fn ($value) => $optionMap[(string) $value] ?? (string) $value)
-                    ->implode(', ');
-            }
-
-            if (in_array($fieldType, ['radio', 'select'], true)) {
-                $selectedValue = $resolveSelectedValues($field, $answer)[0] ?? '';
-                $optionMap = $resolveOptionMap($field);
-
-                return $optionMap[(string) $selectedValue] ?? (string) $selectedValue;
-            }
-
-            if ($fieldType === 'file') {
-                return (string) (data_get($answer, 'payload.original_name') ?: data_get($answer, 'text', ''));
-            }
-
-            if ($fieldType === 'date') {
-                return $formatDateAnswer(data_get($answer, 'text'));
-            }
-
-            return trim((string) data_get($answer, 'text', ''));
-        };
-        $hasAnswer = function (array $field, ?array $answer) use ($resolveSelectedValues): bool {
-            if (! $answer) {
-                return false;
-            }
-
-            $fieldType = $field['tipe_field'] ?? 'text';
-
-            if ($fieldType === 'checkbox') {
-                return $resolveSelectedValues($field, $answer) !== [];
-            }
-
-            if ($fieldType === 'file') {
-                return filled(data_get($answer, 'file_url')) || filled(data_get($answer, 'text'));
-            }
-
-            return trim((string) data_get($answer, 'text', '')) !== '';
-        };
     @endphp
 
     <div>
@@ -249,6 +145,10 @@
                     </span>
                 </div>
             </x-assessment::ui.card>
+
+            @include('assessment.result.partials.scoring-overview', [
+                'scoringSummary' => $scoringSummary,
+            ])
 
             <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
                 <x-assessment::ui.card>
@@ -358,9 +258,11 @@
                                         $fieldId = (int) ($field['id'] ?? 0);
                                         $fieldType = $field['tipe_field'] ?? 'text';
                                         $answer = $answerLookup[$fieldId] ?? null;
-                                        $fieldHasAnswer = $hasAnswer($field, $answer);
-                                        $selectedValues = $resolveSelectedValues($field, $answer);
-                                        $resolvedAnswerText = $resolveAnswerText($field, $answer);
+                                        $fieldHasAnswer = $answerHelper::hasAnswer($field, $answer);
+                                        $selectedValues = $answerHelper::resolveSelectedValues($field, $answer);
+                                        $resolvedAnswerText = $answerHelper::resolveAnswerText($field, $answer);
+                                        $repeaterColumns = $answerHelper::resolveRepeaterColumns($field, $answer);
+                                        $repeaterRows = $answerHelper::resolveRepeaterRows($answer);
                                         $fileUrl = data_get($answer, 'file_url');
                                         $fileName = $resolvedAnswerText ?: 'Belum ada file yang diunggah';
                                         $inputType = match ($fieldType) {
@@ -501,6 +403,39 @@
                                                             @endif
                                                         </div>
                                                     </div>
+                                                @break
+
+                                                @case('repeater')
+                                                    @if ($repeaterRows === [] || $repeaterColumns === [])
+                                                        <div class="rounded-sm border border-[#d7e3ee] bg-white px-4 py-3 text-sm text-slate-500">
+                                                            Peserta belum mengirim data tabel pada pertanyaan ini.
+                                                        </div>
+                                                    @else
+                                                        <div class="overflow-x-auto rounded-sm border border-[#d7e3ee] bg-white">
+                                                            <table class="min-w-full divide-y divide-[#d7e3ee] text-sm">
+                                                                <thead class="bg-[#f8fbfe]">
+                                                                    <tr>
+                                                                        @foreach ($repeaterColumns as $column)
+                                                                            <th class="px-4 py-3 text-left font-semibold text-slate-700">
+                                                                                {{ $column['label'] ?? $column['nama_field'] }}
+                                                                            </th>
+                                                                        @endforeach
+                                                                    </tr>
+                                                                </thead>
+                                                                <tbody class="divide-y divide-[#edf2f7]">
+                                                                    @foreach ($repeaterRows as $row)
+                                                                        <tr>
+                                                                            @foreach ($repeaterColumns as $column)
+                                                                                <td class="px-4 py-3 text-slate-600">
+                                                                                    {{ $answerHelper::formatRepeaterCell($column, $row[$column['nama_field']] ?? '') }}
+                                                                                </td>
+                                                                            @endforeach
+                                                                        </tr>
+                                                                    @endforeach
+                                                                </tbody>
+                                                            </table>
+                                                        </div>
+                                                    @endif
                                                 @break
 
                                                 @default

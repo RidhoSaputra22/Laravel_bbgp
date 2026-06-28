@@ -4,6 +4,15 @@
     $checkboxValues = collect(old('answers.' . $field['id'], []))
         ->map(fn($value) => (string) $value)
         ->all();
+    $repeaterConfig = is_array($field['opsi_field'] ?? null) ? $field['opsi_field'] : [];
+    $repeaterColumns = collect($repeaterConfig['columns'] ?? [])
+        ->filter(fn($column) => is_array($column))
+        ->values()
+        ->all();
+    $repeaterRows = collect(old('answers.' . $field['id'], []))
+        ->filter(fn($row) => is_array($row))
+        ->values()
+        ->all();
     $answerName = 'answers[' . $field['id'] . ']';
     $fieldType = $field['tipe_field'];
     $isRequired = (bool) ($field['is_required'] ?? false);
@@ -57,6 +66,118 @@
         @case('file')
             <x-assessment::form.file-input :label="$field['label']" :description="$field['deskripsi']"
                 :name="$answerName" :required="$isRequired" :error="$fieldError" />
+        @break
+
+        @case('repeater')
+            <div
+                x-data="assessmentRepeaterField({
+                    initialRows: @js($repeaterRows),
+                    columns: @js($repeaterColumns),
+                    fieldNamePrefix: @js($answerName),
+                    minRows: {{ (int) ($repeaterConfig['min_rows'] ?? 0) }},
+                    maxRows: {{ (int) ($repeaterConfig['max_rows'] ?? 0) }},
+                })"
+                class="space-y-3"
+            >
+                <div>
+                    <label class="mb-2 block text-sm font-semibold text-slate-900">
+                        {{ $field['label'] }}
+                        @if ($isRequired)
+                            <span class="text-red-500">*</span>
+                        @endif
+                    </label>
+
+                    @if (!empty($field['deskripsi']))
+                        <p class="mb-2 text-sm text-slate-500">
+                            {{ $field['deskripsi'] }}
+                        </p>
+                    @endif
+                </div>
+
+                <template x-for="(row, rowIndex) in rows" :key="row._key">
+                    <div class="overflow-hidden rounded-sm border border-[#dce8f1] bg-[#f8fbfe]">
+                        <div class="flex items-center justify-between border-b border-[#dce8f1] px-4 py-3">
+                            <div class="text-sm font-semibold text-slate-700">
+                                Entri <span x-text="rowIndex + 1"></span>
+                            </div>
+                            <button
+                                type="button"
+                                class="text-sm font-semibold text-red-600 disabled:cursor-not-allowed disabled:text-slate-400"
+                                @click="removeRow(rowIndex)"
+                                :disabled="! canRemove()"
+                            >
+                                Hapus
+                            </button>
+                        </div>
+
+                        <div class="grid gap-4 px-4 py-4 md:grid-cols-2">
+                            @foreach ($repeaterColumns as $column)
+                                @php
+                                    $columnName = $column['nama_field'] ?? 'kolom';
+                                    $columnType = $column['tipe_field'] ?? 'text';
+                                @endphp
+                                <div class="{{ $columnType === 'textarea' ? 'md:col-span-2' : '' }}">
+                                    <label class="mb-2 block text-sm font-medium text-slate-700">
+                                        {{ $column['label'] ?? $columnName }}
+                                        @if (!empty($column['is_required']))
+                                            <span class="text-red-500">*</span>
+                                        @endif
+                                    </label>
+
+                                    @if ($columnType === 'select')
+                                        <select
+                                            class="w-full rounded-sm border border-[#d0dbe5] px-3 py-2 text-sm text-slate-700 focus:border-[#1376bd] focus:outline-none focus:ring-2 focus:ring-[#1376bd]/20"
+                                            :name="fieldName(rowIndex, '{{ $columnName }}')"
+                                            x-model="row['{{ $columnName }}']"
+                                            data-repeater-required="{{ !empty($column['is_required']) ? '1' : '0' }}"
+                                            data-repeater-label="{{ $column['label'] ?? $columnName }}"
+                                        >
+                                            <option value="">Pilih</option>
+                                            @foreach (($column['opsi_field'] ?? []) as $option)
+                                                <option value="{{ $option }}">{{ $option }}</option>
+                                            @endforeach
+                                        </select>
+                                    @elseif ($columnType === 'textarea')
+                                        <textarea
+                                            rows="3"
+                                            class="w-full rounded-sm border border-[#d0dbe5] px-3 py-2 text-sm text-slate-700 focus:border-[#1376bd] focus:outline-none focus:ring-2 focus:ring-[#1376bd]/20"
+                                            :name="fieldName(rowIndex, '{{ $columnName }}')"
+                                            x-model="row['{{ $columnName }}']"
+                                            placeholder="{{ $column['placeholder'] ?? '' }}"
+                                            data-repeater-required="{{ !empty($column['is_required']) ? '1' : '0' }}"
+                                            data-repeater-label="{{ $column['label'] ?? $columnName }}"
+                                        ></textarea>
+                                    @else
+                                        <input
+                                            type="{{ in_array($columnType, ['number', 'email', 'date'], true) ? $columnType : 'text' }}"
+                                            class="w-full rounded-sm border border-[#d0dbe5] px-3 py-2 text-sm text-slate-700 focus:border-[#1376bd] focus:outline-none focus:ring-2 focus:ring-[#1376bd]/20"
+                                            :name="fieldName(rowIndex, '{{ $columnName }}')"
+                                            x-model="row['{{ $columnName }}']"
+                                            placeholder="{{ $column['placeholder'] ?? '' }}"
+                                            data-repeater-required="{{ !empty($column['is_required']) ? '1' : '0' }}"
+                                            data-repeater-label="{{ $column['label'] ?? $columnName }}"
+                                        >
+                                    @endif
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+                </template>
+
+                <div class="flex flex-wrap items-center justify-between gap-3">
+                    <div class="text-sm text-slate-500">
+                        <span x-text="rows.length"></span> entri terisi
+                    </div>
+                    <button
+                        type="button"
+                        class="inline-flex items-center rounded-sm border border-[#1376bd] px-3 py-2 text-sm font-semibold text-[#1376bd] transition hover:bg-[#1376bd] hover:text-white disabled:cursor-not-allowed disabled:border-slate-300 disabled:text-slate-400"
+                        @click="addRow()"
+                        :disabled="! canAdd()"
+                    >
+                        Tambah Baris
+                    </button>
+                </div>
+            </div>
         @break
 
         @default

@@ -16,12 +16,18 @@ class AssessmentAttemptAnswer extends Model
         'assessment_form_field_id',
         'answer_text',
         'answer_payload',
+        'assessor_score',
+        'assessor_notes',
+        'assessor_user_id',
+        'assessor_scored_at',
         'answer_file_path',
         'answered_at',
     ];
 
     protected $casts = [
         'answer_payload' => 'array',
+        'assessor_score' => 'integer',
+        'assessor_scored_at' => 'datetime',
         'answered_at' => 'datetime',
     ];
 
@@ -43,5 +49,10 @@ class AssessmentAttemptAnswer extends Model
     public function field()
     {
         return $this->belongsTo(AssessmentFormField::class, 'assessment_form_field_id');
+    }
+
+    public function assessor()
+    {
+        return $this->belongsTo(User::class, 'assessor_user_id');
     }
 }

@@ -303,6 +303,7 @@
                                             <th>Sesi Assessment</th>
                                             <th>Status Target</th>
                                             <th>Waktu Ditugaskan</th>
+                                            <th>Aksi</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -315,6 +316,7 @@
                                                         'selesai' => 'success',
                                                         'dibatalkan' => 'secondary',
                                                     ][$target->status] ?? 'secondary';
+                                                $attemptStatus = optional($target->attempt)->status;
                                             @endphp
                                             <tr>
                                                 <td class="text-center">{{ $loop->iteration }}</td>
@@ -343,6 +345,18 @@
                                                 </td>
                                                 <td>
                                                     {{ $target->assigned_at ? $target->assigned_at->format('d M Y H:i') : '-' }}
+                                                </td>
+                                                <td>
+                                                    @if ($attemptStatus === 'submitted')
+                                                        <a href="{{ route('assessment.assignment.review.show', $target->id) }}"
+                                                            class="btn btn-sm btn-primary">
+                                                            <i class="fas fa-clipboard-check"></i> Review Nilai
+                                                        </a>
+                                                    @elseif ($attemptStatus === 'in_progress')
+                                                        <span class="badge badge-warning">Sedang dikerjakan</span>
+                                                    @else
+                                                        <span class="text-muted">Belum ada hasil</span>
+                                                    @endif
                                                 </td>
                                             </tr>
                                         @endforeach
@@ -388,7 +402,7 @@
 
             initDataTable('#table-assignment-assessment', [0]);
             initDataTable('#table-assignment-session', [0]);
-            initDataTable('#table-assignment-target', [0]);
+            initDataTable('#table-assignment-target', [0, 7]);
         });
     </script>
 @endpush

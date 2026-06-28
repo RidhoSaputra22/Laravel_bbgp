@@ -104,6 +104,7 @@ class AssessmentAssignmentController extends Controller
             'sessions.targets',
             'targets.guru',
             'targets.session',
+            'targets.attempt',
         ])
             ->withCount(['targets', 'sessions'])
             ->findOrFail($id);

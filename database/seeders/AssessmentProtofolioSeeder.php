@@ -2,6 +2,8 @@
 
 namespace Database\Seeders;
 
+use App\Enum\AssessmentInstrumentType;
+use App\Enum\KompetensiGuru;
 use App\Models\Assessment;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Str;
@@ -19,6 +21,7 @@ class AssessmentProtofolioSeeder extends Seeder
                 'judul' => 'Instrumen Portofolio Kompetensi Guru',
                 'deskripsi' => 'Instrumen portofolio untuk memetakan identitas, riwayat pendidikan, pengalaman, prestasi, karya, dan refleksi diri responden.',
                 'petunjuk' => 'Isilah data berikut secara jujur dan lengkap. Sertakan bukti dokumen pendukung pada setiap bagian yang relevan.',
+                'instrument_type' => AssessmentInstrumentType::PORTOFOLIO->value,
                 'status' => 'publish',
                 'is_active' => true,
                 'forms' => [
@@ -26,6 +29,7 @@ class AssessmentProtofolioSeeder extends Seeder
                         'judul_form' => 'Identitas Responden',
                         'kode_form' => 'FORM-IDENTITAS',
                         'deskripsi' => 'Data identitas dasar responden dalam instrumen portofolio.',
+                        'is_scoreable' => false,
                         'urutan' => 1,
                         'is_active' => true,
                         'fields' => [
@@ -146,6 +150,10 @@ class AssessmentProtofolioSeeder extends Seeder
                         'judul_form' => 'Riwayat Pendidikan Formal',
                         'kode_form' => 'FORM-PENDIDIKAN',
                         'deskripsi' => 'Riwayat pendidikan formal, sertifikasi, dan kualifikasi akademik responden.',
+                        'kompetensi' => KompetensiGuru::PROFESIONAL->value,
+                        'indikator_kode' => '4.1',
+                        'indikator_label' => 'Kualifikasi dan pengembangan akademik',
+                        'is_scoreable' => true,
                         'urutan' => 2,
                         'is_active' => true,
                         'fields' => [
@@ -211,6 +219,10 @@ class AssessmentProtofolioSeeder extends Seeder
                         'judul_form' => 'Pengalaman Pelatihan',
                         'kode_form' => 'FORM-PELATIHAN',
                         'deskripsi' => 'Pengalaman pelatihan yang relevan dengan profesi dalam lima tahun terakhir.',
+                        'kompetensi' => KompetensiGuru::PROFESIONAL->value,
+                        'indikator_kode' => '4.2',
+                        'indikator_label' => 'Pengembangan profesi berkelanjutan',
+                        'is_scoreable' => true,
                         'urutan' => 3,
                         'is_active' => true,
                         'fields' => [
@@ -276,6 +288,10 @@ class AssessmentProtofolioSeeder extends Seeder
                         'judul_form' => 'Pengalaman Mengajar',
                         'kode_form' => 'FORM-PENGALAMAN-MENGAJAR',
                         'deskripsi' => 'Riwayat pengalaman mengajar responden pada satuan pendidikan atau lembaga terkait.',
+                        'kompetensi' => KompetensiGuru::PEDAGOGIK->value,
+                        'indikator_kode' => '1.2',
+                        'indikator_label' => 'Pengalaman praktik pembelajaran',
+                        'is_scoreable' => true,
                         'urutan' => 4,
                         'is_active' => true,
                         'fields' => [
@@ -327,6 +343,10 @@ class AssessmentProtofolioSeeder extends Seeder
                         'judul_form' => 'Prestasi dan Penghargaan',
                         'kode_form' => 'FORM-PRESTASI',
                         'deskripsi' => 'Prestasi atau penghargaan profesional yang pernah diperoleh responden.',
+                        'kompetensi' => KompetensiGuru::KEPRIBADIAN->value,
+                        'indikator_kode' => '2.1',
+                        'indikator_label' => 'Keteladanan dan integritas profesional',
+                        'is_scoreable' => true,
                         'urutan' => 5,
                         'is_active' => true,
                         'fields' => [
@@ -378,6 +398,10 @@ class AssessmentProtofolioSeeder extends Seeder
                         'judul_form' => 'Karya, Inovasi, dan Best Practice',
                         'kode_form' => 'FORM-KARYA-INOVASI',
                         'deskripsi' => 'Dokumentasi karya, inovasi, atau praktik baik yang dihasilkan responden.',
+                        'kompetensi' => KompetensiGuru::PROFESIONAL->value,
+                        'indikator_kode' => '4.3',
+                        'indikator_label' => 'Inovasi dan pengembangan praktik',
+                        'is_scoreable' => true,
                         'urutan' => 6,
                         'is_active' => true,
                         'fields' => [
@@ -429,6 +453,10 @@ class AssessmentProtofolioSeeder extends Seeder
                         'judul_form' => 'Refleksi Diri',
                         'kode_form' => 'FORM-REFLEKSI-DIRI',
                         'deskripsi' => 'Refleksi responden mengenai kekuatan dan area pengembangan sebagai guru.',
+                        'kompetensi' => KompetensiGuru::KEPRIBADIAN->value,
+                        'indikator_kode' => '2.2',
+                        'indikator_label' => 'Refleksi dan pengembangan diri',
+                        'is_scoreable' => true,
                         'urutan' => 7,
                         'is_active' => true,
                         'fields' => [
@@ -464,6 +492,7 @@ class AssessmentProtofolioSeeder extends Seeder
                     'slug' => Str::slug($item['judul']),
                     'deskripsi' => $item['deskripsi'],
                     'petunjuk' => $item['petunjuk'],
+                    'instrument_type' => $item['instrument_type'] ?? null,
                     'status' => $item['status'],
                     'is_active' => $item['is_active'],
                 ]

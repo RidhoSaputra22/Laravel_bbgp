@@ -15,6 +15,7 @@ class Assessment extends Model
         'slug',
         'deskripsi',
         'petunjuk',
+        'instrument_type',
         'status',
         'is_active',
     ];

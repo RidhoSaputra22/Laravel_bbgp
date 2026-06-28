@@ -14,11 +14,16 @@ class AssessmentForm extends Model
         'judul_form',
         'kode_form',
         'deskripsi',
+        'kompetensi',
+        'indikator_kode',
+        'indikator_label',
+        'is_scoreable',
         'urutan',
         'is_active',
     ];
 
     protected $casts = [
+        'is_scoreable' => 'boolean',
         'is_active' => 'boolean',
     ];
 
