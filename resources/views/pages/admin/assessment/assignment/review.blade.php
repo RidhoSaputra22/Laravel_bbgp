@@ -215,6 +215,16 @@
                                                                         <small class="text-muted d-block">Tersimpan:
                                                                             {{ $answer['answered_at'] }} WITA</small>
                                                                     @endif
+                                                                    @if (!empty($answer['final_score']))
+                                                                        <span class="badge badge-success d-block mt-2">
+                                                                            Skor aktif: {{ number_format((float) $answer['final_score'], 2) }}
+                                                                        </span>
+                                                                    @endif
+                                                                    @if (!empty($answer['final_score_label']))
+                                                                        <small class="text-muted d-block mt-1">
+                                                                            {{ $answer['final_score_label'] }}
+                                                                        </small>
+                                                                    @endif
                                                                     @if ($fieldType === 'radio' && data_get($answer, 'payload.level_kompetensi_label'))
                                                                         <span class="badge badge-primary">
                                                                             {{ data_get($answer, 'payload.level_kompetensi_label') }}
@@ -342,6 +352,12 @@
                                                             </div>
 
                                                             @if ($manualReviewField)
+                                                                @if (!empty($answer['auto_score_reason']))
+                                                                    <div class="alert alert-light border mt-4 mb-0">
+                                                                        <div class="font-weight-bold mb-1">Alasan Auto Score</div>
+                                                                        <div>{{ $answer['auto_score_reason'] }}</div>
+                                                                    </div>
+                                                                @endif
                                                                 <div class="border-top mt-4 pt-3">
                                                                     <div class="row">
                                                                         <div class="col-md-4">

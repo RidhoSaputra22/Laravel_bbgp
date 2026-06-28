@@ -22,8 +22,8 @@ enum AssessmentInstrumentType: string
     public function weight(): float
     {
         return match ($this) {
-            self::PORTOFOLIO => 0.20,
-            self::PILIHAN_GANDA_KOMPLEKS => 0.30,
+            self::PORTOFOLIO => 0.30,
+            self::PILIHAN_GANDA_KOMPLEKS => 0.40,
             self::STUDI_KASUS => 0.30,
             self::MONITORING_OBSERVASI_EVIDEN => 0.20,
         };

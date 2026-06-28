@@ -6,14 +6,22 @@ use App\Enum\AssessmentInstrumentType;
 use App\Enum\KompetensiGuru;
 use App\Enum\LevelKompetensi;
 use App\Models\AssessmentAttempt;
-use App\Models\AssessmentAttemptAnswer;
+use App\Services\Assessment\Engine\BaseInstrumentScoringEngine;
+use App\Services\Assessment\Engine\PilihanGandaKompleksScoringEngine;
+use App\Services\Assessment\Engine\PortofolioScoringEngine;
+use App\Services\Assessment\Engine\StudiKasusScoringEngine;
 use App\Support\Assessment\AssessmentStructureMetadataResolver;
+use App\Support\Assessment\ScoringConfigNormalizer;
 use Illuminate\Support\Collection;
 
 class AssessmentScoringService
 {
     public function __construct(
-        private readonly AssessmentStructureMetadataResolver $metadataResolver
+        private readonly AssessmentStructureMetadataResolver $metadataResolver,
+        private readonly ScoringConfigNormalizer $configNormalizer,
+        private readonly PilihanGandaKompleksScoringEngine $pilihanGandaKompleksScoringEngine,
+        private readonly PortofolioScoringEngine $portofolioScoringEngine,
+        private readonly StudiKasusScoringEngine $studiKasusScoringEngine
     ) {}
 
     public function buildSummary(AssessmentAttempt $attempt): array
@@ -24,66 +32,44 @@ class AssessmentScoringService
             : $attempt->answers()->get();
         $answerMap = $answers->keyBy('assessment_form_field_id');
         $formSummaries = [];
-        $totalScorableItems = 0;
+        $totalAnsweredScoreableItems = 0;
         $scoredItems = 0;
         $pendingManualItems = 0;
 
         foreach ($snapshot['assessments'] ?? [] as $assessmentData) {
             $assessmentMeta = $this->metadataResolver->decorateAssessment($assessmentData);
+            $assessmentConfig = $this->configNormalizer->normalizeAssessment($assessmentMeta);
             $instrument = AssessmentInstrumentType::tryFromMixed($assessmentMeta['instrument_type'] ?? null);
+
+            if (! $instrument) {
+                continue;
+            }
+
+            $engine = $this->resolveInstrumentEngine($instrument);
 
             foreach ($assessmentMeta['forms'] ?? [] as $formData) {
                 $formMeta = $this->metadataResolver->decorateForm($formData, $assessmentMeta);
-                $kompetensi = KompetensiGuru::tryFromMixed($formMeta['kompetensi'] ?? null);
 
-                if (! ($formMeta['is_scoreable'] ?? false) || ! $instrument || ! $kompetensi) {
+                if (! ($formMeta['is_scoreable'] ?? false)) {
                     continue;
                 }
 
-                $fieldItems = [];
-                $availableScores = [];
-                $displayScores = [];
-                $manualPendingCount = 0;
-                $answeredScorableCount = 0;
+                $kompetensi = KompetensiGuru::tryFromMixed($formMeta['kompetensi'] ?? null);
+                $engineSummary = $engine->buildFormSummary($assessmentMeta, $formMeta, $answerMap);
+                $score = $engineSummary['score'];
+                $displayScore = $engineSummary['display_score'];
+                $items = $engineSummary['items'] ?? [];
+                $answeredItems = (int) ($engineSummary['answered_items'] ?? 0);
+                $scoredCount = collect($items)
+                    ->filter(fn (array $item) => $item['answered'] && $item['score'] !== null)
+                    ->count();
+                $manualPendingCount = (int) collect($items)
+                    ->filter(fn (array $item) => $item['answered'] && ($item['manual_pending'] ?? false))
+                    ->count();
 
-                foreach ($formMeta['fields'] ?? [] as $fieldData) {
-                    $answer = $answerMap->get($fieldData['id']);
-                    $itemSummary = $this->buildFieldScoreSummary(
-                        $instrument,
-                        $formMeta,
-                        $fieldData,
-                        $answer
-                    );
-
-                    $fieldItems[] = $itemSummary;
-
-                    if (! $itemSummary['answered']) {
-                        continue;
-                    }
-
-                    $totalScorableItems++;
-                    $answeredScorableCount++;
-
-                    if ($itemSummary['manual_pending']) {
-                        $pendingManualItems++;
-                        $manualPendingCount++;
-                    }
-
-                    if ($itemSummary['score'] !== null) {
-                        $scoredItems++;
-                        $availableScores[] = $itemSummary['score'];
-                        $displayScores[] = $itemSummary['score'];
-                    }
-                }
-
-                $indicator = [
-                    'kode' => $formMeta['indikator_kode'] ?? null,
-                    'label' => $formMeta['indikator_label'] ?? null,
-                ];
-                $formScore = $manualPendingCount === 0
-                    ? $this->average($availableScores)
-                    : null;
-                $displayFormScore = $this->average($displayScores);
+                $totalAnsweredScoreableItems += $answeredItems;
+                $scoredItems += $scoredCount;
+                $pendingManualItems += $manualPendingCount;
 
                 $formSummaries[] = [
                     'assessment_id' => $assessmentMeta['id'] ?? null,
@@ -91,23 +77,31 @@ class AssessmentScoringService
                     'assessment_code' => $assessmentMeta['kode_assessment'] ?? null,
                     'instrument_type' => $instrument->value,
                     'instrument_label' => $instrument->label(),
-                    'kompetensi' => $kompetensi->value,
-                    'kompetensi_label' => $kompetensi->label(),
-                    'indikator_kode' => $indicator['kode'],
-                    'indikator_label' => $indicator['label'],
+                    'instrument_weight' => (float) ($assessmentConfig['weight'] ?? $instrument->weight()),
+                    'kompetensi' => $kompetensi?->value,
+                    'kompetensi_label' => $kompetensi?->label(),
+                    'indikator_kode' => $formMeta['indikator_kode'] ?? null,
+                    'indikator_label' => $formMeta['indikator_label'] ?? null,
                     'form_id' => $formMeta['id'] ?? null,
                     'form_title' => $formMeta['judul_form'] ?? 'Form',
                     'form_code' => $formMeta['kode_form'] ?? null,
-                    'score' => $formScore,
-                    'display_score' => $displayFormScore,
-                    'formatted_score' => $this->formatScore($formScore),
-                    'display_formatted_score' => $this->formatScore($displayFormScore),
-                    'level' => $this->serializeLevel($formScore),
-                    'answered_items' => $answeredScorableCount,
-                    'scored_items' => count($availableScores),
+                    'score' => $score,
+                    'display_score' => $displayScore,
+                    'formatted_score' => $this->formatScore($score),
+                    'display_formatted_score' => $this->formatScore($displayScore),
+                    'level' => $this->serializeLevel($score),
+                    'form_weight' => (float) data_get($engineSummary, 'form_config.weight', 1),
+                    'answered_items' => $answeredItems,
+                    'total_items' => (int) ($engineSummary['total_items'] ?? count($items)),
+                    'scored_items' => $scoredCount,
+                    'unanswered_items' => max((int) ($engineSummary['total_items'] ?? count($items)) - $answeredItems, 0),
                     'pending_manual_items' => $manualPendingCount,
-                    'is_complete' => $answeredScorableCount > 0 && $manualPendingCount === 0,
-                    'items' => $fieldItems,
+                    'exclude_from_competency' => (bool) data_get($engineSummary, 'form_config.exclude_from_competency', false),
+                    'is_complete' => (bool) ($engineSummary['is_complete'] ?? false),
+                    'verification_gap_threshold' => (float) ($assessmentConfig['verification_gap_threshold'] ?? 1.5),
+                    'empty_response_threshold_percent' => (float) ($assessmentConfig['empty_response_threshold_percent'] ?? 10),
+                    'items' => $items,
+                    'form_config' => $engineSummary['form_config'] ?? [],
                 ];
             }
         }
@@ -116,17 +110,23 @@ class AssessmentScoringService
         $instrumentSummaries = $this->buildInstrumentSummaries($indicatorSummaries);
         $competencySummaries = $this->buildCompetencySummaries($instrumentSummaries);
         $overallSummary = $this->buildOverallSummary($competencySummaries);
+        $verificationAlerts = $this->buildVerificationAlerts($competencySummaries);
 
         return [
-            'status' => $this->resolveScoringStatus($totalScorableItems, $pendingManualItems),
-            'status_label' => $this->resolveScoringStatusLabel($totalScorableItems, $pendingManualItems),
-            'status_description' => $this->resolveScoringStatusDescription($totalScorableItems, $pendingManualItems),
+            'status' => $this->resolveScoringStatus($totalAnsweredScoreableItems, $pendingManualItems),
+            'status_label' => $this->resolveScoringStatusLabel($totalAnsweredScoreableItems, $pendingManualItems),
+            'status_description' => $this->resolveScoringStatusDescription(
+                $totalAnsweredScoreableItems,
+                $pendingManualItems,
+                $verificationAlerts
+            ),
             'manual_review' => [
-                'total_items' => $totalScorableItems,
+                'total_items' => $totalAnsweredScoreableItems,
                 'scored_items' => $scoredItems,
                 'pending_items' => $pendingManualItems,
-                'completed_items' => max($totalScorableItems - $pendingManualItems, 0),
+                'completed_items' => max($totalAnsweredScoreableItems - $pendingManualItems, 0),
             ],
+            'verification_alerts' => $verificationAlerts,
             'weight_reference' => collect(AssessmentInstrumentType::cases())
                 ->map(fn (AssessmentInstrumentType $instrument) => [
                     'key' => $instrument->value,
@@ -142,7 +142,7 @@ class AssessmentScoringService
             'indicators' => array_values($indicatorSummaries),
             'instruments' => array_values($instrumentSummaries),
             'development_recommendations' => $this->buildDevelopmentRecommendations($competencySummaries),
-            'narrative' => $this->buildNarrative($overallSummary, $competencySummaries, $pendingManualItems),
+            'narrative' => $this->buildNarrative($overallSummary, $competencySummaries, $pendingManualItems, $verificationAlerts),
             'career_recommendations' => $this->buildCareerRecommendations($overallSummary, $competencySummaries),
             'radar_chart' => [
                 'max_score' => 5,
@@ -162,69 +162,28 @@ class AssessmentScoringService
         ];
     }
 
-    private function buildFieldScoreSummary(
-        AssessmentInstrumentType $instrument,
-        array $form,
-        array $field,
-        ?AssessmentAttemptAnswer $answer
-    ): array {
-        $answered = $this->answerHasContent($answer);
-        $score = null;
-        $scoreSource = null;
-        $manualPending = false;
-
-        if ($answered && $instrument === AssessmentInstrumentType::PILIHAN_GANDA_KOMPLEKS) {
-            $score = $this->normalizeScoreValue(data_get($answer?->answer_payload ?? [], 'level_kompetensi'));
-            $scoreSource = $score !== null ? 'auto_option_level' : null;
-        }
-
-        if ($answered && $score === null && $instrument->requiresManualReview()) {
-            $score = $this->normalizeScoreValue($answer?->assessor_score);
-            $scoreSource = $score !== null ? 'manual_assessor' : null;
-            $manualPending = $score === null;
-        }
-
-        return [
-            'field_id' => $field['id'] ?? null,
-            'field_label' => $field['label'] ?? 'Pertanyaan',
-            'field_type' => $field['tipe_field'] ?? 'text',
-            'answered' => $answered,
-            'score' => $score,
-            'formatted_score' => $this->formatScore($score),
-            'level' => $this->serializeLevel($score),
-            'score_source' => $scoreSource,
-            'manual_pending' => $manualPending,
-        ];
-    }
-
     private function buildIndicatorSummaries(array $formSummaries): array
     {
         return collect($formSummaries)
             ->groupBy(function (array $formSummary) {
                 return implode('|', [
                     $formSummary['instrument_type'],
-                    $formSummary['kompetensi'],
+                    $formSummary['kompetensi'] ?: 'tanpa-kompetensi',
                     $formSummary['indikator_kode'] ?: 'form-'.$formSummary['form_id'],
                 ]);
             })
             ->map(function (Collection $forms) {
                 $first = $forms->first();
-                $availableFormScores = $forms
-                    ->pluck('score')
-                    ->filter(fn ($score) => $score !== null)
-                    ->values()
-                    ->all();
-                $displayScores = $forms
-                    ->pluck('display_score')
-                    ->filter(fn ($score) => $score !== null)
-                    ->values()
-                    ->all();
-                $score = $this->average($availableFormScores);
-                $displayScore = $this->average($displayScores);
+                $score = $this->weightedAverageItems($forms, 'score', 'form_weight');
+                $displayScore = $this->weightedAverageItems($forms, 'display_score', 'form_weight');
+                $aggregationWeight = $forms
+                    ->filter(fn ($form) => $form['score'] !== null)
+                    ->sum(fn ($form) => max((float) ($form['form_weight'] ?? 1), 0.01));
 
                 return [
                     'instrument_type' => $first['instrument_type'],
                     'instrument_label' => $first['instrument_label'],
+                    'instrument_weight' => $first['instrument_weight'],
                     'kompetensi' => $first['kompetensi'],
                     'kompetensi_label' => $first['kompetensi_label'],
                     'indikator_kode' => $first['indikator_kode'],
@@ -235,8 +194,15 @@ class AssessmentScoringService
                     'display_formatted_score' => $this->formatScore($displayScore),
                     'level' => $this->serializeLevel($score),
                     'forms' => $forms->values()->all(),
+                    'aggregation_weight' => round((float) $aggregationWeight, 2),
                     'pending_manual_items' => (int) $forms->sum('pending_manual_items'),
+                    'answered_items' => (int) $forms->sum('answered_items'),
+                    'total_items' => (int) $forms->sum('total_items'),
+                    'scored_items' => (int) $forms->sum('scored_items'),
+                    'exclude_from_competency' => $forms->every(fn ($form) => (bool) ($form['exclude_from_competency'] ?? false)),
                     'is_complete' => $forms->every(fn ($form) => (bool) $form['is_complete']),
+                    'verification_gap_threshold' => (float) ($first['verification_gap_threshold'] ?? 1.5),
+                    'empty_response_threshold_percent' => (float) ($first['empty_response_threshold_percent'] ?? 10),
                 ];
             })
             ->values()
@@ -249,31 +215,20 @@ class AssessmentScoringService
             ->groupBy(function (array $indicatorSummary) {
                 return implode('|', [
                     $indicatorSummary['instrument_type'],
-                    $indicatorSummary['kompetensi'],
+                    $indicatorSummary['kompetensi'] ?: 'tanpa-kompetensi',
                 ]);
             })
             ->map(function (Collection $indicators) {
                 $first = $indicators->first();
-                $availableIndicatorScores = $indicators
-                    ->pluck('score')
-                    ->filter(fn ($score) => $score !== null)
-                    ->values()
-                    ->all();
-                $displayScores = $indicators
-                    ->pluck('display_score')
-                    ->filter(fn ($score) => $score !== null)
-                    ->values()
-                    ->all();
-                $instrument = AssessmentInstrumentType::tryFromMixed($first['instrument_type']);
-                $score = $this->average($availableIndicatorScores);
-                $displayScore = $this->average($displayScores);
+                $score = $this->weightedAverageItems($indicators, 'score', 'aggregation_weight');
+                $displayScore = $this->weightedAverageItems($indicators, 'display_score', 'aggregation_weight');
 
                 return [
                     'instrument_type' => $first['instrument_type'],
                     'instrument_label' => $first['instrument_label'],
                     'kompetensi' => $first['kompetensi'],
                     'kompetensi_label' => $first['kompetensi_label'],
-                    'base_weight' => $instrument?->weight(),
+                    'base_weight' => (float) ($first['instrument_weight'] ?? AssessmentInstrumentType::tryFromMixed($first['instrument_type'])?->weight() ?? 0),
                     'score' => $score,
                     'display_score' => $displayScore,
                     'formatted_score' => $this->formatScore($score),
@@ -281,6 +236,13 @@ class AssessmentScoringService
                     'level' => $this->serializeLevel($score),
                     'indicators' => $indicators->values()->all(),
                     'pending_manual_items' => (int) $indicators->sum('pending_manual_items'),
+                    'answered_items' => (int) $indicators->sum('answered_items'),
+                    'total_items' => (int) $indicators->sum('total_items'),
+                    'scored_items' => (int) $indicators->sum('scored_items'),
+                    'unanswered_items' => max((int) $indicators->sum('total_items') - (int) $indicators->sum('answered_items'), 0),
+                    'exclude_from_competency' => $indicators->every(fn ($indicator) => (bool) ($indicator['exclude_from_competency'] ?? false)),
+                    'verification_gap_threshold' => (float) ($first['verification_gap_threshold'] ?? 1.5),
+                    'empty_response_threshold_percent' => (float) ($first['empty_response_threshold_percent'] ?? 10),
                 ];
             })
             ->values()
@@ -295,29 +257,35 @@ class AssessmentScoringService
                     ->where('kompetensi', $kompetensi->value)
                     ->values();
                 $availableItems = $items
-                    ->filter(fn ($item) => $item['score'] !== null)
+                    ->filter(fn ($item) => $item['score'] !== null && ! ($item['exclude_from_competency'] ?? false))
                     ->values();
-                $activeWeightTotal = $availableItems->sum('base_weight');
+                $activeWeightTotal = (float) $availableItems->sum('base_weight');
                 $weightedScore = $activeWeightTotal > 0
                     ? $availableItems->sum(function ($item) use ($activeWeightTotal) {
-                        return $item['score'] * ($item['base_weight'] / $activeWeightTotal);
+                        return ((float) $item['score']) * (((float) $item['base_weight']) / $activeWeightTotal);
                     })
                     : null;
-                $recommendationCategory = $this->resolveRecommendationCategory($weightedScore);
+                $verificationReasons = $this->buildCompetencyVerificationReasons($availableItems);
+                $recommendation = $this->resolveRecommendationDetails($weightedScore);
 
                 return [
                     'key' => $kompetensi->value,
                     'label' => $kompetensi->label(),
-                    'score' => $weightedScore !== null ? round($weightedScore, 2) : null,
+                    'score' => $weightedScore !== null ? round((float) $weightedScore, 2) : null,
                     'formatted_score' => $this->formatScore($weightedScore),
+                    'percent_score' => $weightedScore !== null ? round((((float) $weightedScore) / 5) * 100, 2) : null,
                     'level' => $this->serializeLevel($weightedScore),
                     'active_weight_total' => $activeWeightTotal > 0 ? round($activeWeightTotal, 2) : 0.0,
                     'active_weight_percent' => $activeWeightTotal > 0 ? (int) round($activeWeightTotal * 100) : 0,
-                    'recommendation_category' => $recommendationCategory,
-                    'recommendation_description' => $this->resolveRecommendationDescription($kompetensi, $weightedScore),
+                    'recommendation_category' => $recommendation['category'],
+                    'recommendation_focus' => $recommendation['focus'],
+                    'recommendation_support' => $recommendation['support'],
+                    'recommendation_description' => $recommendation['description'],
+                    'needs_verification' => $verificationReasons !== [],
+                    'verification_reasons' => $verificationReasons,
                     'instruments' => $items->map(function (array $item) use ($activeWeightTotal) {
                         $normalizedWeight = $activeWeightTotal > 0 && $item['score'] !== null
-                            ? round($item['base_weight'] / $activeWeightTotal, 4)
+                            ? round(((float) $item['base_weight']) / $activeWeightTotal, 4)
                             : null;
 
                         return array_merge($item, [
@@ -339,6 +307,7 @@ class AssessmentScoringService
         $availableScores = collect($competencySummaries)
             ->pluck('score')
             ->filter(fn ($score) => $score !== null)
+            ->map(fn ($score) => (float) $score)
             ->values()
             ->all();
         $overallScore = $this->average($availableScores);
@@ -346,6 +315,7 @@ class AssessmentScoringService
         return [
             'score' => $overallScore,
             'formatted_score' => $this->formatScore($overallScore),
+            'percent_score' => $overallScore !== null ? round(($overallScore / 5) * 100, 2) : null,
             'level' => $this->serializeLevel($overallScore),
             'available_competencies' => count($availableScores),
         ];
@@ -363,15 +333,22 @@ class AssessmentScoringService
                     'score' => $item['score'],
                     'formatted_score' => $item['formatted_score'],
                     'category' => $item['recommendation_category'],
+                    'focus' => $item['recommendation_focus'],
+                    'support' => $item['recommendation_support'],
                     'description' => $item['recommendation_description'],
+                    'needs_verification' => $item['needs_verification'],
                 ];
             })
             ->values()
             ->all();
     }
 
-    private function buildNarrative(array $overallSummary, array $competencySummaries, int $pendingManualItems): string
-    {
+    private function buildNarrative(
+        array $overallSummary,
+        array $competencySummaries,
+        int $pendingManualItems,
+        array $verificationAlerts
+    ): string {
         if ($overallSummary['score'] === null) {
             return 'Hasil penilaian belum dapat dihitung karena belum ada komponen skor yang tersedia pada assessment ini.';
         }
@@ -389,11 +366,15 @@ class AssessmentScoringService
         ];
 
         if ($highest && $lowest) {
-            $parts[] = "Area yang paling menonjol berada pada kompetensi {$highest['label']}, sedangkan fokus penguatan utama saat ini ada pada kompetensi {$lowest['label']}.";
+            $parts[] = "Area terkuat saat ini berada pada kompetensi {$highest['label']}, sedangkan penguatan utama perlu difokuskan pada kompetensi {$lowest['label']}.";
         }
 
         if ($pendingManualItems > 0) {
-            $parts[] = 'Sebagian instrumen masih menunggu penilaian assessor, sehingga ringkasan ini akan semakin lengkap setelah seluruh skor manual diinput.';
+            $parts[] = 'Masih ada jawaban yang membutuhkan verifikasi manual assessor sebelum seluruh skor dianggap final.';
+        }
+
+        if ($verificationAlerts !== []) {
+            $parts[] = 'Beberapa kompetensi menunjukkan selisih antarinstrumen atau respons kosong yang cukup tinggi sehingga tetap perlu klarifikasi lanjutan.';
         }
 
         return implode(' ', $parts);
@@ -422,21 +403,21 @@ class AssessmentScoringService
         if (in_array(KompetensiGuru::SOSIAL->value, $topLabels, true) && in_array(KompetensiGuru::KEPRIBADIAN->value, $topLabels, true)) {
             $recommendations[] = [
                 'title' => 'Wali Kelas / Mentor Guru',
-                'reason' => 'Kombinasi kompetensi sosial dan kepribadian kuat untuk peran pendampingan, komunikasi, dan penguatan budaya belajar yang sehat.',
+                'reason' => 'Kombinasi kompetensi sosial dan kepribadian yang baik cocok untuk peran pendampingan, komunikasi, dan penguatan budaya belajar yang sehat.',
             ];
         }
 
         if ($overallSummary['score'] !== null && $overallSummary['score'] >= 4.20) {
             $recommendations[] = [
                 'title' => 'Calon Kepala Sekolah / Pengembang Program',
-                'reason' => 'Capaian keseluruhan yang tinggi menunjukkan kesiapan untuk mengambil peran kepemimpinan akademik dan pengembangan program pendidikan.',
+                'reason' => 'Profil keseluruhan menunjukkan kesiapan untuk mengambil peran kepemimpinan akademik dan pengembangan program pendidikan.',
             ];
         }
 
         if ($recommendations === []) {
             $recommendations[] = [
                 'title' => 'Penggerak Komunitas Belajar',
-                'reason' => 'Profil kompetensi yang berkembang dapat diarahkan untuk memperkuat komunitas belajar, kolaborasi sejawat, dan perbaikan praktik secara bertahap.',
+                'reason' => 'Profil kompetensi dapat diarahkan untuk memperkuat komunitas belajar, kolaborasi sejawat, dan perbaikan praktik secara bertahap.',
             ];
         }
 
@@ -446,9 +427,65 @@ class AssessmentScoringService
             ->all();
     }
 
-    private function resolveScoringStatus(int $totalScorableItems, int $pendingManualItems): string
+    private function buildVerificationAlerts(array $competencySummaries): array
     {
-        if ($totalScorableItems === 0) {
+        return collect($competencySummaries)
+            ->filter(fn ($summary) => (bool) ($summary['needs_verification'] ?? false))
+            ->map(fn ($summary) => [
+                'kompetensi' => $summary['key'],
+                'label' => $summary['label'],
+                'reasons' => $summary['verification_reasons'] ?? [],
+            ])
+            ->values()
+            ->all();
+    }
+
+    private function buildCompetencyVerificationReasons(Collection $availableItems): array
+    {
+        if ($availableItems->isEmpty()) {
+            return [];
+        }
+
+        $scores = $availableItems
+            ->pluck('score')
+            ->filter(fn ($score) => $score !== null)
+            ->map(fn ($score) => (float) $score)
+            ->values();
+        $reasons = [];
+
+        if ($scores->count() >= 2) {
+            $gap = (float) $scores->max() - (float) $scores->min();
+            $verificationThreshold = max(
+                (float) $availableItems
+                    ->pluck('verification_gap_threshold')
+                    ->filter(fn ($value) => is_numeric($value))
+                    ->map(fn ($value) => (float) $value)
+                    ->max(),
+                1.50
+            );
+
+            if ($gap >= $verificationThreshold) {
+                $reasons[] = 'Selisih skor antarinstrumen mencapai atau melebihi '.number_format($verificationThreshold, 2).' level.';
+            }
+        }
+
+        $pgSummary = $availableItems->firstWhere('instrument_type', AssessmentInstrumentType::PILIHAN_GANDA_KOMPLEKS->value);
+
+        if ($pgSummary) {
+            $blankRatio = ((int) ($pgSummary['unanswered_items'] ?? 0)) / max((int) ($pgSummary['total_items'] ?? 0), 1);
+            $emptyThreshold = max(((float) ($pgSummary['empty_response_threshold_percent'] ?? 10)) / 100, 0);
+
+            if ($blankRatio > $emptyThreshold) {
+                $reasons[] = 'Respons kosong pada domain pilihan ganda kompleks melebihi '.number_format($emptyThreshold * 100, 0).' persen dan perlu klarifikasi.';
+            }
+        }
+
+        return $reasons;
+    }
+
+    private function resolveScoringStatus(int $totalAnsweredItems, int $pendingManualItems): string
+    {
+        if ($totalAnsweredItems === 0) {
             return 'not_ready';
         }
 
@@ -459,51 +496,73 @@ class AssessmentScoringService
         return 'complete';
     }
 
-    private function resolveScoringStatusLabel(int $totalScorableItems, int $pendingManualItems): string
+    private function resolveScoringStatusLabel(int $totalAnsweredItems, int $pendingManualItems): string
     {
-        return match ($this->resolveScoringStatus($totalScorableItems, $pendingManualItems)) {
-            'complete' => 'Penilaian Lengkap',
-            'partial' => 'Menunggu Review Assessor',
+        return match ($this->resolveScoringStatus($totalAnsweredItems, $pendingManualItems)) {
+            'complete' => 'Penilaian Otomatis Selesai',
+            'partial' => 'Sebagian Perlu Review Assessor',
             default => 'Belum Ada Skor',
         };
     }
 
-    private function resolveScoringStatusDescription(int $totalScorableItems, int $pendingManualItems): string
-    {
-        return match ($this->resolveScoringStatus($totalScorableItems, $pendingManualItems)) {
-            'complete' => 'Semua komponen skor yang tersedia sudah dapat dihitung.',
-            'partial' => "Masih ada {$pendingManualItems} jawaban yang menunggu penilaian manual assessor.",
+    private function resolveScoringStatusDescription(
+        int $totalAnsweredItems,
+        int $pendingManualItems,
+        array $verificationAlerts = []
+    ): string {
+        return match ($this->resolveScoringStatus($totalAnsweredItems, $pendingManualItems)) {
+            'complete' => $verificationAlerts === []
+                ? 'Semua komponen skor yang tersedia sudah dihitung otomatis sesuai konfigurasi builder.'
+                : 'Semua komponen skor sudah dihitung, tetapi beberapa kompetensi masih ditandai perlu verifikasi karena selisih antarinstrumen atau respons kosong.',
+            'partial' => "Masih ada {$pendingManualItems} jawaban yang menunggu verifikasi atau penilaian manual assessor.",
             default => 'Instrumen yang ada belum menghasilkan komponen skor yang bisa dihitung.',
         };
     }
 
-    private function resolveRecommendationCategory(float|int|string|null $score): ?string
+    private function resolveRecommendationDetails(float|int|string|null $score): array
     {
         if (! is_numeric($score)) {
-            return null;
+            return [
+                'category' => null,
+                'focus' => null,
+                'support' => null,
+                'description' => null,
+            ];
         }
 
         $numericScore = round((float) $score, 2);
 
         return match (true) {
-            $numericScore <= 2.60 => 'Prioritas segera dilakukan',
-            $numericScore <= 3.40 => 'Perlu dikuatkan rutin',
-            default => 'Perlu dipertahankan secara konsisten',
-        };
-    }
-
-    private function resolveRecommendationDescription(KompetensiGuru $kompetensi, float|int|string|null $score): ?string
-    {
-        $category = $this->resolveRecommendationCategory($score);
-
-        if (! $category) {
-            return null;
-        }
-
-        return match ($category) {
-            'Prioritas segera dilakukan' => "Kompetensi {$kompetensi->label()} perlu menjadi fokus intervensi utama dalam pendampingan, pelatihan, dan praktik harian.",
-            'Perlu dikuatkan rutin' => "Kompetensi {$kompetensi->label()} sudah mulai terbentuk, tetapi masih perlu penguatan yang konsisten melalui latihan, refleksi, dan umpan balik.",
-            default => "Kompetensi {$kompetensi->label()} sudah relatif kuat dan perlu dijaga konsistensinya melalui praktik berkelanjutan serta berbagi praktik baik.",
+            $numericScore < 1.80 => [
+                'category' => 'Level 1 - Paham',
+                'focus' => 'Penguatan konsep dasar',
+                'support' => 'Orientasi kompetensi, contoh praktik, modul mandiri terstruktur, observasi kelas, pendampingan intensif.',
+                'description' => 'Perlu penguatan konsep dasar, contoh praktik, dan pendampingan awal.',
+            ],
+            $numericScore < 2.60 => [
+                'category' => 'Level 2 - Dasar',
+                'focus' => 'Penguatan prosedur dan keterampilan awal',
+                'support' => 'Lokakarya praktik, simulasi kasus, umpan balik coach, perangkat ajar atau asesmen terarah.',
+                'description' => 'Perlu latihan penerapan prosedur, simulasi, dan umpan balik terarah.',
+            ],
+            $numericScore < 3.40 => [
+                'category' => 'Level 3 - Menengah',
+                'focus' => 'Pendalaman analisis dan adaptasi strategi',
+                'support' => 'Peer coaching, lesson study, analisis data hasil belajar, diferensiasi, dan aksi perbaikan kelas.',
+                'description' => 'Mampu menerapkan strategi; perlu penguatan analisis data, evaluasi, dan diferensiasi konteks.',
+            ],
+            $numericScore < 4.20 => [
+                'category' => 'Level 4 - Mumpuni',
+                'focus' => 'Penguatan kepemimpinan pembelajaran',
+                'support' => 'Menjadi mentor, fasilitator komunitas belajar, penelitian tindakan, dan pengembangan sistem sekolah.',
+                'description' => 'Mampu mengevaluasi dan menyesuaikan praktik; perlu perluasan peran sebagai penggerak atau mentor.',
+            ],
+            default => [
+                'category' => 'Level 5 - Ahli',
+                'focus' => 'Diseminasi dan pengembangan ekosistem',
+                'support' => 'Master trainer, pengembangan model praktik baik, jejaring lintas sekolah, pendampingan replikasi, dan evaluasi dampak.',
+                'description' => 'Mampu mengembangkan sistem atau inovasi; diarahkan pada diseminasi, jejaring, dan penguatan kapasitas sekolah.',
+            ],
         };
     }
 
@@ -522,64 +581,60 @@ class AssessmentScoringService
         ];
     }
 
-    private function average(array $values): ?float
-    {
-        $numericValues = collect($values)
-            ->filter(fn ($value) => is_numeric($value))
-            ->map(fn ($value) => (float) $value)
-            ->values();
-
-        if ($numericValues->isEmpty()) {
-            return null;
-        }
-
-        return round($numericValues->avg(), 2);
-    }
-
     private function formatScore(float|int|string|null $score): ?string
     {
         if (! is_numeric($score)) {
             return null;
         }
 
-        return number_format((float) $score, 2, '.', '');
+        return number_format((float) $score, 2);
     }
 
-    private function normalizeScoreValue(float|int|string|null $score): ?float
+    /**
+     * @param  array<int, float|int>  $scores
+     */
+    private function average(array $scores): ?float
     {
-        if (! is_numeric($score)) {
+        if ($scores === []) {
             return null;
         }
 
-        $numericScore = round((float) $score, 2);
+        return round(array_sum(array_map('floatval', $scores)) / count($scores), 2);
+    }
 
-        if ($numericScore < 1 || $numericScore > 5) {
+    private function weightedAverageItems(Collection $items, string $scoreKey, string $weightKey): ?float
+    {
+        $weightedItems = $items
+            ->filter(fn ($item) => $item[$scoreKey] !== null)
+            ->map(fn ($item) => [
+                'score' => (float) $item[$scoreKey],
+                'weight' => max((float) ($item[$weightKey] ?? 1), 0.01),
+            ])
+            ->values();
+
+        if ($weightedItems->isEmpty()) {
             return null;
         }
 
-        return $numericScore;
+        $totalWeight = (float) $weightedItems->sum('weight');
+
+        if ($totalWeight <= 0) {
+            return null;
+        }
+
+        return round(
+            (float) $weightedItems->sum(fn (array $item) => $item['score'] * ($item['weight'] / $totalWeight)),
+            2
+        );
     }
 
-    private function answerHasContent(?AssessmentAttemptAnswer $answer): bool
+    private function resolveInstrumentEngine(AssessmentInstrumentType $instrument): BaseInstrumentScoringEngine
     {
-        if (! $answer) {
-            return false;
-        }
-
-        if (filled($answer->answer_text) || filled($answer->answer_file_path)) {
-            return true;
-        }
-
-        $payload = $answer->answer_payload ?? [];
-
-        if (filled($payload['value'] ?? null)) {
-            return true;
-        }
-
-        if (collect($payload['values'] ?? [])->filter(fn ($value) => filled($value))->isNotEmpty()) {
-            return true;
-        }
-
-        return collect($payload['rows'] ?? [])->filter(fn ($row) => is_array($row) && collect($row)->filter(fn ($value) => filled($value))->isNotEmpty())->isNotEmpty();
+        return match ($instrument) {
+            AssessmentInstrumentType::PILIHAN_GANDA_KOMPLEKS => $this->pilihanGandaKompleksScoringEngine,
+            AssessmentInstrumentType::STUDI_KASUS => $this->studiKasusScoringEngine,
+            AssessmentInstrumentType::PORTOFOLIO,
+            AssessmentInstrumentType::MONITORING_OBSERVASI_EVIDEN => $this->portofolioScoringEngine,
+        };
     }
 }

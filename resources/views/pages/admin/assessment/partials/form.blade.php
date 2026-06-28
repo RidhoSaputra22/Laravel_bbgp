@@ -5,6 +5,24 @@
     $teacherCompetencies = \App\Enum\KompetensiGuru::options();
     $fieldTypeBadges = $fieldTypes ?? [];
     $validationErrors = $errors->getMessages();
+    $formScoringProfiles = [
+        'generic' => 'Generik',
+        'portofolio' => 'Portofolio',
+        'study_case_default' => 'Studi Kasus Default',
+        'pilihan_ganda_kompleks' => 'Pilihan Ganda Kompleks',
+    ];
+    $fieldScoringMethods = [
+        'presence' => 'Skor saat jawaban terisi',
+        'choice_option_score' => 'Skor per opsi',
+        'choice_option_average' => 'Rata-rata skor opsi',
+        'choice_option_sum' => 'Jumlah skor opsi',
+        'choice_option_max' => 'Skor opsi tertinggi',
+        'numeric_threshold' => 'Ambang angka',
+        'numeric_range' => 'Rentang angka ideal',
+        'semantic_similarity' => 'Kemiripan makna / NLP',
+        'keyword_coverage' => 'Cakupan kata kunci',
+        'repeater_completeness' => 'Kelengkapan tabel',
+    ];
 @endphp
 
 @if ($errors->any())
@@ -201,6 +219,7 @@
                     <li>Pilih <strong>jenis instrumen</strong> di level assessment, lalu atur <strong>kompetensi</strong>, <strong>indikator</strong>, dan status <strong>masuk penilaian</strong> di setiap form.</li>
                     <li>Untuk field <strong>Daftar Pilihan</strong> dan <strong>Kotak Centang</strong>, pisahkan opsi dengan koma atau baris baru.</li>
                     <li>Untuk field <strong>Pilihan Ganda</strong>, isi <strong>kode jawaban</strong>, <strong>isi jawaban</strong>, dan <strong>level kompetensi</strong> pada setiap opsi.</li>
+                    <li>Gunakan panel <strong>Pengaturan Skor Otomatis</strong> di setiap form dan field untuk menentukan metode penilaian, bobot, ambang angka, kata kunci, atau jawaban rujukan.</li>
                     <li>Untuk field <strong>Tabel Berulang</strong>, isi konfigurasi JSON kolom tabel sesuai contoh yang tersedia.</li>
                     <li>Nama field akan dibuat otomatis dari label yang Anda isi.</li>
                     <li>Aktifkan hanya form dan field yang ingin ditampilkan ke pengguna.</li>
@@ -242,6 +261,8 @@
             const assessmentFieldTypes = @json($fieldTypes);
             const competencyLevels = @json($competencyLevels);
             const teacherCompetencies = @json($teacherCompetencies);
+            const formScoringProfiles = @json($formScoringProfiles);
+            const fieldScoringMethods = @json($fieldScoringMethods);
             const initialForms = @json($builderSeed);
             const validationErrors = @json($validationErrors);
             const textOptionFieldTypes = ['select', 'checkbox'];
@@ -334,6 +355,108 @@
                 });
 
                 return optionsHtml;
+            };
+
+            const buildFormScoringProfileOptions = (selectedValue) => {
+                let optionsHtml = '<option value="">Ikuti instrumen assessment</option>';
+
+                Object.entries(formScoringProfiles).forEach(([value, label]) => {
+                    const selected = value === selectedValue ? 'selected' : '';
+                    optionsHtml += `<option value="${escapeHtml(value)}" ${selected}>${escapeHtml(label)}</option>`;
+                });
+
+                return optionsHtml;
+            };
+
+            const resolveDefaultScoringMethod = (fieldType) => {
+                if (fieldType === multipleChoiceFieldType || fieldType === 'select') {
+                    return 'choice_option_score';
+                }
+
+                if (fieldType === 'checkbox') {
+                    return 'choice_option_average';
+                }
+
+                if (fieldType === 'number') {
+                    return 'numeric_threshold';
+                }
+
+                if (fieldType === repeaterFieldType) {
+                    return 'repeater_completeness';
+                }
+
+                if (['text', 'textarea'].includes(fieldType)) {
+                    return 'semantic_similarity';
+                }
+
+                return 'presence';
+            };
+
+            const resolveAllowedScoringMethods = (fieldType) => {
+                switch (fieldType) {
+                    case multipleChoiceFieldType:
+                    case 'select':
+                        return ['choice_option_score', 'presence'];
+                    case 'checkbox':
+                        return ['choice_option_average', 'choice_option_sum', 'choice_option_max', 'presence'];
+                    case 'number':
+                        return ['numeric_threshold', 'numeric_range', 'presence'];
+                    case 'textarea':
+                    case 'text':
+                        return ['semantic_similarity', 'keyword_coverage', 'presence'];
+                    case repeaterFieldType:
+                        return ['repeater_completeness', 'presence'];
+                    default:
+                        return ['presence'];
+                }
+            };
+
+            const buildFieldScoringMethodOptions = (fieldType, selectedValue) => {
+                const allowedMethods = resolveAllowedScoringMethods(fieldType);
+                const normalizedSelectedValue = allowedMethods.includes(selectedValue)
+                    ? selectedValue
+                    : resolveDefaultScoringMethod(fieldType);
+
+                return allowedMethods.map((value) => {
+                    const selected = value === normalizedSelectedValue ? 'selected' : '';
+                    return `<option value="${escapeHtml(value)}" ${selected}>${escapeHtml(fieldScoringMethods[value] || value)}</option>`;
+                }).join('');
+            };
+
+            const normalizeFormScoringConfig = (config = {}) => {
+                return {
+                    profile: String(config?.profile || '').trim(),
+                    weight: config?.weight ?? '',
+                    exclude_from_competency: normalizeChecked(config?.exclude_from_competency),
+                    advanced_rules_text: String(config?.advanced_rules_text || '').trim(),
+                };
+            };
+
+            const normalizeFieldScoringConfig = (config = {}, fieldType = 'text') => {
+                return {
+                    enabled: normalizeChecked(config?.enabled),
+                    profile: String(config?.profile || '').trim(),
+                    method: String(config?.method || resolveDefaultScoringMethod(fieldType)).trim(),
+                    rubric_code: String(config?.rubric_code || '').trim(),
+                    weight: config?.weight ?? '',
+                    score_if_answered: config?.score_if_answered ?? '',
+                    scale_min: config?.scale_min ?? '',
+                    scale_max: config?.scale_max ?? '',
+                    reference_answer: String(config?.reference_answer || '').trim(),
+                    keyword_groups_text: String(config?.keyword_groups_text || '').trim(),
+                    synonym_map_text: String(config?.synonym_map_text || '').trim(),
+                    min_words: config?.min_words ?? '',
+                    confidence_threshold: config?.confidence_threshold ?? '',
+                    manual_review_below_confidence: normalizeChecked(config?.manual_review_below_confidence),
+                    numeric_direction: String(config?.numeric_direction || 'greater_is_better').trim(),
+                    min_threshold: config?.min_threshold ?? '',
+                    target_threshold: config?.target_threshold ?? '',
+                    max_threshold: config?.max_threshold ?? '',
+                    min_score: config?.min_score ?? '',
+                    target_score: config?.target_score ?? '',
+                    max_score: config?.max_score ?? '',
+                    advanced_rules_text: String(config?.advanced_rules_text || '').trim(),
+                };
             };
 
             const generateChoiceLabel = (index) => {
@@ -453,6 +576,7 @@
 
                 const normalizedOptions = options.map((option, index) => ({
                     ...normalizeRadioOptionShape(option),
+                    score: option?.score ?? '',
                     level_kompetensi: normalizeCompetencyLevelValue(option?.level_kompetensi, index),
                 }));
 
@@ -460,6 +584,7 @@
                     normalizedOptions.push({
                         label: '',
                         value: '',
+                        score: '',
                         level_kompetensi: getDefaultCompetencyLevel(normalizedOptions.length),
                     });
                 }
@@ -500,8 +625,10 @@
                     normalizedOption.level_kompetensi,
                     optionIndex
                 );
+                const optionScore = optionData?.score ?? optionCompetencyLevel ?? '';
                 const optionTextName = `forms[${formIndex}][fields][${fieldIndex}][radio_options][${optionIndex}][label]`;
                 const optionCodeName = `forms[${formIndex}][fields][${fieldIndex}][radio_options][${optionIndex}][value]`;
+                const optionScoreName = `forms[${formIndex}][fields][${fieldIndex}][radio_options][${optionIndex}][score]`;
                 const optionCompetencyLevelName =
                     `forms[${formIndex}][fields][${fieldIndex}][radio_options][${optionIndex}][level_kompetensi]`;
                 const generatedCode = generateChoiceLabel(optionIndex);
@@ -519,7 +646,7 @@
                                     ${buildInvalidFeedback(optionCodeName)}
                                 </div>
                             </div>
-                            <div class="col-md-6">
+                            <div class="col-md-5">
                                 <div class="form-group mb-md-0">
                                     <label>${buildRequiredLabel('Isi Jawaban')}</label>
                                     <input type="text" class="${getInputClass(optionTextName, 'form-control radio-option-text')}"
@@ -529,7 +656,18 @@
                                     ${buildInvalidFeedback(optionTextName)}
                                 </div>
                             </div>
-                            <div class="col-md-3">
+                            <div class="col-md-2">
+                                <div class="form-group mb-md-0">
+                                    <label>Skor</label>
+                                    <input type="number" min="0" max="5" step="0.01"
+                                        class="${getInputClass(optionScoreName, 'form-control radio-option-score')}"
+                                        name="${optionScoreName}"
+                                        value="${escapeHtml(optionScore)}"
+                                        placeholder="${escapeHtml(optionCompetencyLevel || '')}">
+                                    ${buildInvalidFeedback(optionScoreName)}
+                                </div>
+                            </div>
+                            <div class="col-md-2">
                                 <div class="form-group mb-md-0">
                                     <label>${buildRequiredLabel('Level Kompetensi')}</label>
                                     <select class="${getInputClass(optionCompetencyLevelName, 'form-control radio-option-level')}"
@@ -554,6 +692,7 @@
                 const showTextOptions = textOptionFieldTypes.includes(fieldType);
                 const showMultipleChoiceOptions = fieldType === multipleChoiceFieldType;
                 const radioOptions = normalizeRadioOptions(fieldData.radio_options);
+                const scoringData = normalizeFieldScoringConfig(fieldData.scoring || {}, fieldType);
                 const fieldPrefix = `forms[${formIndex}][fields][${fieldIndex}]`;
                 const labelName = `${fieldPrefix}[label]`;
                 const deskripsiName = `${fieldPrefix}[deskripsi]`;
@@ -561,10 +700,34 @@
                 const placeholderName = `${fieldPrefix}[placeholder]`;
                 const urutanName = `${fieldPrefix}[urutan]`;
                 const opsiFieldTextName = `${fieldPrefix}[opsi_field_text]`;
+                const opsiScoreTextName = `${fieldPrefix}[opsi_score_text]`;
                 const repeaterConfigName = `${fieldPrefix}[repeater_config_text]`;
                 const radioOptionsName = `${fieldPrefix}[radio_options]`;
                 const bantuanName = `${fieldPrefix}[bantuan]`;
                 const lebarKolomName = `${fieldPrefix}[lebar_kolom]`;
+                const scoringPrefix = `${fieldPrefix}[scoring]`;
+                const scoringEnabledName = `${scoringPrefix}[enabled]`;
+                const scoringProfileName = `${scoringPrefix}[profile]`;
+                const scoringMethodName = `${scoringPrefix}[method]`;
+                const scoringRubricCodeName = `${scoringPrefix}[rubric_code]`;
+                const scoringWeightName = `${scoringPrefix}[weight]`;
+                const scoringPresenceName = `${scoringPrefix}[score_if_answered]`;
+                const scoringScaleMinName = `${scoringPrefix}[scale_min]`;
+                const scoringScaleMaxName = `${scoringPrefix}[scale_max]`;
+                const scoringReferenceAnswerName = `${scoringPrefix}[reference_answer]`;
+                const scoringKeywordGroupsName = `${scoringPrefix}[keyword_groups_text]`;
+                const scoringSynonymMapName = `${scoringPrefix}[synonym_map_text]`;
+                const scoringMinWordsName = `${scoringPrefix}[min_words]`;
+                const scoringConfidenceThresholdName = `${scoringPrefix}[confidence_threshold]`;
+                const scoringManualReviewName = `${scoringPrefix}[manual_review_below_confidence]`;
+                const scoringNumericDirectionName = `${scoringPrefix}[numeric_direction]`;
+                const scoringMinThresholdName = `${scoringPrefix}[min_threshold]`;
+                const scoringTargetThresholdName = `${scoringPrefix}[target_threshold]`;
+                const scoringMaxThresholdName = `${scoringPrefix}[max_threshold]`;
+                const scoringMinScoreName = `${scoringPrefix}[min_score]`;
+                const scoringTargetScoreName = `${scoringPrefix}[target_score]`;
+                const scoringMaxScoreName = `${scoringPrefix}[max_score]`;
+                const scoringAdvancedRulesName = `${scoringPrefix}[advanced_rules_text]`;
                 const fieldCardClass = joinClasses(
                     '',
                     'border',
@@ -576,12 +739,10 @@
                     'form-group',
                     'standard-option-wrapper',
                     showTextOptions ? '' : 'd-none',
-
                 );
                 const multipleChoiceWrapperClass = joinClasses(
                     'multiple-choice-wrapper',
                     showMultipleChoiceOptions ? '' : 'd-none',
-
                 );
                 const repeaterWrapperClass = joinClasses(
                     'form-group',
@@ -626,7 +787,9 @@
                                             placeholder="Contoh: Nama Lengkap"
                                             required>
                                         ${buildInvalidFeedback(labelName)}
-
+                                        <small class="form-text text-muted auto-field-name-hint">
+                                            ${buildAutoFieldNameHint(fieldData.label)}
+                                        </small>
                                     </div>
                                 </div>
                                 <div class="col-md-4">
@@ -684,6 +847,16 @@
                                     rows="2"
                                     placeholder="Contoh: Ya, Tidak, Mungkin">${escapeHtml(fieldData.opsi_field_text)}</textarea>
                                 ${buildInvalidFeedback(opsiFieldTextName)}
+                                <small class="text-muted d-block mt-2">
+                                    Isi skor opsi per baris dengan format <code>Label = Skor</code>, misalnya
+                                    <code>Ya = 5</code>.
+                                </small>
+                                <label class="mt-3">Skor Opsi (Opsional)</label>
+                                <textarea class="${getInputClass(opsiScoreTextName)}"
+                                    name="${opsiScoreTextName}"
+                                    rows="3"
+                                    placeholder="Ya = 5&#10;Tidak = 1">${escapeHtml(fieldData.opsi_score_text)}</textarea>
+                                ${buildInvalidFeedback(opsiScoreTextName)}
                             </div>
 
                             <div class="${multipleChoiceWrapperClass}">
@@ -698,7 +871,7 @@
                                 </div>
                                 ${buildInvalidFeedback(radioOptionsName, 'mt-2')}
                                 <small class="text-muted d-block mt-2">
-                                    Kode jawaban akan menjadi nilai yang disimpan saat peserta memilih opsi ini, isi jawaban akan ditampilkan ke peserta, dan level kompetensi ikut tersimpan untuk kebutuhan pemetaan.
+                                    Kode jawaban akan menjadi nilai yang disimpan saat peserta memilih opsi ini, isi jawaban akan ditampilkan ke peserta, dan level kompetensi ikut tersimpan untuk kebutuhan pemetaan. Jika kolom skor dikosongkan, sistem akan memakai level kompetensi sebagai skor default.
                                 </small>
 
                             </div>
@@ -715,6 +888,253 @@
                                     dan daftar <code>columns</code>. Setiap kolom minimal memiliki
                                     <code>label</code>, <code>nama_field</code>, dan <code>tipe_field</code>.
                                 </small>
+                            </div>
+
+                            <div class="card border mt-4 scoring-config-card">
+                                <div class="card-header bg-light py-3">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <h6 class="mb-0">Pengaturan Skor Otomatis</h6>
+                                        <div class="custom-control custom-switch">
+                                            <input type="checkbox" class="custom-control-input field-scoring-enabled"
+                                                id="field-scoring-enabled-${formIndex}-${fieldIndex}"
+                                                name="${scoringEnabledName}"
+                                                value="1" ${scoringData.enabled ? 'checked' : ''}>
+                                            <label class="custom-control-label"
+                                                for="field-scoring-enabled-${formIndex}-${fieldIndex}">Aktif</label>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="card-body scoring-config-body">
+                                    <div class="row">
+                                        <div class="col-md-3">
+                                            <div class="form-group">
+                                                <label>Profil</label>
+                                                <select class="${getInputClass(scoringProfileName)} form-control field-scoring-profile"
+                                                    name="${scoringProfileName}">
+                                                    ${buildFormScoringProfileOptions(scoringData.profile)}
+                                                </select>
+                                                ${buildInvalidFeedback(scoringProfileName)}
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <div class="form-group">
+                                                <label>Metode Skor</label>
+                                                <select class="${getInputClass(scoringMethodName)} form-control field-scoring-method"
+                                                    name="${scoringMethodName}">
+                                                    ${buildFieldScoringMethodOptions(fieldType, scoringData.method)}
+                                                </select>
+                                                ${buildInvalidFeedback(scoringMethodName)}
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <div class="form-group">
+                                                <label>Kode Rubrik</label>
+                                                <input type="text" class="${getInputClass(scoringRubricCodeName)}"
+                                                    name="${scoringRubricCodeName}"
+                                                    value="${escapeHtml(scoringData.rubric_code)}"
+                                                    placeholder="Contoh: P2 / K1">
+                                                ${buildInvalidFeedback(scoringRubricCodeName)}
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <div class="form-group">
+                                                <label>Bobot Field</label>
+                                                <input type="number" min="0" step="0.01" class="${getInputClass(scoringWeightName)}"
+                                                    name="${scoringWeightName}"
+                                                    value="${escapeHtml(scoringData.weight)}"
+                                                    placeholder="Contoh: 20">
+                                                ${buildInvalidFeedback(scoringWeightName)}
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="row">
+                                        <div class="col-md-4">
+                                            <div class="form-group">
+                                                <label>Skor Jika Terisi</label>
+                                                <input type="number" min="0" max="5" step="0.01"
+                                                    class="${getInputClass(scoringPresenceName)}"
+                                                    name="${scoringPresenceName}"
+                                                    value="${escapeHtml(scoringData.score_if_answered)}"
+                                                    placeholder="Contoh: 3">
+                                                ${buildInvalidFeedback(scoringPresenceName)}
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="form-group">
+                                                <label>Skala Minimum</label>
+                                                <input type="number" min="0" max="5" step="0.01"
+                                                    class="${getInputClass(scoringScaleMinName)}"
+                                                    name="${scoringScaleMinName}"
+                                                    value="${escapeHtml(scoringData.scale_min)}"
+                                                    placeholder="1">
+                                                ${buildInvalidFeedback(scoringScaleMinName)}
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="form-group">
+                                                <label>Skala Maksimum</label>
+                                                <input type="number" min="0" max="5" step="0.01"
+                                                    class="${getInputClass(scoringScaleMaxName)}"
+                                                    name="${scoringScaleMaxName}"
+                                                    value="${escapeHtml(scoringData.scale_max)}"
+                                                    placeholder="5">
+                                                ${buildInvalidFeedback(scoringScaleMaxName)}
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="row scoring-numeric-wrapper d-none">
+                                        <div class="col-md-3">
+                                            <div class="form-group">
+                                                <label>Arah Penilaian</label>
+                                                <select class="${getInputClass(scoringNumericDirectionName)} form-control"
+                                                    name="${scoringNumericDirectionName}">
+                                                    <option value="greater_is_better" ${scoringData.numeric_direction === 'greater_is_better' ? 'selected' : ''}>Semakin besar semakin baik</option>
+                                                    <option value="lower_is_better" ${scoringData.numeric_direction === 'lower_is_better' ? 'selected' : ''}>Semakin kecil semakin baik</option>
+                                                    <option value="range" ${scoringData.numeric_direction === 'range' ? 'selected' : ''}>Rentang ideal</option>
+                                                </select>
+                                                ${buildInvalidFeedback(scoringNumericDirectionName)}
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <div class="form-group">
+                                                <label>Ambang Minimum</label>
+                                                <input type="number" step="0.01" class="${getInputClass(scoringMinThresholdName)}"
+                                                    name="${scoringMinThresholdName}"
+                                                    value="${escapeHtml(scoringData.min_threshold)}"
+                                                    placeholder="Contoh: 1">
+                                                ${buildInvalidFeedback(scoringMinThresholdName)}
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <div class="form-group">
+                                                <label>Ambang Target</label>
+                                                <input type="number" step="0.01" class="${getInputClass(scoringTargetThresholdName)}"
+                                                    name="${scoringTargetThresholdName}"
+                                                    value="${escapeHtml(scoringData.target_threshold)}"
+                                                    placeholder="Contoh: 10">
+                                                ${buildInvalidFeedback(scoringTargetThresholdName)}
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <div class="form-group">
+                                                <label>Ambang Maksimum</label>
+                                                <input type="number" step="0.01" class="${getInputClass(scoringMaxThresholdName)}"
+                                                    name="${scoringMaxThresholdName}"
+                                                    value="${escapeHtml(scoringData.max_threshold)}"
+                                                    placeholder="Contoh: 20">
+                                                ${buildInvalidFeedback(scoringMaxThresholdName)}
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="form-group">
+                                                <label>Skor Minimum</label>
+                                                <input type="number" min="0" max="5" step="0.01" class="${getInputClass(scoringMinScoreName)}"
+                                                    name="${scoringMinScoreName}"
+                                                    value="${escapeHtml(scoringData.min_score)}"
+                                                    placeholder="1">
+                                                ${buildInvalidFeedback(scoringMinScoreName)}
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="form-group">
+                                                <label>Skor Target</label>
+                                                <input type="number" min="0" max="5" step="0.01" class="${getInputClass(scoringTargetScoreName)}"
+                                                    name="${scoringTargetScoreName}"
+                                                    value="${escapeHtml(scoringData.target_score)}"
+                                                    placeholder="3">
+                                                ${buildInvalidFeedback(scoringTargetScoreName)}
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="form-group">
+                                                <label>Skor Maksimum</label>
+                                                <input type="number" min="0" max="5" step="0.01" class="${getInputClass(scoringMaxScoreName)}"
+                                                    name="${scoringMaxScoreName}"
+                                                    value="${escapeHtml(scoringData.max_score)}"
+                                                    placeholder="5">
+                                                ${buildInvalidFeedback(scoringMaxScoreName)}
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="scoring-text-wrapper d-none">
+                                        <div class="form-group">
+                                            <label>Jawaban Rujukan / Kunci Semantik</label>
+                                            <textarea class="${getInputClass(scoringReferenceAnswerName)}"
+                                                name="${scoringReferenceAnswerName}"
+                                                rows="3"
+                                                placeholder="Tuliskan jawaban rujukan atau ekspektasi assessor">${escapeHtml(scoringData.reference_answer)}</textarea>
+                                            ${buildInvalidFeedback(scoringReferenceAnswerName)}
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <div class="form-group">
+                                                    <label>Kata Kunci / Cluster Makna</label>
+                                                    <textarea class="${getInputClass(scoringKeywordGroupsName)}"
+                                                        name="${scoringKeywordGroupsName}"
+                                                        rows="4"
+                                                        placeholder="partisipasi aktif | keterlibatan siswa&#10;asesmen | umpan balik">${escapeHtml(scoringData.keyword_groups_text)}</textarea>
+                                                    ${buildInvalidFeedback(scoringKeywordGroupsName)}
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="form-group">
+                                                    <label>Sinonim Kata Kunci</label>
+                                                    <textarea class="${getInputClass(scoringSynonymMapName)}"
+                                                        name="${scoringSynonymMapName}"
+                                                        rows="4"
+                                                        placeholder="asesmen: penilaian, evaluasi&#10;umpan balik: feedback">${escapeHtml(scoringData.synonym_map_text)}</textarea>
+                                                    ${buildInvalidFeedback(scoringSynonymMapName)}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="row scoring-confidence-wrapper d-none">
+                                        <div class="col-md-4">
+                                            <div class="form-group">
+                                                <label>Minimal Jumlah Kata</label>
+                                                <input type="number" min="0" class="${getInputClass(scoringMinWordsName)}"
+                                                    name="${scoringMinWordsName}"
+                                                    value="${escapeHtml(scoringData.min_words)}"
+                                                    placeholder="Contoh: 40">
+                                                ${buildInvalidFeedback(scoringMinWordsName)}
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="form-group">
+                                                <label>Batas Confidence</label>
+                                                <input type="number" min="0" max="1" step="0.01"
+                                                    class="${getInputClass(scoringConfidenceThresholdName)}"
+                                                    name="${scoringConfidenceThresholdName}"
+                                                    value="${escapeHtml(scoringData.confidence_threshold)}"
+                                                    placeholder="0.55">
+                                                ${buildInvalidFeedback(scoringConfidenceThresholdName)}
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4 d-flex align-items-center">
+                                            <div class="custom-control custom-switch mt-3">
+                                                <input type="checkbox" class="custom-control-input"
+                                                    id="field-manual-review-${formIndex}-${fieldIndex}"
+                                                    name="${scoringManualReviewName}"
+                                                    value="1" ${scoringData.manual_review_below_confidence ? 'checked' : ''}>
+                                                <label class="custom-control-label"
+                                                    for="field-manual-review-${formIndex}-${fieldIndex}">Perlu review saat confidence rendah</label>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="form-group mb-0">
+                                        <label>Aturan Lanjutan (JSON)</label>
+                                        <textarea class="${getInputClass(scoringAdvancedRulesName)}"
+                                            name="${scoringAdvancedRulesName}"
+                                            rows="4"
+                                            placeholder='{"signal_keywords":["etika","kolaborasi"],"target_rows":3}'>${escapeHtml(scoringData.advanced_rules_text)}</textarea>
+                                        ${buildInvalidFeedback(scoringAdvancedRulesName)}
+                                    </div>
+                                </div>
                             </div>
 
                             <div class="row">
@@ -747,6 +1167,7 @@
             };
 
             const buildFormCard = (formIndex, formData = {}) => {
+                const formScoring = normalizeFormScoringConfig(formData.scoring || {});
                 const formPrefix = `forms[${formIndex}]`;
                 const judulFormName = `${formPrefix}[judul_form]`;
                 const kodeFormName = `${formPrefix}[kode_form]`;
@@ -755,6 +1176,10 @@
                 const kompetensiName = `${formPrefix}[kompetensi]`;
                 const indikatorKodeName = `${formPrefix}[indikator_kode]`;
                 const indikatorLabelName = `${formPrefix}[indikator_label]`;
+                const formScoringPrefix = `${formPrefix}[scoring]`;
+                const formScoringProfileName = `${formScoringPrefix}[profile]`;
+                const formScoringWeightName = `${formScoringPrefix}[weight]`;
+                const formScoringAdvancedRulesName = `${formScoringPrefix}[advanced_rules_text]`;
                 const fieldsName = `${formPrefix}[fields]`;
                 const formCardClass = joinClasses(
                     'card',
@@ -864,6 +1289,54 @@
                                 ${buildInvalidFeedback(deskripsiName)}
                             </div>
 
+                            <div class="card border mb-4">
+                                <div class="card-header bg-light py-3">
+                                    <h6 class="mb-0">Pengaturan Skor Form</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-md-4">
+                                            <div class="form-group">
+                                                <label>Profil Scoring</label>
+                                                <select class="${getInputClass(formScoringProfileName)} form-control"
+                                                    name="${formScoringProfileName}">
+                                                    ${buildFormScoringProfileOptions(formScoring.profile)}
+                                                </select>
+                                                ${buildInvalidFeedback(formScoringProfileName)}
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="form-group">
+                                                <label>Bobot Form</label>
+                                                <input type="number" min="0" step="0.01" class="${getInputClass(formScoringWeightName)}"
+                                                    name="${formScoringWeightName}"
+                                                    value="${escapeHtml(formScoring.weight)}"
+                                                    placeholder="Contoh: 20">
+                                                ${buildInvalidFeedback(formScoringWeightName)}
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4 d-flex align-items-center">
+                                            <div class="custom-control custom-switch mt-3">
+                                                <input type="checkbox" class="custom-control-input"
+                                                    id="form-exclude-${formIndex}"
+                                                    name="${formScoringPrefix}[exclude_from_competency]"
+                                                    value="1" ${formScoring.exclude_from_competency ? 'checked' : ''}>
+                                                <label class="custom-control-label"
+                                                    for="form-exclude-${formIndex}">Keluarkan dari rekap kompetensi</label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="form-group mb-0">
+                                        <label>Aturan Form Lanjutan (JSON)</label>
+                                        <textarea class="${getInputClass(formScoringAdvancedRulesName)}"
+                                            name="${formScoringAdvancedRulesName}"
+                                            rows="3"
+                                            placeholder='{"synthetic_k5":{"weight":10}}'>${escapeHtml(formScoring.advanced_rules_text)}</textarea>
+                                        ${buildInvalidFeedback(formScoringAdvancedRulesName)}
+                                    </div>
+                                </div>
+                            </div>
+
                             <div class="d-flex justify-content-between align-items-center mb-3">
                                 <h6 class="mb-0">Daftar Pertanyaan</h6>
                             </div>
@@ -890,6 +1363,7 @@
 
                 const $fieldCard = $formCard.find('.assessment-field-card').last();
                 toggleOptionWrapper($fieldCard);
+                toggleScoringWrapper($fieldCard);
                 updateAutoFieldNameHint($fieldCard);
             };
 
@@ -936,6 +1410,7 @@
                     const generatedLabel = generateChoiceLabel(optionIndex);
                     const $textInput = $optionRow.find('.radio-option-text');
                     const $codeInput = $optionRow.find('.radio-option-code');
+                    const $scoreInput = $optionRow.find('.radio-option-score');
                     const $levelSelect = $optionRow.find('.radio-option-level');
 
                     $optionRow.attr('data-option-index', optionIndex);
@@ -947,6 +1422,11 @@
                         'name',
                         `forms[${formIndex}][fields][${fieldIndex}][radio_options][${optionIndex}][value]`
                     ).attr('placeholder', generatedLabel);
+
+                    $scoreInput.attr(
+                        'name',
+                        `forms[${formIndex}][fields][${fieldIndex}][radio_options][${optionIndex}][score]`
+                    ).attr('placeholder', $levelSelect.val() || '');
 
                     $levelSelect
                         .attr(
@@ -1006,6 +1486,27 @@
                 }
             };
 
+            const toggleScoringWrapper = ($fieldCard) => {
+                const selectedType = $fieldCard.find('.field-type-select').val() || 'text';
+                const $methodSelect = $fieldCard.find('.field-scoring-method');
+                const currentMethod = $methodSelect.val();
+                const normalizedMethod = resolveAllowedScoringMethods(selectedType).includes(currentMethod)
+                    ? currentMethod
+                    : resolveDefaultScoringMethod(selectedType);
+                const scoringEnabled = $fieldCard.find('.field-scoring-enabled').is(':checked');
+                const showNumericConfig = selectedType === 'number' && ['numeric_threshold', 'numeric_range'].includes(normalizedMethod);
+                const showTextConfig = ['text', 'textarea'].includes(selectedType)
+                    || normalizedMethod === 'keyword_coverage'
+                    || (selectedType === repeaterFieldType && normalizedMethod === 'repeater_completeness');
+                const showConfidenceConfig = ['text', 'textarea', repeaterFieldType].includes(selectedType);
+
+                $methodSelect.html(buildFieldScoringMethodOptions(selectedType, normalizedMethod)).val(normalizedMethod);
+                $fieldCard.find('.scoring-config-body').toggleClass('d-none', !scoringEnabled);
+                $fieldCard.find('.scoring-numeric-wrapper').toggleClass('d-none', !showNumericConfig);
+                $fieldCard.find('.scoring-text-wrapper').toggleClass('d-none', !showTextConfig);
+                $fieldCard.find('.scoring-confidence-wrapper').toggleClass('d-none', !showConfidenceConfig);
+            };
+
             const updateAutoFieldNameHint = ($fieldCard) => {
                 const labelValue = $fieldCard.find('.field-label-input').val()?.trim() || '';
                 $fieldCard.find('.auto-field-name-hint').html(buildAutoFieldNameHint(labelValue));
@@ -1043,6 +1544,7 @@
 
             const collectFieldPayload = ($fieldCard, fieldIndex) => {
                 const fieldType = $fieldCard.find('select[name$="[tipe_field]"]').val() || 'text';
+                const scoringMethod = $fieldCard.find('select[name$="[scoring][method]"]').val() || resolveDefaultScoringMethod(fieldType);
 
                 return {
                     label: $fieldCard.find('input[name$="[label]"]').val()?.trim() || '',
@@ -1052,9 +1554,35 @@
                     bantuan: $fieldCard.find('textarea[name$="[bantuan]"]').val()?.trim() || '',
                     opsi_field_text: textOptionFieldTypes.includes(fieldType) ?
                         $fieldCard.find('textarea[name$="[opsi_field_text]"]').val()?.trim() || '' : null,
+                    opsi_score_text: textOptionFieldTypes.includes(fieldType) ?
+                        $fieldCard.find('textarea[name$="[opsi_score_text]"]').val()?.trim() || '' : null,
                     repeater_config_text: fieldType === repeaterFieldType ?
                         $fieldCard.find('textarea[name$="[repeater_config_text]"]').val()?.trim() || '' : null,
                     radio_options: fieldType === multipleChoiceFieldType ? getMultipleChoiceOptions($fieldCard) : [],
+                    scoring: {
+                        enabled: $fieldCard.find('input[name$="[scoring][enabled]"]').is(':checked'),
+                        profile: $fieldCard.find('select[name$="[scoring][profile]"]').val()?.trim() || '',
+                        method: scoringMethod,
+                        rubric_code: $fieldCard.find('input[name$="[scoring][rubric_code]"]').val()?.trim() || '',
+                        weight: $fieldCard.find('input[name$="[scoring][weight]"]').val()?.trim() || '',
+                        score_if_answered: $fieldCard.find('input[name$="[scoring][score_if_answered]"]').val()?.trim() || '',
+                        scale_min: $fieldCard.find('input[name$="[scoring][scale_min]"]').val()?.trim() || '',
+                        scale_max: $fieldCard.find('input[name$="[scoring][scale_max]"]').val()?.trim() || '',
+                        reference_answer: $fieldCard.find('textarea[name$="[scoring][reference_answer]"]').val()?.trim() || '',
+                        keyword_groups_text: $fieldCard.find('textarea[name$="[scoring][keyword_groups_text]"]').val()?.trim() || '',
+                        synonym_map_text: $fieldCard.find('textarea[name$="[scoring][synonym_map_text]"]').val()?.trim() || '',
+                        min_words: $fieldCard.find('input[name$="[scoring][min_words]"]').val()?.trim() || '',
+                        confidence_threshold: $fieldCard.find('input[name$="[scoring][confidence_threshold]"]').val()?.trim() || '',
+                        manual_review_below_confidence: $fieldCard.find('input[name$="[scoring][manual_review_below_confidence]"]').is(':checked'),
+                        numeric_direction: $fieldCard.find('select[name$="[scoring][numeric_direction]"]').val()?.trim() || '',
+                        min_threshold: $fieldCard.find('input[name$="[scoring][min_threshold]"]').val()?.trim() || '',
+                        target_threshold: $fieldCard.find('input[name$="[scoring][target_threshold]"]').val()?.trim() || '',
+                        max_threshold: $fieldCard.find('input[name$="[scoring][max_threshold]"]').val()?.trim() || '',
+                        min_score: $fieldCard.find('input[name$="[scoring][min_score]"]').val()?.trim() || '',
+                        target_score: $fieldCard.find('input[name$="[scoring][target_score]"]').val()?.trim() || '',
+                        max_score: $fieldCard.find('input[name$="[scoring][max_score]"]').val()?.trim() || '',
+                        advanced_rules_text: $fieldCard.find('textarea[name$="[scoring][advanced_rules_text]"]').val()?.trim() || '',
+                    },
                     lebar_kolom: $fieldCard.find('select[name$="[lebar_kolom]"]').val() || 'col-md-12',
                     urutan: Number($fieldCard.find('input[name$="[urutan]"]').val() || fieldIndex + 1),
                     is_required: $fieldCard.find('input[name$="[is_required]"]').is(':checked'),
@@ -1076,6 +1604,12 @@
                         kompetensi: $formCard.find('select[name$="[kompetensi]"]').val()?.trim() || '',
                         indikator_kode: $formCard.find('input[name$="[indikator_kode]"]').val()?.trim() || '',
                         indikator_label: $formCard.find('input[name$="[indikator_label]"]').val()?.trim() || '',
+                        scoring: {
+                            profile: $formCard.find('select[name$="[scoring][profile]"]').val()?.trim() || '',
+                            weight: $formCard.find('input[name$="[scoring][weight]"]').val()?.trim() || '',
+                            exclude_from_competency: $formCard.find('input[name$="[scoring][exclude_from_competency]"]').is(':checked'),
+                            advanced_rules_text: $formCard.find('textarea[name$="[scoring][advanced_rules_text]"]').val()?.trim() || '',
+                        },
                         is_scoreable: $formCard.find('input[name$="[is_scoreable]"]').first().is(':checked'),
                         urutan: Number($formCard.find('input[name$="[urutan]"]').val() || formIndex + 1),
                         is_active: $formCard.find('input[name$="[is_active]"]').first().is(':checked'),
@@ -1091,6 +1625,7 @@
                     return {
                         label: $optionRow.find('.radio-option-text').val()?.trim() || '',
                         value: $optionRow.find('.radio-option-code').val()?.trim() || '',
+                        score: $optionRow.find('.radio-option-score').val()?.trim() || '',
                         level_kompetensi: $optionRow.find('.radio-option-level').val()?.trim() || '',
                     };
                 }).get().filter((option) => option.label || option.value || option.level_kompetensi);
@@ -1522,7 +2057,14 @@
             });
 
             $(document).on('change', '.field-type-select', function() {
-                toggleOptionWrapper($(this).closest('.assessment-field-card'));
+                const $fieldCard = $(this).closest('.assessment-field-card');
+                toggleOptionWrapper($fieldCard);
+                toggleScoringWrapper($fieldCard);
+                schedulePreviewRender();
+            });
+
+            $(document).on('change', '.field-scoring-enabled, .field-scoring-method', function() {
+                toggleScoringWrapper($(this).closest('.assessment-field-card'));
                 schedulePreviewRender();
             });
 

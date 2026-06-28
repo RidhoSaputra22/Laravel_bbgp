@@ -5005,6 +5005,7 @@ class AssessmentPilihanGandaSeeder extends Seeder
                     'deskripsi' => $item['deskripsi'],
                     'petunjuk' => $item['petunjuk'],
                     'instrument_type' => $item['instrument_type'] ?? null,
+                    'scoring_config' => $this->assessmentScoringConfig(),
                     'status' => $item['status'],
                     'is_active' => $item['is_active'],
                 ]
@@ -5013,12 +5014,16 @@ class AssessmentPilihanGandaSeeder extends Seeder
             $assessment->forms()->delete();
 
             foreach ($forms as $formData) {
-                $fields = $formData['fields'];
+                $formData = $this->normalizeFormMetadata($formData);
+                $formSource = $formData;
+                $fields = $formSource['fields'];
+                $formData['scoring_config'] = $this->formScoringConfig($formSource);
                 unset($formData['fields']);
 
                 $form = $assessment->forms()->create($formData);
 
-                foreach ($fields as $fieldData) {
+                foreach (array_values($fields) as $fieldIndex => $fieldData) {
+                    $fieldData['scoring_config'] = $this->fieldScoringConfig($formSource, $fieldData, $fieldIndex);
                     $form->fields()->create($fieldData);
                 }
             }
@@ -5036,5 +5041,259 @@ class AssessmentPilihanGandaSeeder extends Seeder
                 ];
             })
             ->all();
+    }
+
+    private function assessmentScoringConfig(): array
+    {
+        return [
+            'profile' => AssessmentInstrumentType::PILIHAN_GANDA_KOMPLEKS->value,
+            'weight' => AssessmentInstrumentType::PILIHAN_GANDA_KOMPLEKS->weight(),
+            'verification_gap_threshold' => 1.5,
+            'empty_response_threshold_percent' => 10,
+            'advanced_rules' => [
+                'response_scoring_rule' => 'Pilihan level 1-5 langsung dikonversi menjadi skor 1-5 tanpa benar atau salah.',
+                'overall_formula' => 'I_PG = (I_Ped + I_Kep + I_Sos + I_Pro) / 4',
+                'domain_ranges' => [
+                    [
+                        'kompetensi' => KompetensiGuru::PEDAGOGIK->value,
+                        'label' => KompetensiGuru::PEDAGOGIK->label(),
+                        'question_start' => 1,
+                        'question_end' => 39,
+                        'question_total' => 39,
+                        'formula' => 'I_Ped = jumlah skor butir 1-39 / 39',
+                    ],
+                    [
+                        'kompetensi' => KompetensiGuru::KEPRIBADIAN->value,
+                        'label' => KompetensiGuru::KEPRIBADIAN->label(),
+                        'question_start' => 40,
+                        'question_end' => 66,
+                        'question_total' => 27,
+                        'formula' => 'I_Kep = jumlah skor butir 40-66 / 27',
+                    ],
+                    [
+                        'kompetensi' => KompetensiGuru::SOSIAL->value,
+                        'label' => KompetensiGuru::SOSIAL->label(),
+                        'question_start' => 67,
+                        'question_end' => 87,
+                        'question_total' => 21,
+                        'formula' => 'I_Sos = jumlah skor butir 67-87 / 21',
+                    ],
+                    [
+                        'kompetensi' => KompetensiGuru::PROFESIONAL->value,
+                        'label' => KompetensiGuru::PROFESIONAL->label(),
+                        'question_start' => 88,
+                        'question_end' => 123,
+                        'question_total' => 36,
+                        'formula' => 'I_Pro = jumlah skor butir 88-123 / 36',
+                    ],
+                ],
+                'interpretation_bands' => $this->interpretationBands(),
+            ],
+        ];
+    }
+
+    private function formScoringConfig(array $formData): array
+    {
+        $questionNumbers = $this->extractQuestionNumbersFromFields($formData['fields'] ?? []);
+        $firstQuestion = $questionNumbers[0] ?? 1;
+        $lastQuestion = $questionNumbers === [] ? $firstQuestion : max($questionNumbers);
+        $domain = $this->resolveDomainConfigForQuestion($firstQuestion);
+
+        return [
+            'profile' => 'pilihan_ganda_kompleks',
+            'weight' => count($questionNumbers) ?: 1,
+            'advanced_rules' => [
+                'domain_key' => $domain['key'],
+                'domain_label' => $domain['label'],
+                'domain_formula' => $domain['formula'],
+                'question_start' => $firstQuestion,
+                'question_end' => $lastQuestion,
+                'question_total_in_form' => count($questionNumbers) ?: 1,
+                'question_total_in_domain' => $domain['question_total'],
+                'empty_response_threshold_percent' => 10,
+                'reporting_focus' => 'Rata-rata domain ditampilkan sebagai level kompetensi pilihan ganda kompleks.',
+                'response_scoring_rule' => 'Setiap respons mewakili level 1-5 dan langsung menjadi skor 1-5.',
+            ],
+        ];
+    }
+
+    private function fieldScoringConfig(array $formData, array $fieldData, int $fieldIndex): array
+    {
+        $questionNumbers = $this->extractQuestionNumbersFromFields($formData['fields'] ?? []);
+        $questionNumber = $this->extractQuestionNumberFromField($fieldData)
+            ?? ($questionNumbers[$fieldIndex] ?? ($fieldIndex + 1));
+        $domain = $this->resolveDomainConfigForQuestion($questionNumber);
+
+        return [
+            'enabled' => true,
+            'profile' => 'pilihan_ganda_kompleks',
+            'method' => 'choice_option_score',
+            'weight' => 1,
+            'rubric_code' => 'PG-'.$questionNumber,
+            'scale_min' => 1,
+            'scale_max' => 5,
+            'advanced_rules' => [
+                'question_number' => $questionNumber,
+                'domain_key' => $domain['key'],
+                'domain_label' => $domain['label'],
+                'score_mapping' => [
+                    '1' => 'Alternatif Level 1: Paham',
+                    '2' => 'Alternatif Level 2: Dasar',
+                    '3' => 'Alternatif Level 3: Menengah',
+                    '4' => 'Alternatif Level 4: Mumpuni',
+                    '5' => 'Alternatif Level 5: Ahli',
+                ],
+                'level_descriptors' => [
+                    '1' => 'Memilih tindakan pengenalan atau arah awal.',
+                    '2' => 'Memilih tindakan prosedural atau penjelasan dasar.',
+                    '3' => 'Memilih penerapan strategi secara terencana pada konteks kasus.',
+                    '4' => 'Memilih tindakan analitis atau evaluatif berbasis kebutuhan atau data.',
+                    '5' => 'Memilih tindakan sistemik, inovatif, kolaboratif, dan berkelanjutan.',
+                ],
+            ],
+        ];
+    }
+
+    private function normalizeFormMetadata(array $formData): array
+    {
+        $questionNumbers = $this->extractQuestionNumbersFromFields($formData['fields'] ?? []);
+        $firstQuestion = $questionNumbers[0] ?? 1;
+        $domain = $this->resolveDomainConfigForQuestion($firstQuestion);
+        [$titleCode, $titleLabel] = $this->splitFormTitle((string) ($formData['judul_form'] ?? ''));
+        $normalizedSuffix = $titleCode !== null
+            ? str_replace('.', '', $titleCode)
+            : str_pad((string) $firstQuestion, 3, '0', STR_PAD_LEFT);
+        $questionStart = min($questionNumbers ?: [$firstQuestion]);
+        $questionEnd = max($questionNumbers ?: [$firstQuestion]);
+
+        $formData['kode_form'] = 'FORM-'.$domain['code_prefix'].'-'.$normalizedSuffix;
+        $formData['kompetensi'] = $domain['kompetensi'];
+        $formData['indikator_kode'] = $titleCode ?? ('PG-'.$questionStart);
+        $formData['indikator_label'] = $titleLabel !== '' ? $titleLabel : $domain['indicator_label'];
+        $formData['deskripsi'] = sprintf(
+            'Kompetensi %s. Rentang butir %d-%d dalam domain %s. Setiap pilihan jawaban merepresentasikan level kompetensi 1-5 sesuai rubrik pilihan ganda kompleks.',
+            $domain['label'],
+            $questionStart,
+            $questionEnd,
+            $domain['label']
+        );
+
+        return $formData;
+    }
+
+    private function extractQuestionNumbersFromFields(array $fields): array
+    {
+        return collect($fields)
+            ->map(fn (array $field) => $this->extractQuestionNumberFromField($field))
+            ->filter(fn ($value) => $value !== null)
+            ->values()
+            ->all();
+    }
+
+    private function extractQuestionNumberFromField(array $fieldData): ?int
+    {
+        $label = (string) ($fieldData['label'] ?? '');
+
+        if (preg_match('/Soal\s+(\d+)\./', $label, $matches) !== 1) {
+            return null;
+        }
+
+        return (int) $matches[1];
+    }
+
+    /**
+     * @return array{0:?string,1:string}
+     */
+    private function splitFormTitle(string $title): array
+    {
+        if (preg_match('/^((?:\d+\.){2}\d+)\s+(.+)$/', trim($title), $matches) !== 1) {
+            return [null, trim($title)];
+        }
+
+        return [$matches[1], trim($matches[2])];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function resolveDomainConfigForQuestion(int $questionNumber): array
+    {
+        return match (true) {
+            $questionNumber <= 39 => [
+                'key' => 'pedagogik',
+                'label' => KompetensiGuru::PEDAGOGIK->label(),
+                'kompetensi' => KompetensiGuru::PEDAGOGIK->value,
+                'code_prefix' => 'PED',
+                'question_total' => 39,
+                'indicator_label' => 'Pembelajaran berpusat pada peserta didik',
+                'formula' => 'I_Ped = jumlah skor butir domain / 39',
+            ],
+            $questionNumber <= 66 => [
+                'key' => 'kepribadian',
+                'label' => KompetensiGuru::KEPRIBADIAN->label(),
+                'kompetensi' => KompetensiGuru::KEPRIBADIAN->value,
+                'code_prefix' => 'KEP',
+                'question_total' => 27,
+                'indicator_label' => 'Integritas, emosi, dan refleksi diri',
+                'formula' => 'I_Kep = jumlah skor butir domain / 27',
+            ],
+            $questionNumber <= 87 => [
+                'key' => 'sosial',
+                'label' => KompetensiGuru::SOSIAL->label(),
+                'kompetensi' => KompetensiGuru::SOSIAL->value,
+                'code_prefix' => 'SOS',
+                'question_total' => 21,
+                'indicator_label' => 'Kolaborasi dan keterlibatan pihak lain',
+                'formula' => 'I_Sos = jumlah skor butir domain / 21',
+            ],
+            default => [
+                'key' => 'profesional',
+                'label' => KompetensiGuru::PROFESIONAL->label(),
+                'kompetensi' => KompetensiGuru::PROFESIONAL->value,
+                'code_prefix' => 'PRO',
+                'question_total' => 36,
+                'indicator_label' => 'Penguasaan materi dan implementasi kurikulum',
+                'formula' => 'I_Pro = jumlah skor butir domain / 36',
+            ],
+        };
+    }
+
+    /**
+     * @return array<int, array<string, float|string>>
+     */
+    private function interpretationBands(): array
+    {
+        return [
+            [
+                'min' => 1.00,
+                'max' => 1.79,
+                'label' => 'Level 1 - Paham',
+                'implication' => 'Perlu penguatan konsep dasar, contoh praktik, dan pendampingan awal.',
+            ],
+            [
+                'min' => 1.80,
+                'max' => 2.59,
+                'label' => 'Level 2 - Dasar',
+                'implication' => 'Perlu latihan penerapan prosedur, simulasi, dan umpan balik terarah.',
+            ],
+            [
+                'min' => 2.60,
+                'max' => 3.39,
+                'label' => 'Level 3 - Menengah',
+                'implication' => 'Mampu menerapkan strategi; perlu penguatan analisis data, evaluasi, dan diferensiasi konteks.',
+            ],
+            [
+                'min' => 3.40,
+                'max' => 4.19,
+                'label' => 'Level 4 - Mumpuni',
+                'implication' => 'Mampu mengevaluasi dan menyesuaikan praktik; perlu perluasan peran sebagai penggerak atau mentor.',
+            ],
+            [
+                'min' => 4.20,
+                'max' => 5.00,
+                'label' => 'Level 5 - Ahli',
+                'implication' => 'Mampu mengembangkan sistem atau inovasi; diarahkan pada diseminasi, jejaring, dan penguatan kapasitas sekolah.',
+            ],
+        ];
     }
 }

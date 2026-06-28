@@ -336,6 +336,7 @@ class AssessmentStudiKasusSeeder extends Seeder
                     'deskripsi' => $item['deskripsi'],
                     'petunjuk' => $item['petunjuk'],
                     'instrument_type' => $item['instrument_type'] ?? null,
+                    'scoring_config' => $this->assessmentScoringConfig(),
                     'status' => $item['status'],
                     'is_active' => $item['is_active'],
                 ]
@@ -346,13 +347,270 @@ class AssessmentStudiKasusSeeder extends Seeder
             foreach ($forms as $formData) {
                 $fields = $formData['fields'];
                 unset($formData['fields']);
+                $formData['scoring_config'] = $this->formScoringConfig($formData);
 
                 $form = $assessment->forms()->create($formData);
 
-                foreach ($fields as $fieldData) {
+                foreach (array_values($fields) as $fieldIndex => $fieldData) {
+                    $fieldData['scoring_config'] = $this->fieldScoringConfig($formData, $fieldIndex);
                     $form->fields()->create($fieldData);
                 }
             }
         }
+    }
+
+    private function assessmentScoringConfig(): array
+    {
+        return [
+            'profile' => AssessmentInstrumentType::STUDI_KASUS->value,
+            'weight' => AssessmentInstrumentType::STUDI_KASUS->weight(),
+            'verification_gap_threshold' => 1.5,
+            'advanced_rules' => [
+                'overall_formula' => 'Level kasus = jumlah(level kriteria x bobot) / 100.',
+                'case_structure' => [
+                    'K1' => 20,
+                    'K2' => 25,
+                    'K3' => 30,
+                    'K4' => 15,
+                    'K5' => 10,
+                ],
+                'competency_source_map' => [
+                    KompetensiGuru::PEDAGOGIK->value => 'Kasus 1',
+                    KompetensiGuru::KEPRIBADIAN->value => 'Kasus 2',
+                    KompetensiGuru::SOSIAL->value => 'Kasus 3',
+                    KompetensiGuru::PROFESIONAL->value => 'Kasus 4',
+                ],
+            ],
+        ];
+    }
+
+    private function formScoringConfig(array $formData): array
+    {
+        $focusMap = [
+            KompetensiGuru::PEDAGOGIK->value => 'Pembelajaran berpusat pada peserta didik',
+            KompetensiGuru::KEPRIBADIAN->value => 'Integritas, emosi, dan refleksi diri',
+            KompetensiGuru::SOSIAL->value => 'Kolaborasi dan keterlibatan pihak lain',
+            KompetensiGuru::PROFESIONAL->value => 'Penguasaan materi dan implementasi kurikulum',
+        ];
+
+        return [
+            'profile' => 'study_case_default',
+            'weight' => 100,
+            'advanced_rules' => [
+                'case_formula' => 'K1 20% + K2 25% + K3 30% + K4 15% + K5 10%',
+                'focus' => $focusMap[$formData['kompetensi'] ?? ''] ?? null,
+                'synthetic_k5' => [
+                    'weight' => 10,
+                    'reference_answer' => 'Jawaban etis, adil, inklusif, layak diterapkan, jelas, dan mampu membangun dukungan dari pihak terkait.',
+                    'keyword_groups' => [
+                        ['etika', 'adil'],
+                        ['inklusif', 'aman'],
+                        ['komunikasi', 'kolaborasi'],
+                        ['layak', 'realistis'],
+                    ],
+                    'synonyms' => [
+                        'kolaborasi' => ['kerja sama', 'kemitraan'],
+                        'adil' => ['objektif', 'setara'],
+                    ],
+                    'signal_keywords' => ['etika', 'keadilan', 'inklusif', 'komunikasi', 'dukungan'],
+                    'min_words' => 25,
+                ],
+            ],
+        ];
+    }
+
+    private function fieldScoringConfig(array $formData, int $fieldIndex): array
+    {
+        $kompetensi = $formData['kompetensi'] ?? null;
+        $weights = [20, 25, 30, 15];
+        $rubricCodes = ['K1', 'K2', 'K3', 'K4'];
+        $references = $this->studyCaseReferenceLibrary();
+        $reference = $references[$kompetensi][$fieldIndex] ?? [
+            'reference_answer' => null,
+            'keyword_groups' => [],
+        ];
+
+        return [
+            'enabled' => true,
+            'profile' => 'study_case_default',
+            'method' => 'semantic_similarity',
+            'weight' => $weights[$fieldIndex] ?? 10,
+            'rubric_code' => $rubricCodes[$fieldIndex] ?? 'K'.($fieldIndex + 1),
+            'scale_min' => 1,
+            'scale_max' => 5,
+            'reference_answer' => $reference['reference_answer'] ?? null,
+            'keyword_groups' => $reference['keyword_groups'] ?? [],
+            'synonyms' => $reference['synonyms'] ?? [],
+            'min_words' => 18,
+            'confidence_threshold' => 0.55,
+            'manual_review_below_confidence' => true,
+            'advanced_rules' => [
+                'min_words' => 18,
+                'signal_keywords' => $reference['signal_keywords'] ?? [],
+                'structure_markers' => [
+                    'analysis' => ['masalah', 'penyebab', 'dampak', 'konteks'],
+                    'strategy' => ['strategi', 'langkah', 'solusi', 'peran'],
+                    'evaluation' => ['indikator', 'monitoring', 'evaluasi', 'umpan balik'],
+                ],
+            ],
+        ];
+    }
+
+    private function studyCaseReferenceLibrary(): array
+    {
+        return [
+            KompetensiGuru::PEDAGOGIK->value => [
+                [
+                    'reference_answer' => 'Masalah utama terletak pada pembelajaran yang masih berpusat pada guru, partisipasi aktif peserta didik rendah, dan pemahaman konsep hanya dangkal.',
+                    'keyword_groups' => [
+                        ['berpusat', 'guru'],
+                        ['partisipasi', 'aktif'],
+                        ['pemahaman', 'konsep'],
+                    ],
+                    'signal_keywords' => ['berpusat', 'partisipasi', 'konsep'],
+                ],
+                [
+                    'reference_answer' => 'Penyebab utama berkaitan dengan dominasi metode ceramah, kurangnya asesmen atau umpan balik, dan tidak terpenuhinya kebutuhan belajar peserta didik.',
+                    'keyword_groups' => [
+                        ['metode', 'ceramah'],
+                        ['asesmen', 'umpan'],
+                        ['kebutuhan', 'belajar'],
+                    ],
+                    'signal_keywords' => ['ceramah', 'asesmen', 'kebutuhan'],
+                ],
+                [
+                    'reference_answer' => 'Strategi perbaikan perlu merancang pembelajaran aktif, kolaboratif, berbasis masalah atau proyek, disertai peran guru sebagai fasilitator dan tahapan yang jelas.',
+                    'keyword_groups' => [
+                        ['pembelajaran', 'aktif'],
+                        ['guru', 'fasilitator'],
+                        ['langkah', 'jelas'],
+                    ],
+                    'signal_keywords' => ['aktif', 'kolaboratif', 'fasilitator'],
+                ],
+                [
+                    'reference_answer' => 'Indikator keberhasilan harus terukur pada partisipasi aktif, pemahaman konsep, kualitas hasil asesmen, dan tindak lanjut evaluasi.',
+                    'keyword_groups' => [
+                        ['indikator', 'terukur'],
+                        ['partisipasi', 'aktif'],
+                        ['hasil', 'asesmen'],
+                    ],
+                    'signal_keywords' => ['terukur', 'partisipasi', 'asesmen'],
+                ],
+            ],
+            KompetensiGuru::KEPRIBADIAN->value => [
+                [
+                    'reference_answer' => 'Masalah utama adalah kurangnya integritas, objektivitas, keadilan, dan pengendalian emosi guru.',
+                    'keyword_groups' => [
+                        ['integritas'],
+                        ['objektivitas', 'adil'],
+                        ['emosi'],
+                    ],
+                    'signal_keywords' => ['integritas', 'objektif', 'emosi'],
+                ],
+                [
+                    'reference_answer' => 'Perilaku guru berdampak pada rasa aman, kepercayaan, motivasi belajar, dan iklim kelas yang tidak adil.',
+                    'keyword_groups' => [
+                        ['rasa', 'aman'],
+                        ['kepercayaan'],
+                        ['motivasi', 'belajar'],
+                    ],
+                    'signal_keywords' => ['aman', 'kepercayaan', 'motivasi'],
+                ],
+                [
+                    'reference_answer' => 'Refleksi diri perlu mencakup pengenalan perilaku, penerimaan umpan balik, evaluasi dampak, dan rencana perbaikan profesional.',
+                    'keyword_groups' => [
+                        ['refleksi'],
+                        ['umpan', 'balik'],
+                        ['rencana', 'perbaikan'],
+                    ],
+                    'signal_keywords' => ['refleksi', 'umpan balik', 'perbaikan'],
+                ],
+                [
+                    'reference_answer' => 'Perilaku sesuai kode etik harus objektif, adil, menghormati peserta didik, profesional, dan mampu mengelola emosi.',
+                    'keyword_groups' => [
+                        ['kode', 'etik'],
+                        ['profesional'],
+                        ['kelola', 'emosi'],
+                    ],
+                    'signal_keywords' => ['kode etik', 'profesional', 'emosi'],
+                ],
+            ],
+            KompetensiGuru::SOSIAL->value => [
+                [
+                    'reference_answer' => 'Masalah sosial guru tampak pada lemahnya kolaborasi sejawat, komunikasi orang tua, dan pemanfaatan masyarakat sebagai mitra belajar.',
+                    'keyword_groups' => [
+                        ['kolaborasi', 'sejawat'],
+                        ['komunikasi', 'orang'],
+                        ['masyarakat'],
+                    ],
+                    'signal_keywords' => ['kolaborasi', 'orang tua', 'masyarakat'],
+                ],
+                [
+                    'reference_answer' => 'Kolaborasi dan kemitraan penting untuk mendukung pembelajaran kontekstual, dukungan belajar peserta didik, dan kesinambungan intervensi.',
+                    'keyword_groups' => [
+                        ['kolaborasi'],
+                        ['pembelajaran', 'kontekstual'],
+                        ['dukungan', 'belajar'],
+                    ],
+                    'signal_keywords' => ['kemitraan', 'kontekstual', 'dukungan'],
+                ],
+                [
+                    'reference_answer' => 'Strategi perlu memuat komunikasi terencana, pembagian peran, kegiatan kolaboratif, sumber daya, dan jadwal pelaksanaan.',
+                    'keyword_groups' => [
+                        ['komunikasi', 'terencana'],
+                        ['pembagian', 'peran'],
+                        ['jadwal'],
+                    ],
+                    'signal_keywords' => ['komunikasi', 'peran', 'jadwal'],
+                ],
+                [
+                    'reference_answer' => 'Dampak yang diharapkan terlihat pada peningkatan kualitas pembelajaran, dukungan peserta didik, hubungan sekolah-keluarga, dan keterlibatan masyarakat.',
+                    'keyword_groups' => [
+                        ['kualitas', 'pembelajaran'],
+                        ['hubungan', 'keluarga'],
+                        ['keterlibatan', 'masyarakat'],
+                    ],
+                    'signal_keywords' => ['kualitas', 'keluarga', 'masyarakat'],
+                ],
+            ],
+            KompetensiGuru::PROFESIONAL->value => [
+                [
+                    'reference_answer' => 'Kelemahan profesional tampak pada penguasaan materi yang terbatas, ketergantungan pada buku teks, dan tidak terhubung dengan kurikulum maupun konteks peserta didik.',
+                    'keyword_groups' => [
+                        ['penguasaan', 'materi'],
+                        ['buku', 'teks'],
+                        ['kurikulum'],
+                    ],
+                    'signal_keywords' => ['materi', 'buku teks', 'kurikulum'],
+                ],
+                [
+                    'reference_answer' => 'Hubungan materi dan kurikulum harus menurunkan capaian pembelajaran ke tujuan, aktivitas, asesmen, dan materi yang relevan.',
+                    'keyword_groups' => [
+                        ['capaian', 'pembelajaran'],
+                        ['tujuan', 'aktivitas'],
+                        ['asesmen'],
+                    ],
+                    'signal_keywords' => ['capaian', 'tujuan', 'asesmen'],
+                ],
+                [
+                    'reference_answer' => 'Strategi peningkatan mutu perlu mengembangkan materi, konteks nyata, variasi metode, sumber belajar, dan asesmen yang sesuai.',
+                    'keyword_groups' => [
+                        ['materi'],
+                        ['konteks', 'nyata'],
+                        ['variasi', 'metode'],
+                    ],
+                    'signal_keywords' => ['materi', 'konteks', 'metode'],
+                ],
+                [
+                    'reference_answer' => 'Integrasi yang baik menyelaraskan materi ajar, strategi pembelajaran, karakteristik peserta didik, konteks, dan asesmen.',
+                    'keyword_groups' => [
+                        ['materi', 'ajar'],
+                        ['karakteristik', 'peserta'],
+                        ['strategi', 'asesmen'],
+                    ],
+                    'signal_keywords' => ['materi ajar', 'karakteristik', 'asesmen'],
+                ],
+            ],
+        ];
     }
 }

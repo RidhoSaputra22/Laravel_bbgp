@@ -71,6 +71,7 @@ class AssessmentController extends Controller
                 'deskripsi' => $validated['deskripsi'] ?? null,
                 'petunjuk' => $validated['petunjuk'] ?? null,
                 'instrument_type' => $validated['instrument_type'] ?? null,
+                'scoring_config' => $this->buildAssessmentScoringConfig($validated['instrument_type'] ?? null),
                 'status' => $validated['status'],
                 'is_active' => (bool) ($validated['is_active'] ?? false),
             ]);
@@ -141,6 +142,7 @@ class AssessmentController extends Controller
                 'deskripsi' => $validated['deskripsi'] ?? null,
                 'petunjuk' => $validated['petunjuk'] ?? null,
                 'instrument_type' => $validated['instrument_type'] ?? null,
+                'scoring_config' => $this->buildAssessmentScoringConfig($validated['instrument_type'] ?? null),
                 'status' => $validated['status'],
                 'is_active' => (bool) ($validated['is_active'] ?? false),
             ]);
@@ -237,6 +239,11 @@ class AssessmentController extends Controller
                 'forms.*.is_scoreable' => 'nullable|boolean',
                 'forms.*.urutan' => 'nullable|integer|min:1',
                 'forms.*.is_active' => 'nullable|boolean',
+                'forms.*.scoring' => 'nullable|array',
+                'forms.*.scoring.profile' => 'nullable|string|max:100',
+                'forms.*.scoring.weight' => 'nullable|numeric|min:0',
+                'forms.*.scoring.exclude_from_competency' => 'nullable|boolean',
+                'forms.*.scoring.advanced_rules_text' => 'nullable|string',
                 'forms.*.fields' => 'required|array|min:1',
                 'forms.*.fields.*.label' => 'required|string|max:255',
                 'forms.*.fields.*.deskripsi' => 'nullable|string',
@@ -248,15 +255,55 @@ class AssessmentController extends Controller
                 'forms.*.fields.*.placeholder' => 'nullable|string|max:255',
                 'forms.*.fields.*.bantuan' => 'nullable|string',
                 'forms.*.fields.*.opsi_field_text' => 'nullable|string',
+                'forms.*.fields.*.opsi_score_text' => 'nullable|string',
                 'forms.*.fields.*.repeater_config_text' => 'nullable|string',
                 'forms.*.fields.*.radio_options' => 'nullable|array',
                 'forms.*.fields.*.radio_options.*.label' => 'nullable|string|max:1000',
                 'forms.*.fields.*.radio_options.*.value' => 'nullable|string|max:255',
+                'forms.*.fields.*.radio_options.*.score' => 'nullable|numeric|min:0|max:5',
                 'forms.*.fields.*.radio_options.*.level_kompetensi' => [
                     'nullable',
                     'integer',
                     Rule::in(LevelKompetensi::values()),
                 ],
+                'forms.*.fields.*.scoring' => 'nullable|array',
+                'forms.*.fields.*.scoring.enabled' => 'nullable|boolean',
+                'forms.*.fields.*.scoring.profile' => 'nullable|string|max:100',
+                'forms.*.fields.*.scoring.method' => [
+                    'nullable',
+                    'string',
+                    Rule::in([
+                        'presence',
+                        'choice_option_score',
+                        'choice_option_average',
+                        'choice_option_sum',
+                        'choice_option_max',
+                        'numeric_threshold',
+                        'numeric_range',
+                        'semantic_similarity',
+                        'keyword_coverage',
+                        'repeater_completeness',
+                    ]),
+                ],
+                'forms.*.fields.*.scoring.rubric_code' => 'nullable|string|max:100',
+                'forms.*.fields.*.scoring.weight' => 'nullable|numeric|min:0',
+                'forms.*.fields.*.scoring.score_if_answered' => 'nullable|numeric|min:0|max:5',
+                'forms.*.fields.*.scoring.scale_min' => 'nullable|numeric|min:0|max:5',
+                'forms.*.fields.*.scoring.scale_max' => 'nullable|numeric|min:0|max:5',
+                'forms.*.fields.*.scoring.min_words' => 'nullable|integer|min:0',
+                'forms.*.fields.*.scoring.confidence_threshold' => 'nullable|numeric|min:0|max:1',
+                'forms.*.fields.*.scoring.manual_review_below_confidence' => 'nullable|boolean',
+                'forms.*.fields.*.scoring.numeric_direction' => 'nullable|in:greater_is_better,lower_is_better,range',
+                'forms.*.fields.*.scoring.min_threshold' => 'nullable|numeric',
+                'forms.*.fields.*.scoring.target_threshold' => 'nullable|numeric',
+                'forms.*.fields.*.scoring.max_threshold' => 'nullable|numeric',
+                'forms.*.fields.*.scoring.min_score' => 'nullable|numeric|min:0|max:5',
+                'forms.*.fields.*.scoring.target_score' => 'nullable|numeric|min:0|max:5',
+                'forms.*.fields.*.scoring.max_score' => 'nullable|numeric|min:0|max:5',
+                'forms.*.fields.*.scoring.reference_answer' => 'nullable|string',
+                'forms.*.fields.*.scoring.keyword_groups_text' => 'nullable|string',
+                'forms.*.fields.*.scoring.synonym_map_text' => 'nullable|string',
+                'forms.*.fields.*.scoring.advanced_rules_text' => 'nullable|string',
                 'forms.*.fields.*.lebar_kolom' => [
                     'nullable',
                     'string',
@@ -401,6 +448,7 @@ class AssessmentController extends Controller
                 'indikator_kode' => $formData['indikator_kode'] ?? null,
                 'indikator_label' => $formData['indikator_label'] ?? null,
                 'is_scoreable' => (bool) ($formData['is_scoreable'] ?? true),
+                'scoring_config' => $this->parseFormScoringConfig($formData, $assessment->instrument_type),
                 'urutan' => (int) ($formData['urutan'] ?? ($formIndex + 1)),
                 'is_active' => (bool) ($formData['is_active'] ?? false),
             ]);
@@ -421,6 +469,7 @@ class AssessmentController extends Controller
                         'required' => (bool) ($fieldData['is_required'] ?? false),
                         'tipe_field' => $fieldData['tipe_field'],
                     ],
+                    'scoring_config' => $this->parseFieldScoringConfig($fieldData, $assessment->instrument_type),
                     'lebar_kolom' => $fieldData['lebar_kolom'] ?? 'col-md-12',
                     'urutan' => (int) ($fieldData['urutan'] ?? ($fieldIndex + 1)),
                     'is_required' => (bool) ($fieldData['is_required'] ?? false),
@@ -443,6 +492,7 @@ class AssessmentController extends Controller
                 ->map(fn ($option) => [
                     'label' => trim((string) ($option['label'] ?? '')),
                     'value' => trim((string) ($option['value'] ?? '')),
+                    'score' => is_numeric($option['score'] ?? null) ? (float) $option['score'] : null,
                     'level_kompetensi' => LevelKompetensi::tryFromMixed($option['level_kompetensi'] ?? null)?->value,
                 ])
                 ->filter(fn ($option) => $option['label'] !== '' && $option['value'] !== '')
@@ -459,8 +509,67 @@ class AssessmentController extends Controller
         $rawOptions = $fieldData['opsi_field_text'] ?? null;
         $options = preg_split('/[\r\n,]+/', (string) $rawOptions);
         $options = array_values(array_filter(array_map('trim', $options)));
+        $scoreMap = $this->parseOptionScoreText($fieldData['opsi_score_text'] ?? null, $options);
 
-        return $options === [] ? null : $options;
+        if ($options === []) {
+            return null;
+        }
+
+        return collect($options)
+            ->values()
+            ->map(function (string $optionLabel, int $index) use ($scoreMap) {
+                $optionKey = Str::lower(trim($optionLabel));
+                $score = $scoreMap[$optionKey] ?? $scoreMap[$index] ?? null;
+
+                return array_filter([
+                    'label' => $optionLabel,
+                    'value' => $optionLabel,
+                    'score' => is_numeric($score) ? (float) $score : null,
+                ], static fn ($value) => $value !== null && $value !== '');
+            })
+            ->values()
+            ->all();
+    }
+
+    /**
+     * @param  array<int, string>  $options
+     * @return array<int|string, float>
+     */
+    private function parseOptionScoreText(?string $rawScoreText, array $options): array
+    {
+        $lines = collect(preg_split('/\r\n|\r|\n/', (string) $rawScoreText))
+            ->map(fn ($line) => trim((string) $line))
+            ->filter()
+            ->values();
+
+        if ($lines->isEmpty()) {
+            return [];
+        }
+
+        if ($lines->every(fn ($line) => preg_match('/[:=]/', $line) === 1)) {
+            return $lines->mapWithKeys(function ($line) {
+                [$rawKey, $rawValue] = array_pad(preg_split('/\s*[:=]\s*/', (string) $line, 2), 2, null);
+                $optionKey = Str::lower(trim((string) $rawKey));
+
+                if ($optionKey === '' || ! is_numeric($rawValue)) {
+                    return [];
+                }
+
+                return [$optionKey => (float) $rawValue];
+            })->all();
+        }
+
+        $numericLines = $lines
+            ->filter(fn ($line) => is_numeric($line))
+            ->values();
+
+        if ($numericLines->count() !== count($options)) {
+            return [];
+        }
+
+        return $numericLines
+            ->mapWithKeys(fn ($line, $index) => [$index => (float) $line])
+            ->all();
     }
 
     private function parseRepeaterConfigText(?string $rawConfig): ?array
@@ -513,6 +622,95 @@ class AssessmentController extends Controller
             'valid' => true,
             'message' => null,
         ];
+    }
+
+    private function buildAssessmentScoringConfig(?string $instrumentType): ?array
+    {
+        $instrument = AssessmentInstrumentType::tryFromMixed($instrumentType);
+
+        if (! $instrument) {
+            return null;
+        }
+
+        return [
+            'profile' => $instrument->value,
+            'weight' => $instrument->weight(),
+            'verification_gap_threshold' => 1.5,
+            'empty_response_threshold_percent' => 10,
+        ];
+    }
+
+    private function parseFormScoringConfig(array $formData, ?string $instrumentType = null): ?array
+    {
+        $instrument = AssessmentInstrumentType::tryFromMixed($instrumentType);
+        $rawConfig = is_array($formData['scoring'] ?? null) ? $formData['scoring'] : [];
+        $config = array_filter([
+            'profile' => trim((string) ($rawConfig['profile'] ?? $instrument?->value ?? '')),
+            'weight' => is_numeric($rawConfig['weight'] ?? null) ? (float) $rawConfig['weight'] : null,
+            'exclude_from_competency' => (bool) ($rawConfig['exclude_from_competency'] ?? false),
+            'advanced_rules_text' => trim((string) ($rawConfig['advanced_rules_text'] ?? '')),
+        ], fn ($value, $key) => match ($key) {
+            'exclude_from_competency' => (bool) $value,
+            default => $value !== null && $value !== '',
+        }, ARRAY_FILTER_USE_BOTH);
+
+        return $config === [] ? null : $config;
+    }
+
+    private function parseFieldScoringConfig(array $fieldData, ?string $instrumentType = null): ?array
+    {
+        $instrument = AssessmentInstrumentType::tryFromMixed($instrumentType);
+        $rawConfig = is_array($fieldData['scoring'] ?? null) ? $fieldData['scoring'] : [];
+        $fieldType = $fieldData['tipe_field'] ?? 'text';
+        $config = [
+            'enabled' => (bool) ($rawConfig['enabled'] ?? false),
+            'profile' => trim((string) ($rawConfig['profile'] ?? $instrument?->value ?? '')) ?: null,
+            'method' => trim((string) ($rawConfig['method'] ?? '')) ?: null,
+            'rubric_code' => trim((string) ($rawConfig['rubric_code'] ?? '')) ?: null,
+            'weight' => is_numeric($rawConfig['weight'] ?? null) ? (float) $rawConfig['weight'] : null,
+            'score_if_answered' => is_numeric($rawConfig['score_if_answered'] ?? null) ? (float) $rawConfig['score_if_answered'] : null,
+            'scale_min' => is_numeric($rawConfig['scale_min'] ?? null) ? (float) $rawConfig['scale_min'] : null,
+            'scale_max' => is_numeric($rawConfig['scale_max'] ?? null) ? (float) $rawConfig['scale_max'] : null,
+            'reference_answer' => trim((string) ($rawConfig['reference_answer'] ?? '')) ?: null,
+            'keyword_groups_text' => trim((string) ($rawConfig['keyword_groups_text'] ?? '')) ?: null,
+            'synonym_map_text' => trim((string) ($rawConfig['synonym_map_text'] ?? '')) ?: null,
+            'min_words' => is_numeric($rawConfig['min_words'] ?? null) ? (int) $rawConfig['min_words'] : null,
+            'confidence_threshold' => is_numeric($rawConfig['confidence_threshold'] ?? null) ? (float) $rawConfig['confidence_threshold'] : null,
+            'manual_review_below_confidence' => (bool) ($rawConfig['manual_review_below_confidence'] ?? false),
+            'numeric_direction' => trim((string) ($rawConfig['numeric_direction'] ?? '')) ?: null,
+            'min_threshold' => is_numeric($rawConfig['min_threshold'] ?? null) ? (float) $rawConfig['min_threshold'] : null,
+            'target_threshold' => is_numeric($rawConfig['target_threshold'] ?? null) ? (float) $rawConfig['target_threshold'] : null,
+            'max_threshold' => is_numeric($rawConfig['max_threshold'] ?? null) ? (float) $rawConfig['max_threshold'] : null,
+            'min_score' => is_numeric($rawConfig['min_score'] ?? null) ? (float) $rawConfig['min_score'] : null,
+            'target_score' => is_numeric($rawConfig['target_score'] ?? null) ? (float) $rawConfig['target_score'] : null,
+            'max_score' => is_numeric($rawConfig['max_score'] ?? null) ? (float) $rawConfig['max_score'] : null,
+            'advanced_rules_text' => trim((string) ($rawConfig['advanced_rules_text'] ?? '')) ?: null,
+        ];
+
+        if (in_array($fieldType, ['radio', 'select', 'checkbox'], true) && empty($config['method'])) {
+            $config['method'] = $fieldType === 'checkbox' ? 'choice_option_average' : 'choice_option_score';
+        }
+
+        if (in_array($fieldType, ['text', 'textarea'], true) && empty($config['method']) && filled($config['reference_answer'] ?? null)) {
+            $config['method'] = 'semantic_similarity';
+        }
+
+        if ($fieldType === 'number' && empty($config['method'])) {
+            $config['method'] = 'numeric_threshold';
+        }
+
+        if ($fieldType === 'repeater' && empty($config['method'])) {
+            $config['method'] = 'repeater_completeness';
+        }
+
+        $config = array_filter($config, function ($value, $key) {
+            return match ($key) {
+                'enabled', 'manual_review_below_confidence' => true,
+                default => $value !== null && $value !== '',
+            };
+        }, ARRAY_FILTER_USE_BOTH);
+
+        return $config === [] ? null : $config;
     }
 
     private function generateOptionLabel(int $index): string
@@ -584,15 +782,33 @@ class AssessmentController extends Controller
                 'is_scoreable' => $form->is_scoreable,
                 'urutan' => $form->urutan,
                 'is_active' => $form->is_active,
+                'scoring' => [
+                    'profile' => data_get($form->scoring_config, 'profile'),
+                    'weight' => data_get($form->scoring_config, 'weight'),
+                    'exclude_from_competency' => (bool) data_get($form->scoring_config, 'exclude_from_competency', false),
+                    'advanced_rules_text' => $this->formatAdvancedRulesText(data_get($form->scoring_config, 'advanced_rules_text') ?: data_get($form->scoring_config, 'advanced_rules')),
+                ],
                 'fields' => $form->fields->map(function ($field) {
                     $radioOptions = [];
+                    $choiceOptions = [];
 
                     if ($field->tipe_field === 'radio') {
                         $radioOptions = collect(ChoiceOptionNormalizer::normalizeMany($field->opsi_field ?? []))
                             ->map(fn ($option) => [
                                 'label' => $option['label'],
                                 'value' => $option['value'],
+                                'score' => $option['score'],
                                 'level_kompetensi' => $option['level_kompetensi'],
+                            ])
+                            ->toArray();
+                    }
+
+                    if (in_array($field->tipe_field, ['select', 'checkbox'], true)) {
+                        $choiceOptions = collect(ChoiceOptionNormalizer::normalizeMany($field->opsi_field ?? []))
+                            ->map(fn ($option) => [
+                                'label' => $option['label'],
+                                'value' => $option['value'],
+                                'score' => $option['score'],
                             ])
                             ->toArray();
                     }
@@ -608,8 +824,35 @@ class AssessmentController extends Controller
                             : null,
                         'opsi_field_text' => in_array($field->tipe_field, ['radio', 'repeater'], true)
                             ? null
-                            : ($field->opsi_field ? implode(', ', $field->opsi_field) : null),
+                            : ($choiceOptions !== []
+                                ? collect($choiceOptions)->pluck('label')->implode(', ')
+                                : ($field->opsi_field ? implode(', ', $field->opsi_field) : null)),
+                        'opsi_score_text' => $this->formatOptionScoreText($choiceOptions),
                         'radio_options' => $radioOptions,
+                        'scoring' => [
+                            'enabled' => (bool) data_get($field->scoring_config, 'enabled', false),
+                            'profile' => data_get($field->scoring_config, 'profile'),
+                            'method' => data_get($field->scoring_config, 'method'),
+                            'rubric_code' => data_get($field->scoring_config, 'rubric_code'),
+                            'weight' => data_get($field->scoring_config, 'weight'),
+                            'score_if_answered' => data_get($field->scoring_config, 'score_if_answered'),
+                            'scale_min' => data_get($field->scoring_config, 'scale_min'),
+                            'scale_max' => data_get($field->scoring_config, 'scale_max'),
+                            'reference_answer' => data_get($field->scoring_config, 'reference_answer'),
+                            'keyword_groups_text' => $this->formatKeywordGroupsText(data_get($field->scoring_config, 'keyword_groups_text') ?: data_get($field->scoring_config, 'keyword_groups')),
+                            'synonym_map_text' => $this->formatSynonymsText(data_get($field->scoring_config, 'synonym_map_text') ?: data_get($field->scoring_config, 'synonyms')),
+                            'min_words' => data_get($field->scoring_config, 'min_words'),
+                            'confidence_threshold' => data_get($field->scoring_config, 'confidence_threshold'),
+                            'manual_review_below_confidence' => (bool) data_get($field->scoring_config, 'manual_review_below_confidence', false),
+                            'numeric_direction' => data_get($field->scoring_config, 'numeric_direction'),
+                            'min_threshold' => data_get($field->scoring_config, 'min_threshold'),
+                            'target_threshold' => data_get($field->scoring_config, 'target_threshold'),
+                            'max_threshold' => data_get($field->scoring_config, 'max_threshold'),
+                            'min_score' => data_get($field->scoring_config, 'min_score'),
+                            'target_score' => data_get($field->scoring_config, 'target_score'),
+                            'max_score' => data_get($field->scoring_config, 'max_score'),
+                            'advanced_rules_text' => $this->formatAdvancedRulesText(data_get($field->scoring_config, 'advanced_rules_text') ?: data_get($field->scoring_config, 'advanced_rules')),
+                        ],
                         'lebar_kolom' => $field->lebar_kolom,
                         'urutan' => $field->urutan,
                         'is_required' => $field->is_required,
@@ -618,5 +861,85 @@ class AssessmentController extends Controller
                 })->toArray(),
             ];
         })->toArray();
+    }
+
+    private function formatOptionScoreText(array $options): ?string
+    {
+        $scoredOptions = collect($options)
+            ->filter(fn ($option) => is_numeric($option['score'] ?? null))
+            ->map(fn ($option) => ($option['label'] ?? $option['value'] ?? '').' = '.$option['score'])
+            ->filter()
+            ->values();
+
+        return $scoredOptions->isEmpty() ? null : $scoredOptions->implode("\n");
+    }
+
+    private function formatKeywordGroupsText(mixed $value): ?string
+    {
+        if (is_string($value)) {
+            return trim($value) !== '' ? trim($value) : null;
+        }
+
+        if (! is_array($value)) {
+            return null;
+        }
+
+        $lines = collect($value)
+            ->map(function ($group) {
+                return collect((array) $group)
+                    ->map(fn ($item) => trim((string) $item))
+                    ->filter()
+                    ->implode(' | ');
+            })
+            ->filter()
+            ->values();
+
+        return $lines->isEmpty() ? null : $lines->implode("\n");
+    }
+
+    private function formatSynonymsText(mixed $value): ?string
+    {
+        if (is_string($value)) {
+            return trim($value) !== '' ? trim($value) : null;
+        }
+
+        if (! is_array($value)) {
+            return null;
+        }
+
+        $lines = collect($value)
+            ->map(function ($variants, $baseWord) {
+                $baseWord = trim((string) $baseWord);
+
+                if ($baseWord === '') {
+                    return null;
+                }
+
+                $variantText = collect((array) $variants)
+                    ->map(fn ($variant) => trim((string) $variant))
+                    ->filter()
+                    ->implode(', ');
+
+                return $variantText !== '' ? $baseWord.': '.$variantText : null;
+            })
+            ->filter()
+            ->values();
+
+        return $lines->isEmpty() ? null : $lines->implode("\n");
+    }
+
+    private function formatAdvancedRulesText(mixed $value): ?string
+    {
+        if (is_string($value)) {
+            $trimmed = trim($value);
+
+            return $trimmed !== '' ? $trimmed : null;
+        }
+
+        if (! is_array($value) || $value === []) {
+            return null;
+        }
+
+        return json_encode($value, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
     }
 }

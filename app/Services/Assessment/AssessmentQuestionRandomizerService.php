@@ -28,6 +28,7 @@ class AssessmentQuestionRandomizerService
                     'deskripsi' => $assessment->deskripsi,
                     'petunjuk' => $assessment->petunjuk,
                     'instrument_type' => $assessment->instrument_type,
+                    'scoring_config' => $assessment->scoring_config,
                 ]);
                 $forms = $assessment->forms
                     ->filter(fn ($form) => (bool) $form->is_active)
@@ -42,6 +43,7 @@ class AssessmentQuestionRandomizerService
                             'indikator_kode' => $form->indikator_kode,
                             'indikator_label' => $form->indikator_label,
                             'is_scoreable' => $form->is_scoreable,
+                            'scoring_config' => $form->scoring_config,
                             'fields' => $form->fields->map(fn ($field) => [
                                 'label' => $field->label,
                                 'deskripsi' => $field->deskripsi,
@@ -70,6 +72,7 @@ class AssessmentQuestionRandomizerService
                             'indikator_kode' => $formMeta['indikator_kode'],
                             'indikator_label' => $formMeta['indikator_label'],
                             'is_scoreable' => (bool) ($formMeta['is_scoreable'] ?? false),
+                            'scoring_config' => $form->scoring_config,
                             'fields' => $fields,
                         ];
                     })
@@ -89,6 +92,7 @@ class AssessmentQuestionRandomizerService
                     'petunjuk' => $assessmentMeta['petunjuk'],
                     'instrument_type' => $assessmentMeta['instrument_type'],
                     'instrument_label' => $assessmentMeta['instrument_label'],
+                    'scoring_config' => $assessment->scoring_config,
                     'forms' => $forms,
                 ];
             })
@@ -128,6 +132,8 @@ class AssessmentQuestionRandomizerService
             'placeholder' => $field->placeholder,
             'bantuan' => $field->bantuan,
             'opsi_field' => $this->mapFieldOptions($field),
+            'validasi' => $field->validasi,
+            'scoring_config' => $field->scoring_config,
             'is_required' => (bool) $field->is_required,
         ];
     }
@@ -147,6 +153,7 @@ class AssessmentQuestionRandomizerService
             ->map(fn ($option) => [
                 'label' => $option['label'],
                 'value' => $option['value'],
+                'score' => $option['score'],
                 'level_kompetensi' => $option['level_kompetensi'],
                 'level_kompetensi_label' => $option['level_kompetensi_label'],
             ])

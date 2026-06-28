@@ -26,13 +26,19 @@ class AssessmentQuestionRandomizerServiceTest extends TestCase
                 [
                     'label' => 'A',
                     'value' => 'Mengenali kondisi belajar peserta didik.',
+                    'score' => 1,
                     'level_kompetensi' => 1,
                 ],
                 [
                     'label' => 'B',
                     'value' => 'Mengembangkan strategi belajar yang adaptif.',
+                    'score' => 5,
                     'level_kompetensi' => 5,
                 ],
+            ],
+            'scoring_config' => [
+                'enabled' => true,
+                'method' => 'choice_option_score',
             ],
             'is_required' => true,
             'is_active' => true,
@@ -43,6 +49,7 @@ class AssessmentQuestionRandomizerServiceTest extends TestCase
             'judul_form' => 'Form Kompetensi',
             'kode_form' => 'FORM-1',
             'deskripsi' => 'Deskripsi form',
+            'scoring_config' => ['profile' => 'pilihan_ganda_kompleks'],
             'is_active' => true,
         ]);
         $form->id = 201;
@@ -53,6 +60,7 @@ class AssessmentQuestionRandomizerServiceTest extends TestCase
             'judul' => 'Assessment Kompetensi',
             'deskripsi' => 'Deskripsi assessment',
             'petunjuk' => 'Petunjuk',
+            'scoring_config' => ['weight' => 0.40],
             'is_active' => true,
         ]);
         $assessment->id = 101;
@@ -73,12 +81,16 @@ class AssessmentQuestionRandomizerServiceTest extends TestCase
         $options = data_get($snapshot, 'assessments.0.forms.0.fields.0.opsi_field');
 
         $this->assertSame(1, $options[0]['level_kompetensi']);
+        $this->assertSame(1.0, $options[0]['score']);
         $this->assertSame('Level 1: Paham', $options[0]['level_kompetensi_label']);
         $this->assertSame('Mengenali kondisi belajar peserta didik.', $options[0]['label']);
         $this->assertSame('A', $options[0]['value']);
 
         $this->assertSame(5, $options[1]['level_kompetensi']);
+        $this->assertSame(5.0, $options[1]['score']);
         $this->assertSame('Level 5: Ahli', $options[1]['level_kompetensi_label']);
         $this->assertSame('B', $options[1]['value']);
+        $this->assertTrue((bool) data_get($snapshot, 'assessments.0.forms.0.fields.0.scoring_config.enabled'));
+        $this->assertSame('choice_option_score', data_get($snapshot, 'assessments.0.forms.0.fields.0.scoring_config.method'));
     }
 }

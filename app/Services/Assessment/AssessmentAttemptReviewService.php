@@ -25,7 +25,7 @@ class AssessmentAttemptReviewService
             $assessmentMeta = $this->metadataResolver->decorateAssessment($assessmentData);
             $instrument = AssessmentInstrumentType::tryFromMixed($assessmentMeta['instrument_type'] ?? null);
 
-            if (! $instrument || ! $instrument->requiresManualReview()) {
+            if (! $instrument) {
                 continue;
             }
 
@@ -40,6 +40,13 @@ class AssessmentAttemptReviewService
                     $answer = $answerMap->get($fieldData['id']);
 
                     if (! $this->answerHasContent($answer)) {
+                        continue;
+                    }
+
+                    $needsReview = ! is_numeric($answer?->auto_score)
+                        || (bool) data_get($answer?->auto_score_metadata ?? [], 'requires_manual_review', false);
+
+                    if (! $needsReview) {
                         continue;
                     }
 

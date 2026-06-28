@@ -292,6 +292,15 @@
                                                 >
                                                     {{ $fieldHasAnswer ? 'Terjawab' : 'Belum dijawab' }}
                                                 </x-assessment::ui.status-badge>
+
+                                                @if (!empty($answer['final_score']))
+                                                    <x-assessment::ui.status-badge
+                                                        tone="primary"
+                                                        class="rounded-sm px-2.5 py-1"
+                                                    >
+                                                        Skor {{ number_format((float) $answer['final_score'], 2) }}
+                                                    </x-assessment::ui.status-badge>
+                                                @endif
                                             </div>
 
                                             @if (!empty($answer['answered_at']))

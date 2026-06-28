@@ -16,11 +16,13 @@ class Assessment extends Model
         'deskripsi',
         'petunjuk',
         'instrument_type',
+        'scoring_config',
         'status',
         'is_active',
     ];
 
     protected $casts = [
+        'scoring_config' => 'array',
         'is_active' => 'boolean',
     ];
 

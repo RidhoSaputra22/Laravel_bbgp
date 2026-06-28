@@ -18,12 +18,14 @@ class AssessmentForm extends Model
         'indikator_kode',
         'indikator_label',
         'is_scoreable',
+        'scoring_config',
         'urutan',
         'is_active',
     ];
 
     protected $casts = [
         'is_scoreable' => 'boolean',
+        'scoring_config' => 'array',
         'is_active' => 'boolean',
     ];
 

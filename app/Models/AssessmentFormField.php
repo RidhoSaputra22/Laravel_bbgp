@@ -20,6 +20,7 @@ class AssessmentFormField extends Model
         'opsi_field',
         'nilai_default',
         'validasi',
+        'scoring_config',
         'lebar_kolom',
         'urutan',
         'is_required',
@@ -29,6 +30,7 @@ class AssessmentFormField extends Model
     protected $casts = [
         'opsi_field' => 'array',
         'validasi' => 'array',
+        'scoring_config' => 'array',
         'is_required' => 'boolean',
         'is_active' => 'boolean',
     ];

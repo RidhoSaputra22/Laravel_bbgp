@@ -32,6 +32,7 @@ class ChoiceOptionNormalizer
                 'label' => $text,
                 'value' => $text,
                 'aliases' => $text !== '' ? [$text] : [],
+                'score' => null,
                 'level_kompetensi' => null,
                 'level_kompetensi_label' => null,
             ];
@@ -74,6 +75,9 @@ class ChoiceOptionNormalizer
             'label' => $label,
             'value' => $value,
             'aliases' => $aliases,
+            'score' => is_numeric($option['score'] ?? null)
+                ? (float) $option['score']
+                : ($competencyLevel?->value !== null ? (float) $competencyLevel->value : null),
             'level_kompetensi' => $competencyLevel?->value,
             'level_kompetensi_label' => $competencyLevel?->label(),
         ];
@@ -113,7 +117,7 @@ class ChoiceOptionNormalizer
             }
         }
 
-        if ($index !== null) {
+        if ($index !== null && (bool) ($option['infer_level_from_sequence'] ?? false)) {
             return LevelKompetensi::tryFromSequence($index + 1);
         }
 

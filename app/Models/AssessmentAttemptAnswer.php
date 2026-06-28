@@ -16,6 +16,10 @@ class AssessmentAttemptAnswer extends Model
         'assessment_form_field_id',
         'answer_text',
         'answer_payload',
+        'auto_score',
+        'auto_score_reason',
+        'auto_score_metadata',
+        'auto_scored_at',
         'assessor_score',
         'assessor_notes',
         'assessor_user_id',
@@ -26,6 +30,9 @@ class AssessmentAttemptAnswer extends Model
 
     protected $casts = [
         'answer_payload' => 'array',
+        'auto_score' => 'float',
+        'auto_score_metadata' => 'array',
+        'auto_scored_at' => 'datetime',
         'assessor_score' => 'integer',
         'assessor_scored_at' => 'datetime',
         'answered_at' => 'datetime',

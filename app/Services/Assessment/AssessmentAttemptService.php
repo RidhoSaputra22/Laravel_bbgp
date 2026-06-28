@@ -15,7 +15,8 @@ use Illuminate\Validation\ValidationException;
 class AssessmentAttemptService
 {
     public function __construct(
-        private readonly AssessmentScoringService $scoringService
+        private readonly AssessmentScoringService $scoringService,
+        private readonly AssessmentAutoScoringService $autoScoringService
     ) {}
 
     public function submit(AssessmentAttempt $attempt, array $answers, array $files): AssessmentAttempt
@@ -64,6 +65,9 @@ class AssessmentAttemptService
                 );
             }
 
+            $freshAnswers = $attempt->answers()->get();
+            $attempt->setRelation('answers', $freshAnswers);
+            $this->autoScoringService->scoreAttempt($attempt);
             $freshAnswers = $attempt->answers()->get();
             $attempt->setRelation('answers', $freshAnswers);
 
@@ -160,11 +164,19 @@ class AssessmentAttemptService
                         'file_url' => $answer->answer_file_path ? asset('storage/'.$answer->answer_file_path) : null,
                         'rows' => data_get($answer->answer_payload ?? [], 'rows', []),
                         'columns' => data_get($answer->answer_payload ?? [], 'columns', []),
+                        'auto_score' => $answer->auto_score,
+                        'auto_score_reason' => $answer->auto_score_reason,
+                        'auto_score_metadata' => $answer->auto_score_metadata ?? [],
+                        'auto_score_confidence' => data_get($answer->auto_score_metadata ?? [], 'confidence'),
                         'assessor_score' => $answer->assessor_score,
                         'assessor_notes' => $answer->assessor_notes,
                         'assessor_score_label' => $answer->assessor_score
                             ? \App\Enum\LevelKompetensi::tryFrom((int) $answer->assessor_score)?->label()
                             : null,
+                        'final_score' => is_numeric($answer->assessor_score) ? (float) $answer->assessor_score : $answer->auto_score,
+                        'final_score_label' => is_numeric($answer->assessor_score)
+                            ? \App\Enum\LevelKompetensi::fromScore((float) $answer->assessor_score)?->label()
+                            : \App\Enum\LevelKompetensi::fromScore((float) $answer->auto_score)?->label(),
                         'answered_at' => $answer->answered_at?->format('d M Y H:i'),
                     ],
                 ];
@@ -244,9 +256,11 @@ class AssessmentAttemptService
                     continue;
                 }
 
-                $allowedValues = collect($field['opsi_field'] ?? [])
-                    ->pluck('value')
+                $normalizedOptions = ChoiceOptionNormalizer::normalizeMany($field['opsi_field'] ?? []);
+                $allowedValues = collect($normalizedOptions)
+                    ->flatMap(fn (array $option) => $option['aliases'] ?? [])
                     ->map(fn ($value) => (string) $value)
+                    ->unique()
                     ->all();
 
                 $invalidValues = array_diff($selectedValues, $allowedValues);
@@ -257,6 +271,12 @@ class AssessmentAttemptService
                     continue;
                 }
 
+                $selectedOptions = collect($normalizedOptions)
+                    ->filter(function (array $option) use ($selectedValues) {
+                        return $selectedValues->contains(fn ($selectedValue) => in_array((string) $selectedValue, $option['aliases'] ?? [], true));
+                    })
+                    ->values();
+
                 $normalized[(int) $fieldId] = [
                     'assessment_id' => $field['assessment_id'],
                     'assessment_form_id' => $field['assessment_form_id'],
@@ -264,6 +284,11 @@ class AssessmentAttemptService
                     'answer_payload' => [
                         'type' => 'checkbox',
                         'values' => $selectedValues,
+                        'selected_options' => $selectedOptions->map(fn (array $option) => array_filter([
+                            'label' => $option['label'] ?? null,
+                            'value' => $option['value'] ?? null,
+                            'score' => $option['score'] ?? null,
+                        ], static fn ($value) => $value !== null && $value !== ''))->all(),
                     ],
                     'answer_file_path' => null,
                 ];
@@ -302,6 +327,7 @@ class AssessmentAttemptService
 
             $value = $answers[$fieldId] ?? null;
             $textValue = is_array($value) ? '' : trim((string) ($value ?? ''));
+            $matchedOption = null;
 
             if ($isRequired && $textValue === '') {
                 $messages[$fieldKey] = "Jawaban untuk pertanyaan {$fieldLabel} wajib diisi.";
@@ -366,6 +392,7 @@ class AssessmentAttemptService
                         'type' => 'radio',
                         'value' => $textValue,
                         'label' => trim((string) ($matchedOption['label'] ?? '')) ?: null,
+                        'score' => is_numeric($matchedOption['score'] ?? null) ? (float) $matchedOption['score'] : null,
                         'level_kompetensi' => $matchedOption['level_kompetensi'] ?? null,
                         'level_kompetensi_label' => $matchedOption['level_kompetensi_label'] ?? null,
                     ], static fn ($value) => $value !== null && $value !== ''),
@@ -376,26 +403,34 @@ class AssessmentAttemptService
             }
 
             if ($fieldType === 'select') {
-                $allowedValues = collect($field['opsi_field'] ?? [])
-                    ->pluck('value')
-                    ->map(fn ($optionValue) => (string) $optionValue)
-                    ->all();
+                $matchedOption = collect(ChoiceOptionNormalizer::normalizeMany($field['opsi_field'] ?? []))
+                    ->first(function (array $option) use ($textValue) {
+                        return in_array($textValue, $option['aliases'] ?? [], true);
+                    });
 
-                if (! in_array($textValue, $allowedValues, true)) {
+                if (! is_array($matchedOption)) {
                     $messages[$fieldKey] = "Pilihan jawaban pada pertanyaan {$fieldLabel} tidak valid.";
 
                     continue;
                 }
+
+                $textValue = trim((string) ($matchedOption['value'] ?? $textValue));
             }
 
             $normalized[(int) $fieldId] = [
                 'assessment_id' => $field['assessment_id'],
                 'assessment_form_id' => $field['assessment_form_id'],
                 'answer_text' => $textValue,
-                'answer_payload' => [
+                'answer_payload' => array_filter([
                     'type' => $fieldType,
                     'value' => $textValue,
-                ],
+                    'label' => isset($matchedOption) && is_array($matchedOption)
+                        ? (trim((string) ($matchedOption['label'] ?? '')) ?: null)
+                        : null,
+                    'score' => isset($matchedOption) && is_array($matchedOption) && is_numeric($matchedOption['score'] ?? null)
+                        ? (float) $matchedOption['score']
+                        : null,
+                ], static fn ($value) => $value !== null && $value !== ''),
                 'answer_file_path' => null,
             ];
         }
