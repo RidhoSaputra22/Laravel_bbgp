@@ -1,5 +1,6 @@
 @php
     $builderSeed = old('forms', $formBuilderData ?? []);
+    $competencyLevels = \App\Enum\LevelKompetensi::options();
     $fieldTypeBadges = $fieldTypes ?? [];
     $validationErrors = $errors->getMessages();
 @endphp
@@ -178,7 +179,7 @@
                     <li>Isi informasi assessment di bagian atas terlebih dahulu.</li>
                     <li>Klik <strong>Tambah Form</strong> di bagian bawah untuk membuat bagian form, lalu tambahkan field di bawah form terkait.</li>
                     <li>Untuk field <strong>Daftar Pilihan</strong> dan <strong>Kotak Centang</strong>, pisahkan opsi dengan koma atau baris baru.</li>
-                    <li>Untuk field <strong>Pilihan Ganda</strong>, isi <strong>kode jawaban</strong> dan <strong>isi jawaban</strong> pada setiap opsi.</li>
+                    <li>Untuk field <strong>Pilihan Ganda</strong>, isi <strong>kode jawaban</strong>, <strong>isi jawaban</strong>, dan <strong>level kompetensi</strong> pada setiap opsi.</li>
                     <li>Nama field akan dibuat otomatis dari label yang Anda isi.</li>
                     <li>Aktifkan hanya form dan field yang ingin ditampilkan ke pengguna.</li>
                 </ul>
@@ -217,6 +218,7 @@
     <script>
         $(document).ready(function() {
             const assessmentFieldTypes = @json($fieldTypes);
+            const competencyLevels = @json($competencyLevels);
             const initialForms = @json($builderSeed);
             const validationErrors = @json($validationErrors);
             const textOptionFieldTypes = ['select', 'checkbox'];
@@ -312,6 +314,42 @@
                 return label;
             };
 
+            const getDefaultCompetencyLevel = (index) => {
+                const optionNumber = Number(index) + 1;
+                return competencyLevels[String(optionNumber)] ? String(optionNumber) : '';
+            };
+
+            const normalizeCompetencyLevelValue = (value, fallbackIndex = null) => {
+                const normalizedValue = String(value ?? '').trim();
+
+                if (normalizedValue && competencyLevels[normalizedValue]) {
+                    return normalizedValue;
+                }
+
+                if (fallbackIndex === null || fallbackIndex === undefined) {
+                    return '';
+                }
+
+                return getDefaultCompetencyLevel(fallbackIndex);
+            };
+
+            const resolveCompetencyLevelLabel = (value) => {
+                const normalizedValue = normalizeCompetencyLevelValue(value);
+                return normalizedValue ? competencyLevels[normalizedValue] || '' : '';
+            };
+
+            const buildCompetencyLevelOptions = (selectedValue, optionIndex = null) => {
+                const normalizedValue = normalizeCompetencyLevelValue(selectedValue, optionIndex);
+                let optionsHtml = '<option value="">Pilih level</option>';
+
+                Object.entries(competencyLevels).forEach(([value, label]) => {
+                    const selected = value === normalizedValue ? 'selected' : '';
+                    optionsHtml += `<option value="${escapeHtml(value)}" ${selected}>${escapeHtml(label)}</option>`;
+                });
+
+                return optionsHtml;
+            };
+
             const looksLikeChoiceCode = (value) => {
                 const normalizedValue = String(value || '').trim();
 
@@ -339,6 +377,7 @@
                     return {
                         label: normalizedValue,
                         value: normalizedValue,
+                        level_kompetensi: '',
                     };
                 }
 
@@ -360,6 +399,7 @@
                 return {
                     label: optionLabel,
                     value: optionValue,
+                    level_kompetensi: normalizeCompetencyLevelValue(option?.level_kompetensi),
                 };
             };
 
@@ -367,19 +407,25 @@
                 if (!Array.isArray(options) || !options.length) {
                     return [{
                         label: '',
-                        value: ''
+                        value: '',
+                        level_kompetensi: getDefaultCompetencyLevel(0),
                     }, {
                         label: '',
-                        value: ''
+                        value: '',
+                        level_kompetensi: getDefaultCompetencyLevel(1),
                     }];
                 }
 
-                const normalizedOptions = options.map((option) => normalizeRadioOptionShape(option));
+                const normalizedOptions = options.map((option, index) => ({
+                    ...normalizeRadioOptionShape(option),
+                    level_kompetensi: normalizeCompetencyLevelValue(option?.level_kompetensi, index),
+                }));
 
                 while (normalizedOptions.length < 2) {
                     normalizedOptions.push({
                         label: '',
                         value: '',
+                        level_kompetensi: getDefaultCompetencyLevel(normalizedOptions.length),
                     });
                 }
 
@@ -390,8 +436,14 @@
                 const normalizedOption = normalizeRadioOptionShape(optionData);
                 const optionText = normalizedOption.label || '';
                 const optionCode = normalizedOption.value || '';
+                const optionCompetencyLevel = normalizeCompetencyLevelValue(
+                    normalizedOption.level_kompetensi,
+                    optionIndex
+                );
                 const optionTextName = `forms[${formIndex}][fields][${fieldIndex}][radio_options][${optionIndex}][label]`;
                 const optionCodeName = `forms[${formIndex}][fields][${fieldIndex}][radio_options][${optionIndex}][value]`;
+                const optionCompetencyLevelName =
+                    `forms[${formIndex}][fields][${fieldIndex}][radio_options][${optionIndex}][level_kompetensi]`;
                 const generatedCode = generateChoiceLabel(optionIndex);
 
                 return `
@@ -407,7 +459,7 @@
                                     ${buildInvalidFeedback(optionCodeName)}
                                 </div>
                             </div>
-                            <div class="col-md-9">
+                            <div class="col-md-6">
                                 <div class="form-group mb-md-0">
                                     <label>${buildRequiredLabel('Isi Jawaban')}</label>
                                     <input type="text" class="${getInputClass(optionTextName, 'form-control radio-option-text')}"
@@ -415,6 +467,16 @@
                                         value="${escapeHtml(optionText)}"
                                         placeholder="Contoh: Mengenali faktor yang memengaruhi perilaku peserta didik">
                                     ${buildInvalidFeedback(optionTextName)}
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-group mb-md-0">
+                                    <label>${buildRequiredLabel('Level Kompetensi')}</label>
+                                    <select class="${getInputClass(optionCompetencyLevelName, 'form-control radio-option-level')}"
+                                        name="${optionCompetencyLevelName}">
+                                        ${buildCompetencyLevelOptions(optionCompetencyLevel, optionIndex)}
+                                    </select>
+                                    ${buildInvalidFeedback(optionCompetencyLevelName)}
                                 </div>
                             </div>
                             <div class="col-md-1 text-md-right">
@@ -570,7 +632,7 @@
                                 </div>
                                 ${buildInvalidFeedback(radioOptionsName, 'mt-2')}
                                 <small class="text-muted d-block mt-2">
-                                    Kode jawaban akan menjadi nilai yang disimpan saat peserta memilih opsi ini, sedangkan isi jawaban akan ditampilkan ke peserta.
+                                    Kode jawaban akan menjadi nilai yang disimpan saat peserta memilih opsi ini, isi jawaban akan ditampilkan ke peserta, dan level kompetensi ikut tersimpan untuk kebutuhan pemetaan.
                                 </small>
 
                             </div>
@@ -700,7 +762,10 @@
                 const formIndex = Number($fieldCard.closest('.assessment-form-card').data('form-index'));
                 const fieldIndex = Number($fieldCard.data('field-index'));
                 const optionIndex = Number($fieldCard.attr('data-radio-option-counter') || 0);
-                const normalizedOption = normalizeRadioOptionShape(optionData);
+                const normalizedOption = {
+                    ...normalizeRadioOptionShape(optionData),
+                    level_kompetensi: normalizeCompetencyLevelValue(optionData?.level_kompetensi, optionIndex),
+                };
 
                 $fieldCard.find('.radio-option-list').append(buildRadioOptionRow(formIndex, fieldIndex, optionIndex,
                     normalizedOption));
@@ -725,6 +790,7 @@
                     const generatedLabel = generateChoiceLabel(optionIndex);
                     const $textInput = $optionRow.find('.radio-option-text');
                     const $codeInput = $optionRow.find('.radio-option-code');
+                    const $levelSelect = $optionRow.find('.radio-option-level');
 
                     $optionRow.attr('data-option-index', optionIndex);
                     $textInput
@@ -735,6 +801,13 @@
                         'name',
                         `forms[${formIndex}][fields][${fieldIndex}][radio_options][${optionIndex}][value]`
                     ).attr('placeholder', generatedLabel);
+
+                    $levelSelect
+                        .attr(
+                            'name',
+                            `forms[${formIndex}][fields][${fieldIndex}][radio_options][${optionIndex}][level_kompetensi]`
+                        )
+                        .html(buildCompetencyLevelOptions($levelSelect.val(), optionIndex));
                 });
 
                 $fieldCard.attr('data-radio-option-counter', $fieldCard.find('.multiple-choice-option-row').length);
@@ -752,6 +825,7 @@
                     appendRadioOption($fieldCard, {
                         label: '',
                         value: '',
+                        level_kompetensi: getDefaultCompetencyLevel(index),
                     });
                 }
 
@@ -770,7 +844,7 @@
 
                 $fieldCard.find('.multiple-choice-wrapper')
                     .toggleClass('d-none', !showMultipleChoiceOptions)
-                    .find('input')
+                    .find('input, select')
                     .prop('disabled', !showMultipleChoiceOptions);
 
                 if (showMultipleChoiceOptions) {
@@ -845,8 +919,9 @@
                     return {
                         label: $optionRow.find('.radio-option-text').val()?.trim() || '',
                         value: $optionRow.find('.radio-option-code').val()?.trim() || '',
+                        level_kompetensi: $optionRow.find('.radio-option-level').val()?.trim() || '',
                     };
-                }).get().filter((option) => option.label || option.value);
+                }).get().filter((option) => option.label || option.value || option.level_kompetensi);
             };
 
             const getBadgeClass = (status) => {
@@ -959,6 +1034,9 @@
                         const normalizedOption = normalizeRadioOptionShape(option);
                         const optionCode = normalizedOption.value || generateChoiceLabel(index);
                         const optionText = normalizedOption.label || 'Belum ada isi jawaban';
+                        const optionCompetencyLevelLabel = resolveCompetencyLevelLabel(
+                            normalizedOption.level_kompetensi || getDefaultCompetencyLevel(index)
+                        );
                         const inputId = `${sanitizePreviewKey(previewKey)}-${index}`;
 
                         return `
@@ -976,6 +1054,7 @@
                                             <div class="col-md-10">
 
                                                 <div class="">${escapeHtml(optionText)}</div>
+                                                ${optionCompetencyLevelLabel ? `<span class="badge badge-light border mt-2">${escapeHtml(optionCompetencyLevelLabel)}</span>` : ''}
                                             </div>
                                         </div>
                                     </div>

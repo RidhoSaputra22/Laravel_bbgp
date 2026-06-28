@@ -103,6 +103,8 @@ class AssessmentQuestionRandomizerService
             ->map(fn ($option) => [
                 'label' => $option['label'],
                 'value' => $option['value'],
+                'level_kompetensi' => $option['level_kompetensi'],
+                'level_kompetensi_label' => $option['level_kompetensi_label'],
             ])
             ->filter(fn ($option) => $option['value'] !== '')
             ->values()

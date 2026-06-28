@@ -283,6 +283,22 @@ class AssessmentAttemptService
                 }
 
                 $textValue = trim((string) ($matchedOption['value'] ?? $textValue));
+
+                $normalized[(int) $fieldId] = [
+                    'assessment_id' => $field['assessment_id'],
+                    'assessment_form_id' => $field['assessment_form_id'],
+                    'answer_text' => $textValue,
+                    'answer_payload' => array_filter([
+                        'type' => 'radio',
+                        'value' => $textValue,
+                        'label' => trim((string) ($matchedOption['label'] ?? '')) ?: null,
+                        'level_kompetensi' => $matchedOption['level_kompetensi'] ?? null,
+                        'level_kompetensi_label' => $matchedOption['level_kompetensi_label'] ?? null,
+                    ], static fn ($value) => $value !== null && $value !== ''),
+                    'answer_file_path' => null,
+                ];
+
+                continue;
             }
 
             if ($fieldType === 'select') {

@@ -2,12 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Enum\LevelKompetensi;
 use App\Models\Assessment;
 use App\Support\Assessment\ChoiceOptionNormalizer;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 
 class AssessmentController extends Controller
@@ -232,6 +233,11 @@ class AssessmentController extends Controller
                 'forms.*.fields.*.radio_options' => 'nullable|array',
                 'forms.*.fields.*.radio_options.*.label' => 'nullable|string|max:1000',
                 'forms.*.fields.*.radio_options.*.value' => 'nullable|string|max:255',
+                'forms.*.fields.*.radio_options.*.level_kompetensi' => [
+                    'nullable',
+                    'integer',
+                    Rule::in(LevelKompetensi::values()),
+                ],
                 'forms.*.fields.*.lebar_kolom' => [
                     'nullable',
                     'string',
@@ -311,6 +317,13 @@ class AssessmentController extends Controller
                                 );
                             }
 
+                            if (! LevelKompetensi::tryFromMixed($option['level_kompetensi'] ?? null)) {
+                                $validator->errors()->add(
+                                    "forms.$formIndex.fields.$fieldIndex.radio_options.$optionIndex.level_kompetensi",
+                                    'Level kompetensi pilihan ganda wajib dipilih.'
+                                );
+                            }
+
                             if ($optionValue !== '' && in_array(Str::upper($optionValue), $usedOptionCodes, true)) {
                                 $validator->errors()->add(
                                     "forms.$formIndex.fields.$fieldIndex.radio_options.$optionIndex.value",
@@ -345,7 +358,7 @@ class AssessmentController extends Controller
         foreach (array_values($forms) as $formIndex => $formData) {
             $form = $assessment->forms()->create([
                 'judul_form' => $formData['judul_form'],
-                'kode_form' => $formData['kode_form'] ?: 'FORM-' . str_pad((string) ($formIndex + 1), 2, '0', STR_PAD_LEFT),
+                'kode_form' => $formData['kode_form'] ?: 'FORM-'.str_pad((string) ($formIndex + 1), 2, '0', STR_PAD_LEFT),
                 'deskripsi' => $formData['deskripsi'] ?? null,
                 'urutan' => (int) ($formData['urutan'] ?? ($formIndex + 1)),
                 'is_active' => (bool) ($formData['is_active'] ?? false),
@@ -380,17 +393,18 @@ class AssessmentController extends Controller
     {
         $fieldType = $fieldData['tipe_field'] ?? null;
 
-        if (!in_array($fieldType, ['select', 'radio', 'checkbox'], true)) {
+        if (! in_array($fieldType, ['select', 'radio', 'checkbox'], true)) {
             return null;
         }
 
         if ($fieldType === 'radio') {
             $options = collect(ChoiceOptionNormalizer::normalizeMany($fieldData['radio_options'] ?? []))
-                ->map(fn($option) => [
+                ->map(fn ($option) => [
                     'label' => trim((string) ($option['label'] ?? '')),
                     'value' => trim((string) ($option['value'] ?? '')),
+                    'level_kompetensi' => LevelKompetensi::tryFromMixed($option['level_kompetensi'] ?? null)?->value,
                 ])
-                ->filter(fn($option) => $option['label'] !== '' && $option['value'] !== '')
+                ->filter(fn ($option) => $option['label'] !== '' && $option['value'] !== '')
                 ->values()
                 ->toArray();
 
@@ -411,7 +425,7 @@ class AssessmentController extends Controller
 
         while ($number > 0) {
             $number--;
-            $label = chr(65 + ($number % 26)) . $label;
+            $label = chr(65 + ($number % 26)).$label;
             $number = intdiv($number, 26);
         }
 
@@ -450,10 +464,10 @@ class AssessmentController extends Controller
 
         while (
             Assessment::where('slug', $slug)
-                ->when($ignoreId, fn($query) => $query->where('id', '!=', $ignoreId))
+                ->when($ignoreId, fn ($query) => $query->where('id', '!=', $ignoreId))
                 ->exists()
         ) {
-            $slug = $baseSlug . '-' . $counter;
+            $slug = $baseSlug.'-'.$counter;
             $counter++;
         }
 
@@ -474,9 +488,10 @@ class AssessmentController extends Controller
 
                     if ($field->tipe_field === 'radio') {
                         $radioOptions = collect(ChoiceOptionNormalizer::normalizeMany($field->opsi_field ?? []))
-                            ->map(fn($option) => [
+                            ->map(fn ($option) => [
                                 'label' => $option['label'],
                                 'value' => $option['value'],
+                                'level_kompetensi' => $option['level_kompetensi'],
                             ])
                             ->toArray();
                     }

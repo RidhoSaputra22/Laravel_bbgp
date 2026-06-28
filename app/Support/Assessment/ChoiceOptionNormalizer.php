@@ -2,6 +2,8 @@
 
 namespace App\Support\Assessment;
 
+use App\Enum\LevelKompetensi;
+
 class ChoiceOptionNormalizer
 {
     public static function normalizeMany(?array $options): array
@@ -30,6 +32,8 @@ class ChoiceOptionNormalizer
                 'label' => $text,
                 'value' => $text,
                 'aliases' => $text !== '' ? [$text] : [],
+                'level_kompetensi' => null,
+                'level_kompetensi_label' => null,
             ];
         }
 
@@ -57,12 +61,63 @@ class ChoiceOptionNormalizer
             trim((string) ($option['value'] ?? '')),
             trim((string) ($option['label'] ?? '')),
         ], fn ($item) => $item !== '')));
+        $competencyLevel = static::resolveCompetencyLevel(
+            $option,
+            $index,
+            $value,
+            $label,
+            $rawValue,
+            $rawLabel
+        );
 
         return [
             'label' => $label,
             'value' => $value,
             'aliases' => $aliases,
+            'level_kompetensi' => $competencyLevel?->value,
+            'level_kompetensi_label' => $competencyLevel?->label(),
         ];
+    }
+
+    private static function resolveCompetencyLevel(
+        array $option,
+        ?int $index,
+        string $normalizedValue,
+        string $normalizedLabel,
+        string $rawValue,
+        string $rawLabel
+    ): ?LevelKompetensi {
+        $explicitLevel = LevelKompetensi::tryFromMixed(
+            $option['level_kompetensi']
+                ?? $option['kompetensi_level']
+                ?? $option['competency_level']
+                ?? null
+        );
+
+        if ($explicitLevel) {
+            return $explicitLevel;
+        }
+
+        $codeCandidates = [
+            $normalizedValue,
+            $normalizedLabel,
+            $rawValue,
+            $rawLabel,
+        ];
+
+        foreach ($codeCandidates as $candidate) {
+            $levelFromCode = LevelKompetensi::tryFromChoiceCode($candidate);
+
+            if ($levelFromCode) {
+                return $levelFromCode;
+            }
+        }
+
+        if ($index !== null) {
+            return LevelKompetensi::tryFromSequence($index + 1);
+        }
+
+        return null;
     }
 
     private static function shouldSwapLabelAndValue(string $label, string $value): bool
