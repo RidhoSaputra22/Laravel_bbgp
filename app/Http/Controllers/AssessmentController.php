@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Assessment;
+use App\Support\Assessment\ChoiceOptionNormalizer;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -281,10 +282,7 @@ class AssessmentController extends Controller
                     }
 
                     if (($field['tipe_field'] ?? '') === 'radio') {
-                        $radioOptions = array_values(array_filter(
-                            $field['radio_options'] ?? [],
-                            fn($option) => filled($option['label'] ?? null) || filled($option['value'] ?? null)
-                        ));
+                        $radioOptions = ChoiceOptionNormalizer::normalizeMany($field['radio_options'] ?? []);
 
                         if (count($radioOptions) < 2) {
                             $validator->errors()->add(
@@ -293,7 +291,7 @@ class AssessmentController extends Controller
                             );
                         }
 
-                        $usedOptionLabels = [];
+                        $usedOptionCodes = [];
 
                         foreach ($radioOptions as $optionIndex => $option) {
                             $optionLabel = trim((string) ($option['label'] ?? ''));
@@ -302,26 +300,26 @@ class AssessmentController extends Controller
                             if ($optionLabel === '') {
                                 $validator->errors()->add(
                                     "forms.$formIndex.fields.$fieldIndex.radio_options.$optionIndex.label",
-                                    'Label opsi pilihan ganda wajib diisi.'
+                                    'Isi jawaban pilihan ganda wajib diisi.'
                                 );
                             }
 
                             if ($optionValue === '') {
                                 $validator->errors()->add(
                                     "forms.$formIndex.fields.$fieldIndex.radio_options.$optionIndex.value",
-                                    'Value opsi pilihan ganda wajib diisi.'
+                                    'Kode jawaban pilihan ganda wajib diisi.'
                                 );
                             }
 
-                            if ($optionLabel !== '' && in_array(Str::upper($optionLabel), $usedOptionLabels, true)) {
+                            if ($optionValue !== '' && in_array(Str::upper($optionValue), $usedOptionCodes, true)) {
                                 $validator->errors()->add(
-                                    "forms.$formIndex.fields.$fieldIndex.radio_options.$optionIndex.label",
-                                    'Label opsi pilihan ganda harus unik.'
+                                    "forms.$formIndex.fields.$fieldIndex.radio_options.$optionIndex.value",
+                                    'Kode jawaban pilihan ganda harus unik.'
                                 );
                             }
 
-                            if ($optionLabel !== '') {
-                                $usedOptionLabels[] = Str::upper($optionLabel);
+                            if ($optionValue !== '') {
+                                $usedOptionCodes[] = Str::upper($optionValue);
                             }
                         }
                     }
@@ -387,14 +385,11 @@ class AssessmentController extends Controller
         }
 
         if ($fieldType === 'radio') {
-            $options = collect($fieldData['radio_options'] ?? [])
-                ->filter(fn($option) => filled($option['label'] ?? null) || filled($option['value'] ?? null))
-                ->map(function ($option, $index) {
-                    return [
-                        'label' => trim((string) ($option['label'] ?? $this->generateOptionLabel($index))),
-                        'value' => trim((string) ($option['value'] ?? '')),
-                    ];
-                })
+            $options = collect(ChoiceOptionNormalizer::normalizeMany($fieldData['radio_options'] ?? []))
+                ->map(fn($option) => [
+                    'label' => trim((string) ($option['label'] ?? '')),
+                    'value' => trim((string) ($option['value'] ?? '')),
+                ])
                 ->filter(fn($option) => $option['label'] !== '' && $option['value'] !== '')
                 ->values()
                 ->toArray();
@@ -478,20 +473,11 @@ class AssessmentController extends Controller
                     $radioOptions = [];
 
                     if ($field->tipe_field === 'radio') {
-                        $radioOptions = collect($field->opsi_field ?? [])
-                            ->map(function ($option, $index) {
-                                if (is_array($option) && array_key_exists('label', $option) && array_key_exists('value', $option)) {
-                                    return [
-                                        'label' => $option['label'],
-                                        'value' => $option['value'],
-                                    ];
-                                }
-
-                                return [
-                                    'label' => is_scalar($option) ? (string) $option : $this->generateOptionLabel($index),
-                                    'value' => is_scalar($option) ? (string) $option : '',
-                                ];
-                            })
+                        $radioOptions = collect(ChoiceOptionNormalizer::normalizeMany($field->opsi_field ?? []))
+                            ->map(fn($option) => [
+                                'label' => $option['label'],
+                                'value' => $option['value'],
+                            ])
                             ->toArray();
                     }
 

@@ -4,6 +4,7 @@ namespace App\Services\Assessment;
 
 use App\Models\AssessmentAttempt;
 use App\Models\AssessmentAttemptAnswer;
+use App\Support\Assessment\ChoiceOptionNormalizer;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Carbon;
@@ -264,7 +265,27 @@ class AssessmentAttemptService
                 }
             }
 
-            if (in_array($fieldType, ['select', 'radio'], true)) {
+            if ($fieldType === 'radio') {
+                $matchedOption = collect(ChoiceOptionNormalizer::normalizeMany($field['opsi_field'] ?? []))
+                    ->first(function (array $option) use ($textValue) {
+                        $aliases = collect($option['aliases'] ?? [])
+                            ->map(fn ($value) => trim((string) $value))
+                            ->filter(fn ($value) => $value !== '')
+                            ->all();
+
+                        return in_array($textValue, $aliases, true);
+                    });
+
+                if (! is_array($matchedOption)) {
+                    $messages[$fieldKey] = "Pilihan jawaban pada pertanyaan {$fieldLabel} tidak valid.";
+
+                    continue;
+                }
+
+                $textValue = trim((string) ($matchedOption['value'] ?? $textValue));
+            }
+
+            if ($fieldType === 'select') {
                 $allowedValues = collect($field['opsi_field'] ?? [])
                     ->pluck('value')
                     ->map(fn ($optionValue) => (string) $optionValue)

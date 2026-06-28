@@ -1,9 +1,10 @@
 @php
-    $statusBadge = [
-        'publish' => 'success',
-        'draft' => 'warning',
-        'nonaktif' => 'secondary',
-    ][$assessment->status] ?? 'secondary';
+    $statusBadge =
+        [
+            'publish' => 'success',
+            'draft' => 'warning',
+            'nonaktif' => 'secondary',
+        ][$assessment->status] ?? 'secondary';
 
     $activeForms = $assessment->forms
         ->filter(function ($form) {
@@ -110,7 +111,8 @@
                         <div class="card-header bg-white">
                             <div>
                                 <h4 class="mb-1">{{ $form->judul_form }}</h4>
-                                <small class="text-muted">Bagian {{ $loop->iteration }} • {{ $form->kode_form }}</small>
+                                <small class="text-muted">Bagian {{ $loop->iteration }} •
+                                    {{ $form->kode_form }}</small>
                             </div>
                         </div>
                         <div class="card-body">
@@ -134,7 +136,8 @@
                                             </label>
 
                                             @if ($field->deskripsi)
-                                                <small class="form-text text-muted mb-2">{{ $field->deskripsi }}</small>
+                                                <small
+                                                    class="form-text text-muted mb-2">{{ $field->deskripsi }}</small>
                                             @endif
 
                                             @switch($field->tipe_field)
@@ -159,24 +162,33 @@
                                                 @case('radio')
                                                     @forelse ($field->opsi_field ?? [] as $option)
                                                         @php
-                                                            $optionLabel = is_array($option) && array_key_exists('label', $option)
-                                                                ? $option['label']
-                                                                : (is_scalar($option) ? (string) $option : $generateChoiceLabel($loop->index));
-                                                            $optionValue = is_array($option) && array_key_exists('value', $option)
-                                                                ? $option['value']
-                                                                : (is_scalar($option) ? (string) $option : '');
+                                                            $normalizedOption = \App\Support\Assessment\ChoiceOptionNormalizer::normalize(
+                                                                $option,
+                                                                $loop->index,
+                                                            );
+                                                            $optionCode =
+                                                                trim((string) ($normalizedOption['value'] ?? '')) ?:
+                                                                $generateChoiceLabel($loop->index);
+                                                            $optionText =
+                                                                trim((string) ($normalizedOption['label'] ?? '')) ?:
+                                                                'Belum ada isi jawaban';
                                                             $optionId = $fieldLabelId . '-' . $loop->index;
                                                         @endphp
-                                                        <div class="custom-control custom-radio mb-2">
-                                                            <input type="radio" class="custom-control-input" id="{{ $optionId }}"
-                                                                name="{{ $field->nama_field }}" disabled>
-                                                            <label class="custom-control-label" for="{{ $optionId }}">
-                                                                {{ $optionLabel }}
-                                                            </label>
-                                                            @if ($optionValue !== '' && $optionValue !== $optionLabel)
-                                                                <small class="form-text text-muted ml-4">{{ $optionValue }}</small>
-                                                            @endif
-                                                        </div>
+                                                        <label for="{{ $optionId }}"
+                                                            class="d-block rounded border bg-white px-3 py-3 mb-2">
+                                                            <div class="d-flex align-items-start">
+                                                                <input type="radio" class="mt-1 mr-3"
+                                                                    id="{{ $optionId }}" name="{{ $field->nama_field }}"
+                                                                    disabled>
+                                                                <div class="flex-grow-1">
+                                                                    <div class="space-x-2">
+                                                                        {{ $optionCode }}.
+                                                                        {{ $optionText }}
+
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </label>
                                                     @empty
                                                         <div class="text-muted">Belum ada opsi.</div>
                                                     @endforelse
@@ -188,8 +200,9 @@
                                                             $optionId = $fieldLabelId . '-' . $loop->index;
                                                         @endphp
                                                         <div class="custom-control custom-checkbox mb-2">
-                                                            <input type="checkbox" class="custom-control-input" id="{{ $optionId }}"
-                                                                name="{{ $field->nama_field }}[]" disabled>
+                                                            <input type="checkbox" class="custom-control-input"
+                                                                id="{{ $optionId }}" name="{{ $field->nama_field }}[]"
+                                                                disabled>
                                                             <label class="custom-control-label" for="{{ $optionId }}">
                                                                 {{ $option }}
                                                             </label>
@@ -201,7 +214,8 @@
 
                                                 @case('file')
                                                     <div class="custom-file">
-                                                        <input type="file" class="custom-file-input" id="{{ $fieldLabelId }}" disabled>
+                                                        <input type="file" class="custom-file-input"
+                                                            id="{{ $fieldLabelId }}" disabled>
                                                         <label class="custom-file-label" for="{{ $fieldLabelId }}">
                                                             Pilih file
                                                         </label>
@@ -209,7 +223,8 @@
                                                 @break
 
                                                 @default
-                                                    <input type="{{ in_array($field->tipe_field, ['text', 'email', 'number', 'date'], true) ? $field->tipe_field : 'text' }}"
+                                                    <input
+                                                        type="{{ in_array($field->tipe_field, ['text', 'email', 'number', 'date'], true) ? $field->tipe_field : 'text' }}"
                                                         id="{{ $fieldLabelId }}" class="form-control" value=""
                                                         placeholder="{{ $field->placeholder }}" readonly>
                                             @endswitch

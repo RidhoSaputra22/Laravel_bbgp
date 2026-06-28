@@ -178,7 +178,7 @@
                     <li>Isi informasi assessment di bagian atas terlebih dahulu.</li>
                     <li>Klik <strong>Tambah Form</strong> di bagian bawah untuk membuat bagian form, lalu tambahkan field di bawah form terkait.</li>
                     <li>Untuk field <strong>Daftar Pilihan</strong> dan <strong>Kotak Centang</strong>, pisahkan opsi dengan koma atau baris baru.</li>
-                    <li>Untuk field <strong>Pilihan Ganda</strong>, isi label dan value pada opsi yang tersedia.</li>
+                    <li>Untuk field <strong>Pilihan Ganda</strong>, isi <strong>kode jawaban</strong> dan <strong>isi jawaban</strong> pada setiap opsi.</li>
                     <li>Nama field akan dibuat otomatis dari label yang Anda isi.</li>
                     <li>Aktifkan hanya form dan field yang ingin ditampilkan ke pengguna.</li>
                 </ul>
@@ -312,6 +312,57 @@
                 return label;
             };
 
+            const looksLikeChoiceCode = (value) => {
+                const normalizedValue = String(value || '').trim();
+
+                if (!normalizedValue || /\s/.test(normalizedValue) || normalizedValue.length > 6) {
+                    return false;
+                }
+
+                return /^[A-Za-z0-9._-]+$/.test(normalizedValue);
+            };
+
+            const looksLikeChoiceAnswerText = (value) => {
+                const normalizedValue = String(value || '').trim();
+
+                if (!normalizedValue) {
+                    return false;
+                }
+
+                return /\s/.test(normalizedValue) || normalizedValue.length >= 6;
+            };
+
+            const normalizeRadioOptionShape = (option = {}) => {
+                if (typeof option === 'string') {
+                    const normalizedValue = option.trim();
+
+                    return {
+                        label: normalizedValue,
+                        value: normalizedValue,
+                    };
+                }
+
+                let optionLabel = String(option?.label || '').trim();
+                let optionValue = String(option?.value || '').trim();
+
+                if (looksLikeChoiceCode(optionLabel) && looksLikeChoiceAnswerText(optionValue)) {
+                    [optionLabel, optionValue] = [optionValue, optionLabel];
+                }
+
+                if (!optionLabel && optionValue) {
+                    optionLabel = optionValue;
+                }
+
+                if (!optionValue && optionLabel) {
+                    optionValue = optionLabel;
+                }
+
+                return {
+                    label: optionLabel,
+                    value: optionValue,
+                };
+            };
+
             const normalizeRadioOptions = (options = []) => {
                 if (!Array.isArray(options) || !options.length) {
                     return [{
@@ -323,19 +374,7 @@
                     }];
                 }
 
-                const normalizedOptions = options.map((option) => {
-                    if (typeof option === 'string') {
-                        return {
-                            label: option,
-                            value: option,
-                        };
-                    }
-
-                    return {
-                        label: option?.label || '',
-                        value: option?.value || '',
-                    };
-                });
+                const normalizedOptions = options.map((option) => normalizeRadioOptionShape(option));
 
                 while (normalizedOptions.length < 2) {
                     normalizedOptions.push({
@@ -348,32 +387,34 @@
             };
 
             const buildRadioOptionRow = (formIndex, fieldIndex, optionIndex, optionData = {}) => {
-                const optionLabel = optionData.label || '';
-                const optionValue = optionData.value || '';
-                const optionLabelName = `forms[${formIndex}][fields][${fieldIndex}][radio_options][${optionIndex}][label]`;
-                const optionValueName = `forms[${formIndex}][fields][${fieldIndex}][radio_options][${optionIndex}][value]`;
+                const normalizedOption = normalizeRadioOptionShape(optionData);
+                const optionText = normalizedOption.label || '';
+                const optionCode = normalizedOption.value || '';
+                const optionTextName = `forms[${formIndex}][fields][${fieldIndex}][radio_options][${optionIndex}][label]`;
+                const optionCodeName = `forms[${formIndex}][fields][${fieldIndex}][radio_options][${optionIndex}][value]`;
+                const generatedCode = generateChoiceLabel(optionIndex);
 
                 return `
                     <div class="multiple-choice-option-row mb-2" data-option-index="${optionIndex}">
                         <div class="row align-items-end">
-                            <div class="col-md-3">
+                            <div class="col-md-2">
                                 <div class="form-group mb-md-0">
-                                    <label>${buildRequiredLabel('Teks Opsi')}</label>
-                                    <input type="text" class="${getInputClass(optionLabelName, 'form-control radio-option-label')}"
-                                        name="${optionLabelName}"
-                                        value="${escapeHtml(optionLabel)}"
-                                        placeholder="A">
-                                    ${buildInvalidFeedback(optionLabelName)}
+                                    <label>${buildRequiredLabel('Kode')}</label>
+                                    <input type="text" class="${getInputClass(optionCodeName, 'form-control radio-option-code')}"
+                                        name="${optionCodeName}"
+                                        value="${escapeHtml(optionCode)}"
+                                        placeholder="${escapeHtml(generatedCode)}">
+                                    ${buildInvalidFeedback(optionCodeName)}
                                 </div>
                             </div>
-                            <div class="col-md-8">
+                            <div class="col-md-9">
                                 <div class="form-group mb-md-0">
-                                    <label>${buildRequiredLabel('Value')}</label>
-                                    <input type="text" class="${getInputClass(optionValueName, 'form-control radio-option-value')}"
-                                        name="${optionValueName}"
-                                        value="${escapeHtml(optionValue)}"
+                                    <label>${buildRequiredLabel('Isi Jawaban')}</label>
+                                    <input type="text" class="${getInputClass(optionTextName, 'form-control radio-option-text')}"
+                                        name="${optionTextName}"
+                                        value="${escapeHtml(optionText)}"
                                         placeholder="Contoh: Mengenali faktor yang memengaruhi perilaku peserta didik">
-                                    ${buildInvalidFeedback(optionValueName)}
+                                    ${buildInvalidFeedback(optionTextName)}
                                 </div>
                             </div>
                             <div class="col-md-1 text-md-right">
@@ -529,7 +570,7 @@
                                 </div>
                                 ${buildInvalidFeedback(radioOptionsName, 'mt-2')}
                                 <small class="text-muted d-block mt-2">
-                                    Isi teks opsi seperti jawaban yang dilihat user, lalu gunakan value untuk nilai atau kode jawaban.
+                                    Kode jawaban akan menjadi nilai yang disimpan saat peserta memilih opsi ini, sedangkan isi jawaban akan ditampilkan ke peserta.
                                 </small>
 
                             </div>
@@ -659,10 +700,7 @@
                 const formIndex = Number($fieldCard.closest('.assessment-form-card').data('form-index'));
                 const fieldIndex = Number($fieldCard.data('field-index'));
                 const optionIndex = Number($fieldCard.attr('data-radio-option-counter') || 0);
-                const normalizedOption = {
-                    label: optionData.label || '',
-                    value: optionData.value || '',
-                };
+                const normalizedOption = normalizeRadioOptionShape(optionData);
 
                 $fieldCard.find('.radio-option-list').append(buildRadioOptionRow(formIndex, fieldIndex, optionIndex,
                     normalizedOption));
@@ -685,18 +723,18 @@
                 $fieldCard.find('.multiple-choice-option-row').each(function(optionIndex) {
                     const $optionRow = $(this);
                     const generatedLabel = generateChoiceLabel(optionIndex);
-                    const $labelInput = $optionRow.find('.radio-option-label');
-                    const $valueInput = $optionRow.find('.radio-option-value');
+                    const $textInput = $optionRow.find('.radio-option-text');
+                    const $codeInput = $optionRow.find('.radio-option-code');
 
                     $optionRow.attr('data-option-index', optionIndex);
-                    $labelInput
+                    $textInput
                         .attr('name', `forms[${formIndex}][fields][${fieldIndex}][radio_options][${optionIndex}][label]`)
-                        .attr('placeholder', `Contoh: Opsi ${generatedLabel}`);
+                        .attr('placeholder', 'Contoh: Mengenali faktor yang memengaruhi perilaku peserta didik');
 
-                    $valueInput.attr(
+                    $codeInput.attr(
                         'name',
                         `forms[${formIndex}][fields][${fieldIndex}][radio_options][${optionIndex}][value]`
-                    );
+                    ).attr('placeholder', generatedLabel);
                 });
 
                 $fieldCard.attr('data-radio-option-counter', $fieldCard.find('.multiple-choice-option-row').length);
@@ -805,8 +843,8 @@
                     const $optionRow = $(this);
 
                     return {
-                        label: $optionRow.find('.radio-option-label').val()?.trim() || '',
-                        value: $optionRow.find('.radio-option-value').val()?.trim() || '',
+                        label: $optionRow.find('.radio-option-text').val()?.trim() || '',
+                        value: $optionRow.find('.radio-option-code').val()?.trim() || '',
                     };
                 }).get().filter((option) => option.label || option.value);
             };
@@ -913,28 +951,36 @@
                     `;
                 } else if (field.type === 'radio') {
                     const options = field.options.length ? field.options : [{
-                        label: 'Belum ada opsi',
+                        label: '',
                         value: ''
                     }];
 
                     inputHtml = options.map((option, index) => {
-                        const optionLabel = typeof option === 'object' ? (option.label || `Opsi ${generateChoiceLabel(index)}`) :
-                            option;
-                        const optionDescription = typeof option === 'object' && option.value && option.value !== option.label ?
-                            option.value : '';
+                        const normalizedOption = normalizeRadioOptionShape(option);
+                        const optionCode = normalizedOption.value || generateChoiceLabel(index);
+                        const optionText = normalizedOption.label || 'Belum ada isi jawaban';
                         const inputId = `${sanitizePreviewKey(previewKey)}-${index}`;
 
                         return `
-                            <div class="custom-control custom-radio mb-2">
-                                <input type="radio" class="custom-control-input"
-                                    id="${inputId}"
-                                    name="${sanitizePreviewKey(previewKey)}">
-                                <label class="custom-control-label"
-                                    for="${inputId}">
-                                    ${escapeHtml(optionLabel)}
-                                </label>
-                                ${optionDescription ? `<small class="form-text text-muted ml-4">${escapeHtml(optionDescription)}</small>` : ''}
-                            </div>
+                            <label for="${inputId}" class="d-block rounded border bg-white px-3 py-3 mb-2">
+                                <div class="d-flex align-items-start">
+                                    <input type="radio" class="mt-1 mr-3"
+                                        id="${inputId}"
+                                        name="${sanitizePreviewKey(previewKey)}">
+                                    <div class="flex-grow-1">
+                                        <div class="row">
+                                            <div class="col-md-2 mb-2 mb-md-0">
+
+                                                <div class="">${escapeHtml(optionCode)}</div>
+                                            </div>
+                                            <div class="col-md-10">
+
+                                                <div class="">${escapeHtml(optionText)}</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </label>
                         `;
                     }).join('');
                 } else if (field.type === 'checkbox') {
@@ -1140,7 +1186,7 @@
                 schedulePreviewRender();
             });
 
-            $(document).on('input', '.radio-option-label', function() {
+            $(document).on('input', '.radio-option-text, .radio-option-code', function() {
                 schedulePreviewRender();
             });
 

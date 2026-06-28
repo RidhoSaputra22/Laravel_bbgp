@@ -66,17 +66,23 @@
         ];
         $resolveOptionMap = function (array $field): array {
             return collect($field['opsi_field'] ?? [])
-                ->mapWithKeys(function ($option) {
+                ->flatMap(function ($option, $index) {
                     if (! is_array($option)) {
                         $value = trim((string) $option);
 
                         return $value !== '' ? [$value => $value] : [];
                     }
 
-                    $value = trim((string) ($option['value'] ?? ''));
-                    $label = trim((string) ($option['label'] ?? $value));
+                    $normalizedOption = \App\Support\Assessment\ChoiceOptionNormalizer::normalize($option, $index);
+                    $label = trim((string) ($normalizedOption['label'] ?? ''));
 
-                    return $value !== '' ? [$value => $label] : [];
+                    return collect($normalizedOption['aliases'] ?? [])
+                        ->mapWithKeys(function ($value) use ($label) {
+                            $value = trim((string) $value);
+
+                            return $value !== '' ? [$value => $label] : [];
+                        })
+                        ->all();
                 })
                 ->all();
         };

@@ -4,6 +4,7 @@ namespace App\Services\Assessment;
 
 use App\Models\AssessmentAssignmentTarget;
 use App\Models\AssessmentFormField;
+use App\Support\Assessment\ChoiceOptionNormalizer;
 
 class AssessmentQuestionRandomizerService
 {
@@ -98,25 +99,11 @@ class AssessmentQuestionRandomizerService
 
     private function normalizeOptions(?array $options): array
     {
-        return collect($options ?? [])
-            ->map(function ($option) {
-                if (is_array($option)) {
-                    $value = trim((string) ($option['value'] ?? ''));
-                    $label = trim((string) ($option['label'] ?? $value));
-
-                    return [
-                        'label' => $label,
-                        'value' => $value,
-                    ];
-                }
-
-                $text = trim((string) $option);
-
-                return [
-                    'label' => $text,
-                    'value' => $text,
-                ];
-            })
+        return collect(ChoiceOptionNormalizer::normalizeMany($options ?? []))
+            ->map(fn ($option) => [
+                'label' => $option['label'],
+                'value' => $option['value'],
+            ])
             ->filter(fn ($option) => $option['value'] !== '')
             ->values()
             ->all();

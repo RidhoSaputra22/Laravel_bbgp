@@ -16,25 +16,23 @@
         ->values();
     $selectedValue = $selectedValues->first();
     $idPrefix = $idPrefix ?: trim((string) preg_replace('/[^A-Za-z0-9_-]+/', '-', $name), '-');
-    $normalizedOptions = collect($options ?? [])
+    $normalizedOptions = collect(\App\Support\Assessment\ChoiceOptionNormalizer::normalizeMany($options ?? []))
         ->map(function ($option, $index) {
-            if (is_array($option)) {
-                $value = trim((string) ($option['value'] ?? ''));
-                $label = trim((string) ($option['label'] ?? $value));
-                $description = array_key_exists('description', $option)
-                    ? trim((string) ($option['description'] ?? ''))
-                    : ($value !== $label ? $value : null);
-            } else {
-                $value = trim((string) $option);
-                $label = $value;
-                $description = null;
-            }
+            $value = trim((string) ($option['value'] ?? ''));
+            $label = trim((string) ($option['label'] ?? $value));
+            $matchValues = collect($option['aliases'] ?? [$value, $label])
+                ->map(fn($item) => trim((string) $item))
+                ->filter(fn($item) => $item !== '')
+                ->unique()
+                ->values()
+                ->all();
 
             return [
                 'index' => $index,
                 'value' => $value,
-                'label' => $label,
-                'description' => $description ?: null,
+                'label' => $value,
+                'description' => $label !== '' ? $label : null,
+                'match_values' => $matchValues,
             ];
         })
         ->filter(fn($option) => $option['value'] !== '')
@@ -60,7 +58,8 @@
     </div>
     @foreach ($normalizedOptions as $option)
         <x-assessment::form.choice-option :id="$idPrefix . '-' . $option['index']" type="radio" :name="$name"
-            :value="$option['value']" :checked="$selectedValue !== null && $selectedValue === (string) $option['value']"
-            :label="$option['label']" :description="$option['description']" :disabled="$disabled" />
+            :value="$option['value']" :checked="$selectedValue !== null && in_array($selectedValue, $option['match_values'], true)"
+            :label="$option['label']" :description="$option['description']" layout="split"
+            :disabled="$disabled" />
     @endforeach
 </div>
