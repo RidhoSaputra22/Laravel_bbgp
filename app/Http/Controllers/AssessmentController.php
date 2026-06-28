@@ -194,9 +194,12 @@ class AssessmentController extends Controller
 
     private function validatePayload(Request $request, ?int $assessmentId = null): array
     {
+        $this->mergeSerializedFormsPayload($request);
+
         $validator = Validator::make(
             $request->all(),
             [
+                'forms_payload' => 'nullable|string',
                 'kode_assessment' => [
                     'required',
                     'string',
@@ -226,8 +229,13 @@ class AssessmentController extends Controller
                 'forms.*.fields.*.bantuan' => 'nullable|string',
                 'forms.*.fields.*.opsi_field_text' => 'nullable|string',
                 'forms.*.fields.*.radio_options' => 'nullable|array',
-                'forms.*.fields.*.radio_options.*.label' => 'nullable|string|max:10',
+                'forms.*.fields.*.radio_options.*.label' => 'nullable|string|max:1000',
                 'forms.*.fields.*.radio_options.*.value' => 'nullable|string|max:255',
+                'forms.*.fields.*.lebar_kolom' => [
+                    'nullable',
+                    'string',
+                    Rule::in(['col-md-12', 'col-md-8', 'col-md-6', 'col-md-4']),
+                ],
                 'forms.*.fields.*.urutan' => 'nullable|integer|min:1',
                 'forms.*.fields.*.is_required' => 'nullable|boolean',
                 'forms.*.fields.*.is_active' => 'nullable|boolean',
@@ -361,7 +369,7 @@ class AssessmentController extends Controller
                         'required' => (bool) ($fieldData['is_required'] ?? false),
                         'tipe_field' => $fieldData['tipe_field'],
                     ],
-                    'lebar_kolom' => 'col-md-12',
+                    'lebar_kolom' => $fieldData['lebar_kolom'] ?? 'col-md-12',
                     'urutan' => (int) ($fieldData['urutan'] ?? ($fieldIndex + 1)),
                     'is_required' => (bool) ($fieldData['is_required'] ?? false),
                     'is_active' => (bool) ($fieldData['is_active'] ?? false),
@@ -383,7 +391,7 @@ class AssessmentController extends Controller
                 ->filter(fn($option) => filled($option['label'] ?? null) || filled($option['value'] ?? null))
                 ->map(function ($option, $index) {
                     return [
-                        'label' => Str::upper(trim((string) ($option['label'] ?? $this->generateOptionLabel($index)))),
+                        'label' => trim((string) ($option['label'] ?? $this->generateOptionLabel($index))),
                         'value' => trim((string) ($option['value'] ?? '')),
                     ];
                 })
@@ -413,6 +421,25 @@ class AssessmentController extends Controller
         }
 
         return $label;
+    }
+
+    private function mergeSerializedFormsPayload(Request $request): void
+    {
+        $formsPayload = $request->input('forms_payload');
+
+        if (! is_string($formsPayload) || trim($formsPayload) === '') {
+            return;
+        }
+
+        $decodedPayload = json_decode($formsPayload, true);
+
+        if (json_last_error() !== JSON_ERROR_NONE || ! is_array($decodedPayload)) {
+            return;
+        }
+
+        $request->merge([
+            'forms' => $decodedPayload,
+        ]);
     }
 
     private function generateFieldNameFromLabel(?string $label): string
@@ -461,7 +488,7 @@ class AssessmentController extends Controller
                                 }
 
                                 return [
-                                    'label' => $this->generateOptionLabel($index),
+                                    'label' => is_scalar($option) ? (string) $option : $this->generateOptionLabel($index),
                                     'value' => is_scalar($option) ? (string) $option : '',
                                 ];
                             })

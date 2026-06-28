@@ -62,11 +62,29 @@
         .assessment-builder-actions .custom-control-label {
             white-space: nowrap;
         }
+
+        .auto-field-name-hint code {
+            background: #f4f7fb;
+            border-radius: 0.25rem;
+            color: #0c63e7;
+            padding: 0.15rem 0.35rem;
+        }
+
+        .assessment-meta-textarea.form-control {
+            height: 180px !important;
+        }
+
+        .assessment-form-card textarea.form-control,
+        .assessment-field-card textarea.form-control {
+            height: 140px !important;
+            min-height: 140px !important;
+        }
     </style>
 @endpush
 
 <form action="{{ $formAction }}" method="POST" id="assessment-builder-form">
     @csrf
+    <input type="hidden" name="forms_payload" id="forms-payload">
     @if ($httpMethod !== 'POST')
         @method($httpMethod)
     @endif
@@ -122,7 +140,7 @@
                 <div class="col-md-6">
                     <div class="form-group">
                         <label>Deskripsi</label>
-                        <textarea name="deskripsi" class="form-control @error('deskripsi') is-invalid @enderror" rows="4"
+                        <textarea name="deskripsi" class="form-control assessment-meta-textarea @error('deskripsi') is-invalid @enderror" rows="6"
                             placeholder="Deskripsi singkat assessment">{{ old('deskripsi', $assessment->deskripsi) }}</textarea>
                         @error('deskripsi')
                             <div class="invalid-feedback">{{ $message }}</div>
@@ -132,7 +150,7 @@
                 <div class="col-md-6">
                     <div class="form-group">
                         <label>Petunjuk Pengisian</label>
-                        <textarea name="petunjuk" class="form-control @error('petunjuk') is-invalid @enderror" rows="4"
+                        <textarea name="petunjuk" class="form-control assessment-meta-textarea @error('petunjuk') is-invalid @enderror" rows="6"
                             placeholder="Petunjuk untuk pengguna form">{{ old('petunjuk', $assessment->petunjuk) }}</textarea>
                         @error('petunjuk')
                             <div class="invalid-feedback">{{ $message }}</div>
@@ -253,8 +271,15 @@
                 .replace(/[^a-z0-9]+/g, '_')
                 .replace(/^_+|_+$/g, '')
                 .replace(/_+/g, '_');
+            const buildAutoFieldNameHint = (labelValue) => {
+                const generatedName = slugifyFieldName(labelValue);
 
+                if (!generatedName) {
+                    return 'Nama field otomatis akan muncul setelah label diisi.';
+                }
 
+                return `Nama field otomatis: <code>${escapeHtml(generatedName)}</code>`;
+            };
 
             const normalizeChecked = (value) => {
                 return value === true || value === 1 || value === '1' || value === 'on';
@@ -290,31 +315,31 @@
             const normalizeRadioOptions = (options = []) => {
                 if (!Array.isArray(options) || !options.length) {
                     return [{
-                        label: 'A',
+                        label: '',
                         value: ''
                     }, {
-                        label: 'B',
+                        label: '',
                         value: ''
                     }];
                 }
 
-                const normalizedOptions = options.map((option, index) => {
+                const normalizedOptions = options.map((option) => {
                     if (typeof option === 'string') {
                         return {
-                            label: generateChoiceLabel(index),
+                            label: option,
                             value: option,
                         };
                     }
 
                     return {
-                        label: option?.label || generateChoiceLabel(index),
+                        label: option?.label || '',
                         value: option?.value || '',
                     };
                 });
 
                 while (normalizedOptions.length < 2) {
                     normalizedOptions.push({
-                        label: generateChoiceLabel(normalizedOptions.length),
+                        label: '',
                         value: '',
                     });
                 }
@@ -323,7 +348,7 @@
             };
 
             const buildRadioOptionRow = (formIndex, fieldIndex, optionIndex, optionData = {}) => {
-                const optionLabel = optionData.label || generateChoiceLabel(optionIndex);
+                const optionLabel = optionData.label || '';
                 const optionValue = optionData.value || '';
                 const optionLabelName = `forms[${formIndex}][fields][${fieldIndex}][radio_options][${optionIndex}][label]`;
                 const optionValueName = `forms[${formIndex}][fields][${fieldIndex}][radio_options][${optionIndex}][value]`;
@@ -331,24 +356,23 @@
                 return `
                     <div class="multiple-choice-option-row mb-2" data-option-index="${optionIndex}">
                         <div class="row align-items-end">
-                            <div class="col-md-2">
+                            <div class="col-md-3">
                                 <div class="form-group mb-md-0">
-                                    <label>${buildRequiredLabel('Label')}</label>
+                                    <label>${buildRequiredLabel('Teks Opsi')}</label>
                                     <input type="text" class="${getInputClass(optionLabelName, 'form-control radio-option-label')}"
                                         name="${optionLabelName}"
                                         value="${escapeHtml(optionLabel)}"
-                                        maxlength="10"
                                         placeholder="A">
                                     ${buildInvalidFeedback(optionLabelName)}
                                 </div>
                             </div>
-                            <div class="col-md-9">
+                            <div class="col-md-8">
                                 <div class="form-group mb-md-0">
                                     <label>${buildRequiredLabel('Value')}</label>
                                     <input type="text" class="${getInputClass(optionValueName, 'form-control radio-option-value')}"
                                         name="${optionValueName}"
                                         value="${escapeHtml(optionValue)}"
-                                        placeholder="Contoh: Jawaban 1">
+                                        placeholder="Contoh: Mengenali faktor yang memengaruhi perilaku peserta didik">
                                     ${buildInvalidFeedback(optionValueName)}
                                 </div>
                             </div>
@@ -376,6 +400,7 @@
                 const opsiFieldTextName = `${fieldPrefix}[opsi_field_text]`;
                 const radioOptionsName = `${fieldPrefix}[radio_options]`;
                 const bantuanName = `${fieldPrefix}[bantuan]`;
+                const lebarKolomName = `${fieldPrefix}[lebar_kolom]`;
                 const fieldCardClass = joinClasses(
                     '',
                     'border',
@@ -504,7 +529,7 @@
                                 </div>
                                 ${buildInvalidFeedback(radioOptionsName, 'mt-2')}
                                 <small class="text-muted d-block mt-2">
-                                    Hasil akan ditampilkan seperti: A. Jawaban 1, B. Jawaban 2, dan seterusnya.
+                                    Isi teks opsi seperti jawaban yang dilihat user, lalu gunakan value untuk nilai atau kode jawaban.
                                 </small>
 
                             </div>
@@ -635,7 +660,7 @@
                 const fieldIndex = Number($fieldCard.data('field-index'));
                 const optionIndex = Number($fieldCard.attr('data-radio-option-counter') || 0);
                 const normalizedOption = {
-                    label: optionData.label || generateChoiceLabel(optionIndex),
+                    label: optionData.label || '',
                     value: optionData.value || '',
                 };
 
@@ -666,11 +691,7 @@
                     $optionRow.attr('data-option-index', optionIndex);
                     $labelInput
                         .attr('name', `forms[${formIndex}][fields][${fieldIndex}][radio_options][${optionIndex}][label]`)
-                        .attr('placeholder', generatedLabel);
-
-                    if (!$labelInput.val()?.trim()) {
-                        $labelInput.val(generatedLabel);
-                    }
+                        .attr('placeholder', `Contoh: Opsi ${generatedLabel}`);
 
                     $valueInput.attr(
                         'name',
@@ -691,7 +712,7 @@
 
                 for (let index = optionCount; index < minimum; index += 1) {
                     appendRadioOption($fieldCard, {
-                        label: generateChoiceLabel(index),
+                        label: '',
                         value: '',
                     });
                 }
@@ -742,13 +763,49 @@
                     .filter(Boolean);
             };
 
+            const collectFieldPayload = ($fieldCard, fieldIndex) => {
+                const fieldType = $fieldCard.find('select[name$="[tipe_field]"]').val() || 'text';
+
+                return {
+                    label: $fieldCard.find('input[name$="[label]"]').val()?.trim() || '',
+                    deskripsi: $fieldCard.find('textarea[name$="[deskripsi]"]').val()?.trim() || '',
+                    tipe_field: fieldType,
+                    placeholder: $fieldCard.find('input[name$="[placeholder]"]').val()?.trim() || '',
+                    bantuan: $fieldCard.find('textarea[name$="[bantuan]"]').val()?.trim() || '',
+                    opsi_field_text: textOptionFieldTypes.includes(fieldType) ?
+                        $fieldCard.find('textarea[name$="[opsi_field_text]"]').val()?.trim() || '' : null,
+                    radio_options: fieldType === multipleChoiceFieldType ? getMultipleChoiceOptions($fieldCard) : [],
+                    lebar_kolom: $fieldCard.find('select[name$="[lebar_kolom]"]').val() || 'col-md-12',
+                    urutan: Number($fieldCard.find('input[name$="[urutan]"]').val() || fieldIndex + 1),
+                    is_required: $fieldCard.find('input[name$="[is_required]"]').is(':checked'),
+                    is_active: $fieldCard.find('input[name$="[is_active]"]').is(':checked'),
+                };
+            };
+
+            const collectBuilderPayload = () => {
+                return $('.assessment-form-card').map(function(formIndex) {
+                    const $formCard = $(this);
+                    const fields = $formCard.find('.assessment-field-card').map(function(fieldIndex) {
+                        return collectFieldPayload($(this), fieldIndex);
+                    }).get();
+
+                    return {
+                        judul_form: $formCard.find('input[name$="[judul_form]"]').val()?.trim() || '',
+                        kode_form: $formCard.find('input[name$="[kode_form]"]').val()?.trim() || '',
+                        deskripsi: $formCard.find('.form-description-input').first().val()?.trim() || '',
+                        urutan: Number($formCard.find('input[name$="[urutan]"]').val() || formIndex + 1),
+                        is_active: $formCard.find('input[name$="[is_active]"]').first().is(':checked'),
+                        fields: fields,
+                    };
+                }).get();
+            };
+
             const getMultipleChoiceOptions = ($fieldCard) => {
-                return $fieldCard.find('.multiple-choice-option-row').map(function(optionIndex) {
+                return $fieldCard.find('.multiple-choice-option-row').map(function() {
                     const $optionRow = $(this);
 
                     return {
-                        label: ($optionRow.find('.radio-option-label').val()?.trim() || generateChoiceLabel(
-                            optionIndex)).toUpperCase(),
+                        label: $optionRow.find('.radio-option-label').val()?.trim() || '',
                         value: $optionRow.find('.radio-option-value').val()?.trim() || '',
                     };
                 }).get().filter((option) => option.label || option.value);
@@ -794,51 +851,33 @@
             };
 
             const getPreviewState = () => {
-                const forms = [];
+                const forms = collectBuilderPayload()
+                    .filter((form) => normalizeChecked(form.is_active))
+                    .map((form) => {
+                        const activeFields = (form.fields || [])
+                            .filter((field) => normalizeChecked(field.is_active))
+                            .map((field) => ({
+                                label: field.label || 'Field tanpa label',
+                                description: field.deskripsi || '',
+                                name: slugifyFieldName(field.label || ''),
+                                type: field.tipe_field || 'text',
+                                placeholder: field.placeholder || '',
+                                helpText: field.bantuan || '',
+                                options: field.tipe_field === multipleChoiceFieldType ?
+                                    (field.radio_options || []) :
+                                    parseOptionText(field.opsi_field_text),
+                                widthClass: field.lebar_kolom || 'col-md-12',
+                                required: normalizeChecked(field.is_required),
+                            }));
 
-                $('.assessment-form-card').each(function() {
-                    const $formCard = $(this);
-                    const isFormActive = $formCard.find('input[name$="[is_active]"]').first().is(':checked');
-
-                    if (!isFormActive) {
-                        return;
-                    }
-
-                    const formData = {
-                        title: $formCard.find('input[name$="[judul_form]"]').val()?.trim() ||
-                            'Child form tanpa judul',
-                        code: $formCard.find('input[name$="[kode_form]"]').val()?.trim() || '-',
-                        description: $formCard.find('.form-description-input').first().val()?.trim() || '',
-                        fields: [],
-                    };
-
-                    $formCard.find('.assessment-field-card').each(function() {
-                        const $fieldCard = $(this);
-                        const isFieldActive = $fieldCard.find('input[name$="[is_active]"]').is(':checked');
-
-                        if (!isFieldActive) {
-                            return;
-                        }
-
-                        formData.fields.push({
-                            label: $fieldCard.find('input[name$="[label]"]').val()?.trim() || 'Field tanpa label',
-                            description: $fieldCard.find('.field-description-input').val()?.trim() || '',
-                            name: slugifyFieldName($fieldCard.find('input[name$="[label]"]').val()?.trim() || ''),
-                            type: $fieldCard.find('select[name$="[tipe_field]"]').val() || 'text',
-                            placeholder: $fieldCard.find('input[name$="[placeholder]"]').val()?.trim() || '',
-                            helpText: $fieldCard.find('textarea[name$="[bantuan]"]').val()?.trim() || '',
-                            options: $fieldCard.find('select[name$="[tipe_field]"]').val() === multipleChoiceFieldType ?
-                                getMultipleChoiceOptions($fieldCard) :
-                                parseOptionText($fieldCard.find('textarea[name$="[opsi_field_text]"]').val()),
-                            widthClass: $fieldCard.find('select[name$="[lebar_kolom]"]').val() || 'col-md-6',
-                            required: $fieldCard.find('input[name$="[is_required]"]').is(':checked'),
-                        });
-                    });
-
-                    if (formData.fields.length) {
-                        forms.push(formData);
-                    }
-                });
+                        return {
+                            title: form.judul_form || 'Child form tanpa judul',
+                            code: form.kode_form || '-',
+                            description: form.deskripsi || '',
+                            fields: activeFields,
+                        };
+                    })
+                    .filter((form) => form.fields.length);
 
                 return {
                     title: $('input[name="judul"]').val()?.trim() || 'Judul assessment belum diisi',
@@ -874,14 +913,15 @@
                     `;
                 } else if (field.type === 'radio') {
                     const options = field.options.length ? field.options : [{
-                        label: 'A',
-                        value: 'Belum ada opsi'
+                        label: 'Belum ada opsi',
+                        value: ''
                     }];
 
                     inputHtml = options.map((option, index) => {
-                        const optionLabel = typeof option === 'object' ? (option.label || generateChoiceLabel(index)) :
-                            generateChoiceLabel(index);
-                        const optionValue = typeof option === 'object' ? (option.value || '') : option;
+                        const optionLabel = typeof option === 'object' ? (option.label || `Opsi ${generateChoiceLabel(index)}`) :
+                            option;
+                        const optionDescription = typeof option === 'object' && option.value && option.value !== option.label ?
+                            option.value : '';
                         const inputId = `${sanitizePreviewKey(previewKey)}-${index}`;
 
                         return `
@@ -891,8 +931,9 @@
                                     name="${sanitizePreviewKey(previewKey)}">
                                 <label class="custom-control-label"
                                     for="${inputId}">
-                                    ${escapeHtml(optionLabel)}. ${escapeHtml(optionValue)}
+                                    ${escapeHtml(optionLabel)}
                                 </label>
+                                ${optionDescription ? `<small class="form-text text-muted ml-4">${escapeHtml(optionDescription)}</small>` : ''}
                             </div>
                         `;
                     }).join('');
@@ -996,7 +1037,7 @@
                 data.forms.forEach((form, index) => {
                     const fieldsHtml = form.fields.map((field, fieldIndex) => {
                         return `
-                            <div class="${escapeHtml(field.widthClass || 'col-md-6')}">
+                            <div class="${escapeHtml(field.widthClass || 'col-md-12')}">
                                 ${renderPreviewFieldInput(field, `${form.code || form.title}-${field.name || fieldIndex}`)}
                             </div>
                         `;
@@ -1100,8 +1141,6 @@
             });
 
             $(document).on('input', '.radio-option-label', function() {
-                const sanitizedValue = $(this).val().toUpperCase().replace(/\s+/g, '');
-                $(this).val(sanitizedValue);
                 schedulePreviewRender();
             });
 
@@ -1134,6 +1173,11 @@
 
             $('#assessment-builder-form').on('input change', 'input, textarea, select', function() {
                 schedulePreviewRender();
+            });
+
+            $('#assessment-builder-form').on('submit', function() {
+                $('#forms-payload').val(JSON.stringify(collectBuilderPayload()));
+                $('#form-builder-list').find('input, textarea, select').prop('disabled', true);
             });
 
             if (Array.isArray(initialForms) && initialForms.length) {

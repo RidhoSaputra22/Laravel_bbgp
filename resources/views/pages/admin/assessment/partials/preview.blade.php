@@ -121,7 +121,7 @@
                             <div class="row">
                                 @foreach ($activeFields as $field)
                                     @php
-                                        $fieldWidth = $field->lebar_kolom ?: 'col-md-6';
+                                        $fieldWidth = $field->lebar_kolom ?: 'col-md-12';
                                         $fieldLabelId = 'preview-field-' . $form->id . '-' . $field->id;
                                     @endphp
                                     <div class="{{ $fieldWidth }}">
@@ -159,16 +159,23 @@
                                                 @case('radio')
                                                     @forelse ($field->opsi_field ?? [] as $option)
                                                         @php
-                                                            $optionLabel = is_array($option) && array_key_exists('label', $option) ? $option['label'] : $generateChoiceLabel($loop->index);
-                                                            $optionValue = is_array($option) && array_key_exists('value', $option) ? $option['value'] : (is_scalar($option) ? (string) $option : '');
+                                                            $optionLabel = is_array($option) && array_key_exists('label', $option)
+                                                                ? $option['label']
+                                                                : (is_scalar($option) ? (string) $option : $generateChoiceLabel($loop->index));
+                                                            $optionValue = is_array($option) && array_key_exists('value', $option)
+                                                                ? $option['value']
+                                                                : (is_scalar($option) ? (string) $option : '');
                                                             $optionId = $fieldLabelId . '-' . $loop->index;
                                                         @endphp
                                                         <div class="custom-control custom-radio mb-2">
                                                             <input type="radio" class="custom-control-input" id="{{ $optionId }}"
                                                                 name="{{ $field->nama_field }}" disabled>
                                                             <label class="custom-control-label" for="{{ $optionId }}">
-                                                                {{ $optionLabel }}. {{ $optionValue }}
+                                                                {{ $optionLabel }}
                                                             </label>
+                                                            @if ($optionValue !== '' && $optionValue !== $optionLabel)
+                                                                <small class="form-text text-muted ml-4">{{ $optionValue }}</small>
+                                                            @endif
                                                         </div>
                                                     @empty
                                                         <div class="text-muted">Belum ada opsi.</div>

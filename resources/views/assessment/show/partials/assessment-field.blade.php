@@ -15,7 +15,7 @@
     };
 @endphp
 
-<div class="mb-6 rounded-sm {{ $fieldError ? 'border-red-500/50 bg-red-50/50' : '' }}" data-assessment-field
+<div class="mb-6 rounded-sm " data-assessment-field
     data-field-id="{{ $field['id'] }}" data-field-type="{{ $fieldType }}" data-field-label="{{ $field['label'] }}"
     data-required="{{ $isRequired ? '1' : '0' }}">
     @switch($fieldType)
