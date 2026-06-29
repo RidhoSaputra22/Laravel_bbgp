@@ -16,7 +16,7 @@ return new class extends Migration
             ! Schema::hasColumn('assessment_form_fields', 'deskripsi')
         ) {
             Schema::table('assessment_form_fields', function (Blueprint $table) {
-                $table->text('deskripsi')->nullable()->after('label');
+                $table->text('deskripsi')->nullable();
             });
         }
     }

@@ -57,7 +57,6 @@ return new class extends Migration {
             Schema::table('assessment_assignments', function (Blueprint $table) {
                 $table->foreignId('assessment_id')
                     ->nullable()
-                    ->after('id')
                     ->constrained('assessments')
                     ->cascadeOnDelete();
                 $table->index(
@@ -87,9 +86,39 @@ return new class extends Migration {
                     self::ASSIGNMENT_ASSESSMENT_UNIQUE
                 );
             });
+        } else {
+            $this->addColumnIfMissing(
+                self::ASSIGNMENT_ASSESSMENT_TABLE,
+                'assessment_assignment_id',
+                fn (Blueprint $table) => $table->unsignedBigInteger('assessment_assignment_id')->nullable()
+            );
+            $this->addColumnIfMissing(
+                self::ASSIGNMENT_ASSESSMENT_TABLE,
+                'assessment_id',
+                fn (Blueprint $table) => $table->unsignedBigInteger('assessment_id')->nullable()
+            );
+            $this->addColumnIfMissing(
+                self::ASSIGNMENT_ASSESSMENT_TABLE,
+                'urutan',
+                fn (Blueprint $table) => $table->unsignedInteger('urutan')->default(1)
+            );
+            $this->addColumnIfMissing(
+                self::ASSIGNMENT_ASSESSMENT_TABLE,
+                'created_at',
+                fn (Blueprint $table) => $table->timestamp('created_at')->nullable()
+            );
+            $this->addColumnIfMissing(
+                self::ASSIGNMENT_ASSESSMENT_TABLE,
+                'updated_at',
+                fn (Blueprint $table) => $table->timestamp('updated_at')->nullable()
+            );
         }
 
-        if (!$this->foreignKeyExists(self::ASSIGNMENT_ASSESSMENT_TABLE, self::ASSIGNMENT_LINK_FOREIGN)) {
+        if (
+            Schema::hasTable('assessment_assignments') &&
+            Schema::hasColumn(self::ASSIGNMENT_ASSESSMENT_TABLE, 'assessment_assignment_id') &&
+            !$this->foreignKeyExists(self::ASSIGNMENT_ASSESSMENT_TABLE, self::ASSIGNMENT_LINK_FOREIGN)
+        ) {
             Schema::table(self::ASSIGNMENT_ASSESSMENT_TABLE, function (Blueprint $table) {
                 $table->foreign('assessment_assignment_id', self::ASSIGNMENT_LINK_FOREIGN)
                     ->references('id')
@@ -98,7 +127,11 @@ return new class extends Migration {
             });
         }
 
-        if (!$this->foreignKeyExists(self::ASSIGNMENT_ASSESSMENT_TABLE, self::ASSESSMENT_LINK_FOREIGN)) {
+        if (
+            Schema::hasTable('assessments') &&
+            Schema::hasColumn(self::ASSIGNMENT_ASSESSMENT_TABLE, 'assessment_id') &&
+            !$this->foreignKeyExists(self::ASSIGNMENT_ASSESSMENT_TABLE, self::ASSESSMENT_LINK_FOREIGN)
+        ) {
             Schema::table(self::ASSIGNMENT_ASSESSMENT_TABLE, function (Blueprint $table) {
                 $table->foreign('assessment_id', self::ASSESSMENT_LINK_FOREIGN)
                     ->references('id')
@@ -112,7 +145,15 @@ return new class extends Migration {
     {
         if (
             !Schema::hasTable(self::ASSIGNMENT_ASSESSMENT_TABLE) ||
-            !Schema::hasColumn('assessment_assignments', 'assessment_id')
+            !Schema::hasColumn('assessment_assignments', 'assessment_id') ||
+            ! $this->hasColumns('assessment_assignments', ['id', 'assessment_id', 'created_at', 'updated_at']) ||
+            ! $this->hasColumns(self::ASSIGNMENT_ASSESSMENT_TABLE, [
+                'assessment_assignment_id',
+                'assessment_id',
+                'urutan',
+                'created_at',
+                'updated_at',
+            ])
         ) {
             return;
         }
@@ -154,7 +195,9 @@ return new class extends Migration {
     {
         if (
             !Schema::hasTable(self::ASSIGNMENT_ASSESSMENT_TABLE) ||
-            !Schema::hasColumn('assessment_assignments', 'assessment_id')
+            !Schema::hasColumn('assessment_assignments', 'assessment_id') ||
+            ! $this->hasColumns(self::ASSIGNMENT_ASSESSMENT_TABLE, ['assessment_assignment_id', 'assessment_id']) ||
+            ! Schema::hasColumn('assessment_assignments', 'id')
         ) {
             return;
         }
@@ -225,5 +268,27 @@ return new class extends Migration {
             ->where('table_name', $table)
             ->where('index_name', $indexName)
             ->exists();
+    }
+
+    private function addColumnIfMissing(string $tableName, string $column, callable $definition): void
+    {
+        if (Schema::hasColumn($tableName, $column)) {
+            return;
+        }
+
+        Schema::table($tableName, function (Blueprint $table) use ($definition) {
+            $definition($table);
+        });
+    }
+
+    private function hasColumns(string $tableName, array $columns): bool
+    {
+        foreach ($columns as $column) {
+            if (! Schema::hasColumn($tableName, $column)) {
+                return false;
+            }
+        }
+
+        return true;
     }
 };

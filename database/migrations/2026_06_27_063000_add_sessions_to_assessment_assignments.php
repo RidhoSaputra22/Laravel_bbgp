@@ -19,19 +19,21 @@ return new class extends Migration
     public function up(): void
     {
         if (Schema::hasTable('assessment_assignments')) {
-            Schema::table('assessment_assignments', function (Blueprint $table) {
-                if (! Schema::hasColumn('assessment_assignments', 'kapasitas_per_sesi')) {
-                    $table->unsignedInteger('kapasitas_per_sesi')->default(self::DEFAULT_TARGETS_PER_SESSION)->after('tanggal_selesai');
-                }
-
-                if (! Schema::hasColumn('assessment_assignments', 'durasi_sesi_jam')) {
-                    $table->unsignedSmallInteger('durasi_sesi_jam')->default(self::DEFAULT_DURATION_HOURS)->after('kapasitas_per_sesi');
-                }
-
-                if (! Schema::hasColumn('assessment_assignments', 'total_sesi')) {
-                    $table->unsignedInteger('total_sesi')->default(0)->after('durasi_sesi_jam');
-                }
-            });
+            $this->addColumnIfMissing(
+                'assessment_assignments',
+                'kapasitas_per_sesi',
+                fn (Blueprint $table) => $table->unsignedInteger('kapasitas_per_sesi')->default(self::DEFAULT_TARGETS_PER_SESSION)
+            );
+            $this->addColumnIfMissing(
+                'assessment_assignments',
+                'durasi_sesi_jam',
+                fn (Blueprint $table) => $table->unsignedSmallInteger('durasi_sesi_jam')->default(self::DEFAULT_DURATION_HOURS)
+            );
+            $this->addColumnIfMissing(
+                'assessment_assignments',
+                'total_sesi',
+                fn (Blueprint $table) => $table->unsignedInteger('total_sesi')->default(0)
+            );
         }
 
         if (! Schema::hasTable('assessment_assignment_sessions')) {
@@ -50,20 +52,60 @@ return new class extends Migration
                     'assessment_assignment_sessions_unique'
                 );
             });
+        } else {
+            $this->addColumnIfMissing(
+                'assessment_assignment_sessions',
+                'assessment_assignment_id',
+                fn (Blueprint $table) => $table->unsignedBigInteger('assessment_assignment_id')->nullable()
+            );
+            $this->addColumnIfMissing(
+                'assessment_assignment_sessions',
+                'nomor_sesi',
+                fn (Blueprint $table) => $table->unsignedInteger('nomor_sesi')->default(1)
+            );
+            $this->addColumnIfMissing(
+                'assessment_assignment_sessions',
+                'label_sesi',
+                fn (Blueprint $table) => $table->string('label_sesi')->nullable()
+            );
+            $this->addColumnIfMissing(
+                'assessment_assignment_sessions',
+                'kapasitas_peserta',
+                fn (Blueprint $table) => $table->unsignedInteger('kapasitas_peserta')->default(self::DEFAULT_TARGETS_PER_SESSION)
+            );
+            $this->addColumnIfMissing(
+                'assessment_assignment_sessions',
+                'total_peserta',
+                fn (Blueprint $table) => $table->unsignedInteger('total_peserta')->default(0)
+            );
+            $this->addColumnIfMissing(
+                'assessment_assignment_sessions',
+                'durasi_sesi_jam',
+                fn (Blueprint $table) => $table->unsignedSmallInteger('durasi_sesi_jam')->default(self::DEFAULT_DURATION_HOURS)
+            );
+            $this->addColumnIfMissing(
+                'assessment_assignment_sessions',
+                'created_at',
+                fn (Blueprint $table) => $table->timestamp('created_at')->nullable()
+            );
+            $this->addColumnIfMissing(
+                'assessment_assignment_sessions',
+                'updated_at',
+                fn (Blueprint $table) => $table->timestamp('updated_at')->nullable()
+            );
         }
 
         if (Schema::hasTable('assessment_assignment_targets')) {
             if (! Schema::hasColumn('assessment_assignment_targets', 'assessment_assignment_session_id')) {
                 Schema::table('assessment_assignment_targets', function (Blueprint $table) {
-                    $table->unsignedBigInteger('assessment_assignment_session_id')
-                        ->nullable()
-                        ->after('assessment_assignment_id');
+                    $table->unsignedBigInteger('assessment_assignment_session_id')->nullable();
                 });
             }
 
             if (
                 Schema::hasTable('assessment_assignment_sessions') &&
                 Schema::hasColumn('assessment_assignment_targets', 'assessment_assignment_session_id') &&
+                Schema::hasColumn('assessment_assignment_sessions', 'id') &&
                 ! $this->foreignKeyExists('assessment_assignment_targets', self::TARGET_SESSION_FOREIGN_KEY)
             ) {
                 Schema::table('assessment_assignment_targets', function (Blueprint $table) {
@@ -124,7 +166,25 @@ return new class extends Migration
         if (
             ! Schema::hasTable('assessment_assignments') ||
             ! Schema::hasTable('assessment_assignment_sessions') ||
-            ! Schema::hasTable('assessment_assignment_targets')
+            ! Schema::hasTable('assessment_assignment_targets') ||
+            ! $this->hasColumns('assessment_assignments', ['id', 'total_target', 'updated_at']) ||
+            ! $this->hasColumns('assessment_assignment_sessions', [
+                'id',
+                'assessment_assignment_id',
+                'nomor_sesi',
+                'label_sesi',
+                'kapasitas_peserta',
+                'total_peserta',
+                'durasi_sesi_jam',
+                'created_at',
+                'updated_at',
+            ]) ||
+            ! $this->hasColumns('assessment_assignment_targets', [
+                'id',
+                'assessment_assignment_id',
+                'assessment_assignment_session_id',
+                'updated_at',
+            ])
         ) {
             return;
         }
@@ -224,5 +284,27 @@ return new class extends Migration
             ->where('constraint_name', $constraintName)
             ->where('constraint_type', 'FOREIGN KEY')
             ->exists();
+    }
+
+    private function addColumnIfMissing(string $tableName, string $column, callable $definition): void
+    {
+        if (Schema::hasColumn($tableName, $column)) {
+            return;
+        }
+
+        Schema::table($tableName, function (Blueprint $table) use ($definition) {
+            $definition($table);
+        });
+    }
+
+    private function hasColumns(string $tableName, array $columns): bool
+    {
+        foreach ($columns as $column) {
+            if (! Schema::hasColumn($tableName, $column)) {
+                return false;
+            }
+        }
+
+        return true;
     }
 };

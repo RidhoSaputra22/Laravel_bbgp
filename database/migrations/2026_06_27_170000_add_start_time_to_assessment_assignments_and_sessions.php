@@ -14,23 +14,24 @@ return new class extends Migration
     public function up(): void
     {
         if (Schema::hasTable('assessment_assignments')) {
-            Schema::table('assessment_assignments', function (Blueprint $table) {
-                if (! Schema::hasColumn('assessment_assignments', 'jam_mulai')) {
-                    $table->time('jam_mulai')->nullable()->after('tanggal_mulai');
-                }
-            });
+            $this->addColumnIfMissing(
+                'assessment_assignments',
+                'jam_mulai',
+                fn (Blueprint $table) => $table->time('jam_mulai')->nullable()
+            );
         }
 
         if (Schema::hasTable('assessment_assignment_sessions')) {
-            Schema::table('assessment_assignment_sessions', function (Blueprint $table) {
-                if (! Schema::hasColumn('assessment_assignment_sessions', 'waktu_mulai')) {
-                    $table->dateTime('waktu_mulai')->nullable()->after('label_sesi');
-                }
-
-                if (! Schema::hasColumn('assessment_assignment_sessions', 'waktu_selesai')) {
-                    $table->dateTime('waktu_selesai')->nullable()->after('waktu_mulai');
-                }
-            });
+            $this->addColumnIfMissing(
+                'assessment_assignment_sessions',
+                'waktu_mulai',
+                fn (Blueprint $table) => $table->dateTime('waktu_mulai')->nullable()
+            );
+            $this->addColumnIfMissing(
+                'assessment_assignment_sessions',
+                'waktu_selesai',
+                fn (Blueprint $table) => $table->dateTime('waktu_selesai')->nullable()
+            );
         }
 
         $this->backfillSessionSchedules();
@@ -69,7 +70,11 @@ return new class extends Migration
         if (
             ! Schema::hasTable('assessment_assignments') ||
             ! Schema::hasTable('assessment_assignment_sessions') ||
+            ! Schema::hasColumn('assessment_assignments', 'tanggal_mulai') ||
             ! Schema::hasColumn('assessment_assignments', 'jam_mulai') ||
+            ! Schema::hasColumn('assessment_assignment_sessions', 'assessment_assignment_id') ||
+            ! Schema::hasColumn('assessment_assignment_sessions', 'nomor_sesi') ||
+            ! Schema::hasColumn('assessment_assignment_sessions', 'durasi_sesi_jam') ||
             ! Schema::hasColumn('assessment_assignment_sessions', 'waktu_mulai') ||
             ! Schema::hasColumn('assessment_assignment_sessions', 'waktu_selesai')
         ) {
@@ -117,5 +122,16 @@ return new class extends Migration
                 $currentStartAt = $sessionEndAt;
             }
         }
+    }
+
+    private function addColumnIfMissing(string $tableName, string $column, callable $definition): void
+    {
+        if (Schema::hasColumn($tableName, $column)) {
+            return;
+        }
+
+        Schema::table($tableName, function (Blueprint $table) use ($definition) {
+            $definition($table);
+        });
     }
 };
