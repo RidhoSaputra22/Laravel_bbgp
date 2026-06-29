@@ -16,55 +16,55 @@ return new class extends Migration
     {
         if (Schema::hasTable('assessments') && ! Schema::hasColumn('assessments', 'instrument_type')) {
             Schema::table('assessments', function (Blueprint $table) {
-                $table->string('instrument_type')->nullable()->after('petunjuk');
+                $table->string('instrument_type')->nullable();
             });
         }
 
         if (Schema::hasTable('assessment_forms') && ! Schema::hasColumn('assessment_forms', 'kompetensi')) {
             Schema::table('assessment_forms', function (Blueprint $table) {
-                $table->string('kompetensi')->nullable()->after('deskripsi');
+                $table->string('kompetensi')->nullable();
             });
         }
 
         if (Schema::hasTable('assessment_forms') && ! Schema::hasColumn('assessment_forms', 'indikator_kode')) {
             Schema::table('assessment_forms', function (Blueprint $table) {
-                $table->string('indikator_kode')->nullable()->after('kompetensi');
+                $table->string('indikator_kode')->nullable();
             });
         }
 
         if (Schema::hasTable('assessment_forms') && ! Schema::hasColumn('assessment_forms', 'indikator_label')) {
             Schema::table('assessment_forms', function (Blueprint $table) {
-                $table->string('indikator_label')->nullable()->after('indikator_kode');
+                $table->string('indikator_label')->nullable();
             });
         }
 
         if (Schema::hasTable('assessment_forms') && ! Schema::hasColumn('assessment_forms', 'is_scoreable')) {
             Schema::table('assessment_forms', function (Blueprint $table) {
-                $table->boolean('is_scoreable')->default(true)->after('indikator_label');
+                $table->boolean('is_scoreable')->default(true);
             });
         }
 
         if (Schema::hasTable('assessment_attempts') && ! Schema::hasColumn('assessment_attempts', 'scoring_summary')) {
             Schema::table('assessment_attempts', function (Blueprint $table) {
-                $table->json('scoring_summary')->nullable()->after('result_summary');
+                $table->json('scoring_summary')->nullable();
             });
         }
 
         if (Schema::hasTable('assessment_attempt_answers') && ! Schema::hasColumn('assessment_attempt_answers', 'assessor_score')) {
             Schema::table('assessment_attempt_answers', function (Blueprint $table) {
-                $table->unsignedTinyInteger('assessor_score')->nullable()->after('answer_payload');
+                $table->unsignedTinyInteger('assessor_score')->nullable();
             });
         }
 
         if (Schema::hasTable('assessment_attempt_answers') && ! Schema::hasColumn('assessment_attempt_answers', 'assessor_notes')) {
             Schema::table('assessment_attempt_answers', function (Blueprint $table) {
-                $table->text('assessor_notes')->nullable()->after('assessor_score');
+                $table->text('assessor_notes')->nullable();
             });
         }
 
         if (Schema::hasTable('assessment_attempt_answers') && ! Schema::hasColumn('assessment_attempt_answers', 'assessor_user_id')) {
             Schema::table('assessment_attempt_answers', function (Blueprint $table) {
-                $table->unsignedBigInteger('assessor_user_id')->nullable()->after('assessor_notes');
+                $table->unsignedBigInteger('assessor_user_id')->nullable();
             });
         }
 
@@ -84,7 +84,7 @@ return new class extends Migration
 
         if (Schema::hasTable('assessment_attempt_answers') && ! Schema::hasColumn('assessment_attempt_answers', 'assessor_scored_at')) {
             Schema::table('assessment_attempt_answers', function (Blueprint $table) {
-                $table->timestamp('assessor_scored_at')->nullable()->after('assessor_user_id');
+                $table->timestamp('assessor_scored_at')->nullable();
             });
         }
     }
