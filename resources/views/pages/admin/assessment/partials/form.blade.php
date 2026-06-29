@@ -5,23 +5,24 @@
     $teacherCompetencies = \App\Enum\KompetensiGuru::options();
     $fieldTypeBadges = $fieldTypes ?? [];
     $validationErrors = $errors->getMessages();
+    $scoringGuidancePreset = \App\Support\Assessment\ScoringGuidanceAssistant::clientPreset();
     $formScoringProfiles = [
-        'generic' => 'Generik',
+        'generic' => 'Umum',
         'portofolio' => 'Portofolio',
-        'study_case_default' => 'Studi Kasus Default',
+        'study_case_default' => 'Studi Kasus',
         'pilihan_ganda_kompleks' => 'Pilihan Ganda Kompleks',
     ];
     $fieldScoringMethods = [
-        'presence' => 'Skor saat jawaban terisi',
-        'choice_option_score' => 'Skor per opsi',
-        'choice_option_average' => 'Rata-rata skor opsi',
-        'choice_option_sum' => 'Jumlah skor opsi',
-        'choice_option_max' => 'Skor opsi tertinggi',
-        'numeric_threshold' => 'Ambang angka',
-        'numeric_range' => 'Rentang angka ideal',
-        'semantic_similarity' => 'Kemiripan makna / NLP',
-        'keyword_coverage' => 'Cakupan kata kunci',
-        'repeater_completeness' => 'Kelengkapan tabel',
+        'presence' => 'Nilai saat ada jawaban',
+        'choice_option_score' => 'Ambil dari skor opsi',
+        'choice_option_average' => 'Rata-rata opsi terpilih',
+        'choice_option_sum' => 'Jumlahkan skor opsi',
+        'choice_option_max' => 'Ambil skor opsi tertinggi',
+        'numeric_threshold' => 'Nilai berdasarkan target angka',
+        'numeric_range' => 'Nilai berdasarkan rentang ideal',
+        'semantic_similarity' => 'Analisis isi jawaban',
+        'keyword_coverage' => 'Cek kata kunci penting',
+        'repeater_completeness' => 'Cek kelengkapan tabel',
     ];
 @endphp
 
@@ -99,6 +100,55 @@
         .assessment-field-card textarea.form-control {
             height: 140px !important;
             min-height: 140px !important;
+        }
+
+        .scoring-main-note {
+            background: #f8fbff;
+            border: 1px solid #dbe8fb;
+            border-radius: 0.5rem;
+            color: #2d4369;
+            font-size: 0.92rem;
+            padding: 0.85rem 1rem;
+        }
+
+        .scoring-default-summary {
+            background: #fcfcfd;
+            border: 1px dashed #d7dce5;
+            border-radius: 0.5rem;
+            padding: 0.85rem 1rem;
+        }
+
+        .scoring-summary-pill {
+            background: #eef3ff;
+            border-radius: 999px;
+            color: #34539d;
+            display: inline-flex;
+            font-size: 0.78rem;
+            font-weight: 600;
+            margin: 0 0.4rem 0.4rem 0;
+            padding: 0.28rem 0.7rem;
+        }
+
+        .scoring-advanced-panel {
+            background: #fbfcfe;
+            border: 1px dashed #d7dce5;
+            border-radius: 0.5rem;
+            margin-top: 1rem;
+            padding: 1rem;
+        }
+
+        .scoring-helper-status {
+            color: #5f6b7a;
+            display: block;
+            min-height: 1.15rem;
+        }
+
+        .scoring-assist-actions {
+            align-items: center;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            justify-content: space-between;
         }
     </style>
 @endpush
@@ -219,7 +269,8 @@
                     <li>Pilih <strong>jenis instrumen</strong> di level assessment, lalu atur <strong>kompetensi</strong>, <strong>indikator</strong>, dan status <strong>masuk penilaian</strong> di setiap form.</li>
                     <li>Untuk field <strong>Daftar Pilihan</strong> dan <strong>Kotak Centang</strong>, pisahkan opsi dengan koma atau baris baru.</li>
                     <li>Untuk field <strong>Pilihan Ganda</strong>, isi <strong>kode jawaban</strong>, <strong>isi jawaban</strong>, dan <strong>level kompetensi</strong> pada setiap opsi.</li>
-                    <li>Gunakan panel <strong>Pengaturan Skor Otomatis</strong> di setiap form dan field untuk menentukan metode penilaian, bobot, ambang angka, kata kunci, atau jawaban rujukan.</li>
+                    <li>Pada panel <strong>Pengaturan Skor Otomatis</strong>, isi dulu bagian utama seperti <strong>pedoman penilaian</strong> atau <strong>target angka</strong>. Pengaturan lanjutan bisa dibiarkan otomatis jika tidak diperlukan.</li>
+                    <li>Untuk pertanyaan teks atau tabel, Anda bisa memakai tombol bantuan otomatis agar sistem menyiapkan <strong>kata kunci</strong>, <strong>padanan kata</strong>, dan <strong>saran panjang jawaban</strong> dari deskripsi yang sudah Anda tulis.</li>
                     <li>Untuk field <strong>Tabel Berulang</strong>, isi konfigurasi JSON kolom tabel sesuai contoh yang tersedia.</li>
                     <li>Nama field akan dibuat otomatis dari label yang Anda isi.</li>
                     <li>Aktifkan hanya form dan field yang ingin ditampilkan ke pengguna.</li>
@@ -263,6 +314,7 @@
             const teacherCompetencies = @json($teacherCompetencies);
             const formScoringProfiles = @json($formScoringProfiles);
             const fieldScoringMethods = @json($fieldScoringMethods);
+            const scoringGuidancePreset = @json($scoringGuidancePreset);
             const initialForms = @json($builderSeed);
             const validationErrors = @json($validationErrors);
             const textOptionFieldTypes = ['select', 'checkbox'];
@@ -457,6 +509,312 @@
                     max_score: config?.max_score ?? '',
                     advanced_rules_text: String(config?.advanced_rules_text || '').trim(),
                 };
+            };
+
+            const scoringStopWords = new Set(scoringGuidancePreset?.stop_words || []);
+            const scoringSynonymLibrary = scoringGuidancePreset?.synonym_library || {};
+            const scoringPhraseLibrary = scoringGuidancePreset?.phrase_library || {};
+            const scoringSynonymReverseMap = Object.entries(scoringSynonymLibrary).reduce((carry, [baseWord, variants]) => {
+                const normalizedBaseWord = String(baseWord || '').trim().toLowerCase();
+
+                if (normalizedBaseWord) {
+                    carry[normalizedBaseWord] = normalizedBaseWord;
+                }
+
+                (variants || []).forEach((variant) => {
+                    const normalizedVariant = String(variant || '').trim().toLowerCase();
+
+                    if (normalizedVariant) {
+                        carry[normalizedVariant] = normalizedBaseWord;
+                    }
+                });
+
+                return carry;
+            }, {});
+
+            const normalizeScoringText = (value) => {
+                const rawValue = String(value || '').toLowerCase();
+
+                try {
+                    return rawValue
+                        .normalize('NFD')
+                        .replace(/[\u0300-\u036f]/g, '');
+                } catch (error) {
+                    return rawValue;
+                }
+            };
+
+            const sanitizeScoringWords = (value) => normalizeScoringText(value)
+                .replace(/[^a-z0-9\s]+/g, ' ')
+                .replace(/\s+/g, ' ')
+                .trim();
+
+            const isMeaningfulScoringWord = (word) => {
+                return Boolean(word) && word.length >= 4 && !scoringStopWords.has(word);
+            };
+
+            const resolveDefaultMinWords = (fieldType) => {
+                if (fieldType === 'textarea') {
+                    return 40;
+                }
+
+                if (fieldType === 'text') {
+                    return 8;
+                }
+
+                return 0;
+            };
+
+            const formatScoringNumber = (value, fallback = '') => {
+                if (value === null || value === undefined || value === '') {
+                    return fallback;
+                }
+
+                return String(value);
+            };
+
+            const extractCuratedScoringTerms = (text) => {
+                const normalizedText = sanitizeScoringWords(text);
+
+                return Object.keys(scoringPhraseLibrary).filter((phrase) => normalizedText.includes(phrase));
+            };
+
+            const extractAdjacentScoringTerms = (text) => {
+                const tokens = sanitizeScoringWords(text).split(/\s+/).filter(Boolean);
+                const phrases = [];
+
+                for (let index = 0; index < tokens.length - 1; index += 1) {
+                    const first = tokens[index];
+                    const second = tokens[index + 1];
+
+                    if (!isMeaningfulScoringWord(first) || !isMeaningfulScoringWord(second)) {
+                        continue;
+                    }
+
+                    const phrase = `${first} ${second}`;
+
+                    if (!phrases.includes(phrase)) {
+                        phrases.push(phrase);
+                    }
+                }
+
+                return phrases.slice(0, 4);
+            };
+
+            const extractImportantScoringWords = (text) => {
+                const words = sanitizeScoringWords(text).split(/\s+/).filter(Boolean);
+                const uniqueWords = [];
+
+                words.forEach((word) => {
+                    if (!isMeaningfulScoringWord(word) || uniqueWords.includes(word)) {
+                        return;
+                    }
+
+                    uniqueWords.push(word);
+                });
+
+                return uniqueWords.slice(0, 8);
+            };
+
+            const buildKeywordGroupFromTerm = (term) => {
+                const normalizedTerm = sanitizeScoringWords(term);
+
+                if (!normalizedTerm) {
+                    return [];
+                }
+
+                if (Object.prototype.hasOwnProperty.call(scoringPhraseLibrary, normalizedTerm)) {
+                    return [normalizedTerm, ...(scoringPhraseLibrary[normalizedTerm] || [])]
+                        .map((item) => String(item || '').trim())
+                        .filter(Boolean);
+                }
+
+                const baseWord = scoringSynonymReverseMap[normalizedTerm] || normalizedTerm;
+                const variants = scoringSynonymLibrary[baseWord] || [];
+
+                return [baseWord, ...variants]
+                    .map((item) => String(item || '').trim())
+                    .filter(Boolean)
+                    .filter((item, index, allItems) => allItems.indexOf(item) === index);
+            };
+
+            const estimateScoringMinWords = (text, fieldType) => {
+                const wordCount = Math.max(sanitizeScoringWords(text).split(/\s+/).filter(Boolean).length, 1);
+                const baseline = fieldType === 'textarea' ? 18 : (fieldType === repeaterFieldType ? 12 : (fieldType === 'text' ? 8 : 5));
+                const ratio = fieldType === 'textarea' ? 0.45 : (fieldType === repeaterFieldType ? 0.30 : (fieldType === 'text' ? 0.35 : 0.25));
+
+                return Math.max(baseline, Math.min(Math.round(wordCount * ratio), 60));
+            };
+
+            const buildScoringGuidanceSuggestion = (sourceText, fieldType = 'text', context = {}) => {
+                const mergedTerms = [
+                    ...extractCuratedScoringTerms(sourceText),
+                    ...extractAdjacentScoringTerms(sourceText),
+                    ...extractImportantScoringWords(sourceText),
+                ].filter(Boolean).filter((term, index, allTerms) => allTerms.indexOf(term) === index).slice(0, 6);
+                const keywordGroups = mergedTerms
+                    .map((term) => buildKeywordGroupFromTerm(term))
+                    .filter((group) => group.length);
+                const synonymLines = keywordGroups
+                    .filter((group) => group.length > 1)
+                    .slice(0, 4)
+                    .map((group) => `${group[0]}: ${group.slice(1).join(', ')}`);
+                const signalKeywords = keywordGroups
+                    .map((group) => group[0])
+                    .filter(Boolean)
+                    .slice(0, 5);
+                const advancedRules = {};
+
+                if (signalKeywords.length) {
+                    advancedRules.signal_keywords = signalKeywords;
+                }
+
+                if (fieldType === repeaterFieldType) {
+                    advancedRules.target_rows = Math.max(Number(context?.target_rows || 1), 1);
+                }
+
+                return {
+                    keyword_groups_text: keywordGroups.length ? keywordGroups.map((group) => group.join(' | ')).join('\n') : '',
+                    synonym_map_text: synonymLines.join('\n'),
+                    min_words: estimateScoringMinWords(sourceText, fieldType),
+                    advanced_rules_text: Object.keys(advancedRules).length ? JSON.stringify(advancedRules, null, 2) : '',
+                };
+            };
+
+            const resolveScoringGuidanceSource = ($fieldCard) => {
+                return [
+                    $fieldCard.find('textarea[name$="[scoring][reference_answer]"]').val()?.trim() || '',
+                    $fieldCard.find('textarea[name$="[deskripsi]"]').val()?.trim() || '',
+                    $fieldCard.find('textarea[name$="[bantuan]"]').val()?.trim() || '',
+                ].filter(Boolean).join('\n');
+            };
+
+            const updateScoringAssistantStatus = ($fieldCard, message = '') => {
+                $fieldCard.find('.scoring-helper-status').text(message);
+            };
+
+            const supportsScoringAssistant = (fieldType, method) => {
+                return (
+                    ['text', 'textarea'].includes(fieldType)
+                    && ['semantic_similarity', 'keyword_coverage'].includes(method)
+                ) || (fieldType === repeaterFieldType && method === 'repeater_completeness');
+            };
+
+            const applyScoringGuidanceSuggestion = ($fieldCard, options = {}) => {
+                const fieldType = $fieldCard.find('.field-type-select').val() || 'text';
+                const method = $fieldCard.find('.field-scoring-method').val() || resolveDefaultScoringMethod(fieldType);
+
+                if (!supportsScoringAssistant(fieldType, method)) {
+                    return false;
+                }
+
+                if (options.copyDescriptionToReference) {
+                    const currentReference = $fieldCard.find('textarea[name$="[scoring][reference_answer]"]').val()?.trim() || '';
+                    const descriptionText = $fieldCard.find('textarea[name$="[deskripsi]"]').val()?.trim() || '';
+
+                    if (!currentReference && descriptionText) {
+                        $fieldCard.find('textarea[name$="[scoring][reference_answer]"]').val(descriptionText);
+                    }
+                }
+
+                const sourceText = resolveScoringGuidanceSource($fieldCard);
+
+                if (!sourceText) {
+                    updateScoringAssistantStatus($fieldCard, 'Belum ada deskripsi atau pedoman yang bisa diolah.');
+                    return false;
+                }
+
+                const repeaterConfig = fieldType === repeaterFieldType
+                    ? parseRepeaterConfig($fieldCard.find('textarea[name$="[repeater_config_text]"]').val()?.trim() || '')
+                    : null;
+                const suggestion = buildScoringGuidanceSuggestion(sourceText, fieldType, {
+                    target_rows: repeaterConfig?.min_rows || 1,
+                });
+                const shouldForce = Boolean(options.force);
+                const fillIfNeeded = (selector, value) => {
+                    const $input = $fieldCard.find(selector);
+
+                    if (!value || !$input.length) {
+                        return;
+                    }
+
+                    if (shouldForce || !String($input.val() || '').trim()) {
+                        $input.val(value);
+                    }
+                };
+
+                fillIfNeeded('textarea[name$="[scoring][keyword_groups_text]"]', suggestion.keyword_groups_text);
+                fillIfNeeded('textarea[name$="[scoring][synonym_map_text]"]', suggestion.synonym_map_text);
+                fillIfNeeded('input[name$="[scoring][min_words]"]', suggestion.min_words);
+                fillIfNeeded('textarea[name$="[scoring][advanced_rules_text]"]', suggestion.advanced_rules_text);
+
+                updateScoringAssistantStatus(
+                    $fieldCard,
+                    shouldForce
+                    ? 'Bantuan otomatis diperbarui. Hasilnya masih bisa disesuaikan.'
+                    : 'Saran default disiapkan dari deskripsi dan pedoman yang ada.'
+                );
+
+                return true;
+            };
+
+            const resolveScoringSummaryMessage = (fieldType, method) => {
+                if (method === 'presence') {
+                    return 'Cocok untuk field yang cukup dicek keberadaan jawabannya, seperti unggah file, tanggal, atau isian singkat.';
+                }
+
+                if (fieldType === 'number') {
+                    return 'Isi batas angka minimum, target, dan maksimum. Sistem akan mengubahnya menjadi nilai secara otomatis.';
+                }
+
+                if (fieldType === repeaterFieldType) {
+                    return 'Tuliskan gambaran isi tabel yang baik. Sistem akan menilai kelengkapan baris, kolom wajib, dan mutu isi tabel.';
+                }
+
+                if (['text', 'textarea'].includes(fieldType) && method === 'keyword_coverage') {
+                    return 'Fokuskan pada kata kunci utama yang wajib muncul dalam jawaban peserta.';
+                }
+
+                if (['text', 'textarea'].includes(fieldType)) {
+                    return 'Tuliskan pedoman jawaban dengan bahasa sehari-hari. Sistem akan membaca makna jawaban dan mencocokkannya.';
+                }
+
+                if (['radio', 'select', 'checkbox'].includes(fieldType)) {
+                    return 'Nilai utama diambil dari skor pada setiap opsi jawaban yang Anda isi di bagian atas.';
+                }
+
+                return 'Sistem akan memakai aturan nilai yang paling sesuai dengan tipe pertanyaan ini.';
+            };
+
+            const buildScoringSummaryHtml = ($fieldCard, fieldType, method) => {
+                const scaleMin = $fieldCard.find('input[name$="[scoring][scale_min]"]').val()?.trim() || '1';
+                const scaleMax = $fieldCard.find('input[name$="[scoring][scale_max]"]').val()?.trim() || '5';
+                const minWords = $fieldCard.find('input[name$="[scoring][min_words]"]').val()?.trim() || resolveDefaultMinWords(fieldType);
+                const confidence = $fieldCard.find('input[name$="[scoring][confidence_threshold]"]').val()?.trim() || '0.55';
+                const manualReview = $fieldCard.find('input[name$="[scoring][manual_review_below_confidence]"]').is(':checked')
+                    ? 'review manual aktif'
+                    : 'review manual mati';
+                const summaryPills = [
+                    `Cara nilai: ${fieldScoringMethods[method] || method}`,
+                    `Skala: ${formatScoringNumber(scaleMin)}-${formatScoringNumber(scaleMax)}`,
+                ];
+
+                if (supportsScoringAssistant(fieldType, method)) {
+                    summaryPills.push(`Saran minimal kata: ${minWords}`);
+                    summaryPills.push(`Ambang keyakinan: ${confidence}`);
+                }
+
+                if (['radio', 'select', 'checkbox'].includes(fieldType) && method !== 'presence') {
+                    summaryPills.push('Skor mengikuti opsi jawaban');
+                }
+
+                if (fieldType === 'number' && method !== 'presence') {
+                    summaryPills.push('Nilai mengikuti target angka');
+                }
+
+                summaryPills.push(manualReview);
+
+                return summaryPills.map((pill) => `<span class="scoring-summary-pill">${escapeHtml(pill)}</span>`).join('');
             };
 
             const generateChoiceLabel = (index) => {
@@ -905,101 +1263,81 @@
                                     </div>
                                 </div>
                                 <div class="card-body scoring-config-body">
+                                    <div class="scoring-main-note mb-3 scoring-main-guidance">
+                                        Isi bagian utama terlebih dahulu. Jika belum ada kebutuhan khusus, sistem akan memakai aturan default yang aman.
+                                    </div>
+
                                     <div class="row">
-                                        <div class="col-md-3">
+                                        <div class="col-md-7">
                                             <div class="form-group">
-                                                <label>Profil</label>
-                                                <select class="${getInputClass(scoringProfileName)} form-control field-scoring-profile"
-                                                    name="${scoringProfileName}">
-                                                    ${buildFormScoringProfileOptions(scoringData.profile)}
-                                                </select>
-                                                ${buildInvalidFeedback(scoringProfileName)}
-                                            </div>
-                                        </div>
-                                        <div class="col-md-3">
-                                            <div class="form-group">
-                                                <label>Metode Skor</label>
+                                                <label>Cara Sistem Menilai</label>
                                                 <select class="${getInputClass(scoringMethodName)} form-control field-scoring-method"
                                                     name="${scoringMethodName}">
                                                     ${buildFieldScoringMethodOptions(fieldType, scoringData.method)}
                                                 </select>
                                                 ${buildInvalidFeedback(scoringMethodName)}
+                                                <small class="text-muted d-block mt-2">
+                                                    Biasanya sudah sesuai otomatis dengan tipe pertanyaan. Ubah hanya jika diperlukan.
+                                                </small>
                                             </div>
                                         </div>
-                                        <div class="col-md-3">
+                                        <div class="col-md-5">
                                             <div class="form-group">
-                                                <label>Kode Rubrik</label>
-                                                <input type="text" class="${getInputClass(scoringRubricCodeName)}"
-                                                    name="${scoringRubricCodeName}"
-                                                    value="${escapeHtml(scoringData.rubric_code)}"
-                                                    placeholder="Contoh: P2 / K1">
-                                                ${buildInvalidFeedback(scoringRubricCodeName)}
-                                            </div>
-                                        </div>
-                                        <div class="col-md-3">
-                                            <div class="form-group">
-                                                <label>Bobot Field</label>
+                                                <label>Bobot Nilai Pertanyaan <span class="text-muted">(opsional)</span></label>
                                                 <input type="number" min="0" step="0.01" class="${getInputClass(scoringWeightName)}"
                                                     name="${scoringWeightName}"
                                                     value="${escapeHtml(scoringData.weight)}"
-                                                    placeholder="Contoh: 20">
+                                                    placeholder="Kosongkan jika bobot sama dengan pertanyaan lain">
                                                 ${buildInvalidFeedback(scoringWeightName)}
                                             </div>
                                         </div>
                                     </div>
 
-                                    <div class="row">
-                                        <div class="col-md-4">
-                                            <div class="form-group">
-                                                <label>Skor Jika Terisi</label>
-                                                <input type="number" min="0" max="5" step="0.01"
-                                                    class="${getInputClass(scoringPresenceName)}"
-                                                    name="${scoringPresenceName}"
-                                                    value="${escapeHtml(scoringData.score_if_answered)}"
-                                                    placeholder="Contoh: 3">
-                                                ${buildInvalidFeedback(scoringPresenceName)}
-                                            </div>
+                                    <div class="scoring-default-summary mb-3">
+                                        <div class="font-weight-bold mb-2">Yang bisa dibiarkan otomatis</div>
+                                        <div class="scoring-default-summary-content">
+                                            <span class="scoring-summary-pill">Skala: 1-5</span>
+                                            <span class="scoring-summary-pill">Ambang keyakinan: 0.55</span>
                                         </div>
-                                        <div class="col-md-4">
-                                            <div class="form-group">
-                                                <label>Skala Minimum</label>
-                                                <input type="number" min="0" max="5" step="0.01"
-                                                    class="${getInputClass(scoringScaleMinName)}"
-                                                    name="${scoringScaleMinName}"
-                                                    value="${escapeHtml(scoringData.scale_min)}"
-                                                    placeholder="1">
-                                                ${buildInvalidFeedback(scoringScaleMinName)}
-                                            </div>
+                                    </div>
+
+                                    <div class="scoring-choice-wrapper d-none mb-3">
+                                        <div class="alert alert-light border mb-0">
+                                            Nilai utama untuk pertanyaan pilihan diambil dari skor pada masing-masing opsi jawaban di atas.
                                         </div>
-                                        <div class="col-md-4">
-                                            <div class="form-group">
-                                                <label>Skala Maksimum</label>
-                                                <input type="number" min="0" max="5" step="0.01"
-                                                    class="${getInputClass(scoringScaleMaxName)}"
-                                                    name="${scoringScaleMaxName}"
-                                                    value="${escapeHtml(scoringData.scale_max)}"
-                                                    placeholder="5">
-                                                ${buildInvalidFeedback(scoringScaleMaxName)}
-                                            </div>
+                                    </div>
+
+                                    <div class="scoring-presence-wrapper d-none">
+                                        <div class="form-group">
+                                            <label>Nilai Saat Jawaban Ada</label>
+                                            <input type="number" min="0" max="5" step="0.01"
+                                                class="${getInputClass(scoringPresenceName)}"
+                                                name="${scoringPresenceName}"
+                                                value="${escapeHtml(scoringData.score_if_answered)}"
+                                                placeholder="Contoh: 3">
+                                            ${buildInvalidFeedback(scoringPresenceName)}
+                                            <small class="text-muted d-block mt-2">
+                                                Gunakan untuk field yang cukup dicek keberadaan jawabannya, misalnya unggah file atau tanggal.
+                                            </small>
                                         </div>
                                     </div>
 
                                     <div class="row scoring-numeric-wrapper d-none">
-                                        <div class="col-md-3">
+                                        <div class="col-md-4">
                                             <div class="form-group">
                                                 <label>Arah Penilaian</label>
                                                 <select class="${getInputClass(scoringNumericDirectionName)} form-control"
                                                     name="${scoringNumericDirectionName}">
                                                     <option value="greater_is_better" ${scoringData.numeric_direction === 'greater_is_better' ? 'selected' : ''}>Semakin besar semakin baik</option>
                                                     <option value="lower_is_better" ${scoringData.numeric_direction === 'lower_is_better' ? 'selected' : ''}>Semakin kecil semakin baik</option>
-                                                    <option value="range" ${scoringData.numeric_direction === 'range' ? 'selected' : ''}>Rentang ideal</option>
+                                                    <option value="range" ${scoringData.numeric_direction === 'range' ? 'selected' : ''}>Ada rentang nilai ideal</option>
                                                 </select>
                                                 ${buildInvalidFeedback(scoringNumericDirectionName)}
                                             </div>
                                         </div>
-                                        <div class="col-md-3">
+                                        <div class="col-md-4">
                                             <div class="form-group">
-                                                <label>Ambang Minimum</label>
+                                                <label>Batas Minimum</label>
                                                 <input type="number" step="0.01" class="${getInputClass(scoringMinThresholdName)}"
                                                     name="${scoringMinThresholdName}"
                                                     value="${escapeHtml(scoringData.min_threshold)}"
@@ -1007,9 +1345,9 @@
                                                 ${buildInvalidFeedback(scoringMinThresholdName)}
                                             </div>
                                         </div>
-                                        <div class="col-md-3">
+                                        <div class="col-md-4">
                                             <div class="form-group">
-                                                <label>Ambang Target</label>
+                                                <label>Target / Nilai Ideal</label>
                                                 <input type="number" step="0.01" class="${getInputClass(scoringTargetThresholdName)}"
                                                     name="${scoringTargetThresholdName}"
                                                     value="${escapeHtml(scoringData.target_threshold)}"
@@ -1017,122 +1355,199 @@
                                                 ${buildInvalidFeedback(scoringTargetThresholdName)}
                                             </div>
                                         </div>
-                                        <div class="col-md-3">
-                                            <div class="form-group">
-                                                <label>Ambang Maksimum</label>
+                                        <div class="col-md-12">
+                                            <div class="form-group mb-0">
+                                                <label>Batas Maksimum</label>
                                                 <input type="number" step="0.01" class="${getInputClass(scoringMaxThresholdName)}"
                                                     name="${scoringMaxThresholdName}"
                                                     value="${escapeHtml(scoringData.max_threshold)}"
                                                     placeholder="Contoh: 20">
                                                 ${buildInvalidFeedback(scoringMaxThresholdName)}
-                                            </div>
-                                        </div>
-                                        <div class="col-md-4">
-                                            <div class="form-group">
-                                                <label>Skor Minimum</label>
-                                                <input type="number" min="0" max="5" step="0.01" class="${getInputClass(scoringMinScoreName)}"
-                                                    name="${scoringMinScoreName}"
-                                                    value="${escapeHtml(scoringData.min_score)}"
-                                                    placeholder="1">
-                                                ${buildInvalidFeedback(scoringMinScoreName)}
-                                            </div>
-                                        </div>
-                                        <div class="col-md-4">
-                                            <div class="form-group">
-                                                <label>Skor Target</label>
-                                                <input type="number" min="0" max="5" step="0.01" class="${getInputClass(scoringTargetScoreName)}"
-                                                    name="${scoringTargetScoreName}"
-                                                    value="${escapeHtml(scoringData.target_score)}"
-                                                    placeholder="3">
-                                                ${buildInvalidFeedback(scoringTargetScoreName)}
-                                            </div>
-                                        </div>
-                                        <div class="col-md-4">
-                                            <div class="form-group">
-                                                <label>Skor Maksimum</label>
-                                                <input type="number" min="0" max="5" step="0.01" class="${getInputClass(scoringMaxScoreName)}"
-                                                    name="${scoringMaxScoreName}"
-                                                    value="${escapeHtml(scoringData.max_score)}"
-                                                    placeholder="5">
-                                                ${buildInvalidFeedback(scoringMaxScoreName)}
+                                                <small class="text-muted d-block mt-2">
+                                                    Jika kosong, sistem akan memakai nilai target sebagai batas atas.
+                                                </small>
                                             </div>
                                         </div>
                                     </div>
 
                                     <div class="scoring-text-wrapper d-none">
                                         <div class="form-group">
-                                            <label>Jawaban Rujukan / Kunci Semantik</label>
-                                            <textarea class="${getInputClass(scoringReferenceAnswerName)}"
-                                                name="${scoringReferenceAnswerName}"
-                                                rows="3"
-                                                placeholder="Tuliskan jawaban rujukan atau ekspektasi assessor">${escapeHtml(scoringData.reference_answer)}</textarea>
-                                            ${buildInvalidFeedback(scoringReferenceAnswerName)}
-                                        </div>
-                                        <div class="row">
-                                            <div class="col-md-6">
-                                                <div class="form-group">
-                                                    <label>Kata Kunci / Cluster Makna</label>
-                                                    <textarea class="${getInputClass(scoringKeywordGroupsName)}"
-                                                        name="${scoringKeywordGroupsName}"
-                                                        rows="4"
-                                                        placeholder="partisipasi aktif | keterlibatan siswa&#10;asesmen | umpan balik">${escapeHtml(scoringData.keyword_groups_text)}</textarea>
-                                                    ${buildInvalidFeedback(scoringKeywordGroupsName)}
+                                            <div class="scoring-assist-actions mb-2">
+                                                <label class="mb-0">Pedoman Penilaian / Ciri Jawaban yang Diharapkan</label>
+                                                <div class="d-flex flex-wrap" style="gap:0.5rem;">
+                                                    <button type="button" class="btn btn-light btn-sm btn-copy-description-to-scoring">
+                                                        Ambil dari deskripsi pertanyaan
+                                                    </button>
+                                                    <button type="button" class="btn btn-outline-primary btn-sm btn-generate-scoring-helper">
+                                                        Isi bantuan otomatis
+                                                    </button>
                                                 </div>
                                             </div>
+                                            <textarea class="${getInputClass(scoringReferenceAnswerName)}"
+                                                name="${scoringReferenceAnswerName}"
+                                                rows="4"
+                                                placeholder="Tuliskan dengan bahasa sederhana: jawaban seperti apa yang dianggap baik, bukti apa yang diharapkan, atau isi tabel apa yang perlu muncul">${escapeHtml(scoringData.reference_answer)}</textarea>
+                                            ${buildInvalidFeedback(scoringReferenceAnswerName)}
+                                            <small class="text-muted d-block mt-2">
+                                                Satu deskripsi ini bisa membantu sistem menyusun kata kunci, padanan kata, dan saran panjang jawaban.
+                                            </small>
+                                            <small class="scoring-helper-status mt-2"></small>
+                                        </div>
+                                        <div class="form-group mb-0">
+                                            <label>Kata Kunci Penting</label>
+                                            <textarea class="${getInputClass(scoringKeywordGroupsName)}"
+                                                name="${scoringKeywordGroupsName}"
+                                                rows="4"
+                                                placeholder="Satu fokus per baris, misalnya: sertifikat | piagam&#10;program studi | bidang studi">${escapeHtml(scoringData.keyword_groups_text)}</textarea>
+                                            ${buildInvalidFeedback(scoringKeywordGroupsName)}
+                                            <small class="text-muted d-block mt-2">
+                                                Boleh dikosongkan lalu gunakan bantuan otomatis. Anda tetap bisa mengubah hasilnya kapan saja.
+                                            </small>
+                                        </div>
+                                    </div>
+
+                                    <div class="scoring-advanced-panel d-none">
+                                        <div class="font-weight-bold mb-3">Pengaturan Lanjutan</div>
+                                        <div class="row">
+                                            <div class="col-md-4">
+                                                <div class="form-group">
+                                                    <label>Konteks Penilaian</label>
+                                                    <select class="${getInputClass(scoringProfileName)} form-control field-scoring-profile"
+                                                        name="${scoringProfileName}">
+                                                        ${buildFormScoringProfileOptions(scoringData.profile)}
+                                                    </select>
+                                                    ${buildInvalidFeedback(scoringProfileName)}
+                                                </div>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <div class="form-group">
+                                                    <label>Kode Rubrik / Indikator <span class="text-muted">(opsional)</span></label>
+                                                    <input type="text" class="${getInputClass(scoringRubricCodeName)}"
+                                                        name="${scoringRubricCodeName}"
+                                                        value="${escapeHtml(scoringData.rubric_code)}"
+                                                        placeholder="Contoh: P2 / K1">
+                                                    ${buildInvalidFeedback(scoringRubricCodeName)}
+                                                </div>
+                                            </div>
+                                            <div class="col-md-2">
+                                                <div class="form-group">
+                                                    <label>Skala Minimum</label>
+                                                    <input type="number" min="0" max="5" step="0.01"
+                                                        class="${getInputClass(scoringScaleMinName)}"
+                                                        name="${scoringScaleMinName}"
+                                                        value="${escapeHtml(scoringData.scale_min)}"
+                                                        placeholder="1">
+                                                    ${buildInvalidFeedback(scoringScaleMinName)}
+                                                </div>
+                                            </div>
+                                            <div class="col-md-2">
+                                                <div class="form-group">
+                                                    <label>Skala Maksimum</label>
+                                                    <input type="number" min="0" max="5" step="0.01"
+                                                        class="${getInputClass(scoringScaleMaxName)}"
+                                                        name="${scoringScaleMaxName}"
+                                                        value="${escapeHtml(scoringData.scale_max)}"
+                                                        placeholder="5">
+                                                    ${buildInvalidFeedback(scoringScaleMaxName)}
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="row scoring-synonym-wrapper d-none">
                                             <div class="col-md-6">
                                                 <div class="form-group">
-                                                    <label>Sinonim Kata Kunci</label>
+                                                    <label>Padanan Kata <span class="text-muted">(opsional)</span></label>
                                                     <textarea class="${getInputClass(scoringSynonymMapName)}"
                                                         name="${scoringSynonymMapName}"
                                                         rows="4"
-                                                        placeholder="asesmen: penilaian, evaluasi&#10;umpan balik: feedback">${escapeHtml(scoringData.synonym_map_text)}</textarea>
+                                                        placeholder="asesmen: penilaian, evaluasi&#10;pelatihan: diklat, bimtek">${escapeHtml(scoringData.synonym_map_text)}</textarea>
                                                     ${buildInvalidFeedback(scoringSynonymMapName)}
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="form-group">
+                                                    <label>Pengaturan Teknis Tambahan (JSON)</label>
+                                                    <textarea class="${getInputClass(scoringAdvancedRulesName)}"
+                                                        name="${scoringAdvancedRulesName}"
+                                                        rows="4"
+                                                        placeholder='{"signal_keywords":["etika","kolaborasi"],"target_rows":3}'>${escapeHtml(scoringData.advanced_rules_text)}</textarea>
+                                                    ${buildInvalidFeedback(scoringAdvancedRulesName)}
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="row scoring-confidence-wrapper d-none">
+                                            <div class="col-md-4">
+                                                <div class="form-group">
+                                                    <label>Saran Panjang Jawaban Minimum</label>
+                                                    <input type="number" min="0" class="${getInputClass(scoringMinWordsName)}"
+                                                        name="${scoringMinWordsName}"
+                                                        value="${escapeHtml(scoringData.min_words)}"
+                                                        placeholder="Contoh: 40">
+                                                    ${buildInvalidFeedback(scoringMinWordsName)}
+                                                </div>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <div class="form-group">
+                                                    <label>Ambang Keyakinan Sistem</label>
+                                                    <input type="number" min="0" max="1" step="0.01"
+                                                        class="${getInputClass(scoringConfidenceThresholdName)}"
+                                                        name="${scoringConfidenceThresholdName}"
+                                                        value="${escapeHtml(scoringData.confidence_threshold)}"
+                                                        placeholder="0.55">
+                                                    ${buildInvalidFeedback(scoringConfidenceThresholdName)}
+                                                </div>
+                                            </div>
+                                            <div class="col-md-4 d-flex align-items-center">
+                                                <div class="custom-control custom-switch mt-3">
+                                                    <input type="checkbox" class="custom-control-input"
+                                                        id="field-manual-review-${formIndex}-${fieldIndex}"
+                                                        name="${scoringManualReviewName}"
+                                                        value="1" ${scoringData.manual_review_below_confidence ? 'checked' : ''}>
+                                                    <label class="custom-control-label"
+                                                        for="field-manual-review-${formIndex}-${fieldIndex}">Minta cek manual jika sistem ragu</label>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="row scoring-numeric-score-wrapper d-none">
+                                            <div class="col-md-4">
+                                                <div class="form-group">
+                                                    <label>Nilai Terendah</label>
+                                                    <input type="number" min="0" max="5" step="0.01" class="${getInputClass(scoringMinScoreName)}"
+                                                        name="${scoringMinScoreName}"
+                                                        value="${escapeHtml(scoringData.min_score)}"
+                                                        placeholder="1">
+                                                    ${buildInvalidFeedback(scoringMinScoreName)}
+                                                </div>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <div class="form-group">
+                                                    <label>Nilai Target</label>
+                                                    <input type="number" min="0" max="5" step="0.01" class="${getInputClass(scoringTargetScoreName)}"
+                                                        name="${scoringTargetScoreName}"
+                                                        value="${escapeHtml(scoringData.target_score)}"
+                                                        placeholder="3">
+                                                    ${buildInvalidFeedback(scoringTargetScoreName)}
+                                                </div>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <div class="form-group mb-0">
+                                                    <label>Nilai Tertinggi</label>
+                                                    <input type="number" min="0" max="5" step="0.01" class="${getInputClass(scoringMaxScoreName)}"
+                                                        name="${scoringMaxScoreName}"
+                                                        value="${escapeHtml(scoringData.max_score)}"
+                                                        placeholder="5">
+                                                    ${buildInvalidFeedback(scoringMaxScoreName)}
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
 
-                                    <div class="row scoring-confidence-wrapper d-none">
-                                        <div class="col-md-4">
-                                            <div class="form-group">
-                                                <label>Minimal Jumlah Kata</label>
-                                                <input type="number" min="0" class="${getInputClass(scoringMinWordsName)}"
-                                                    name="${scoringMinWordsName}"
-                                                    value="${escapeHtml(scoringData.min_words)}"
-                                                    placeholder="Contoh: 40">
-                                                ${buildInvalidFeedback(scoringMinWordsName)}
-                                            </div>
-                                        </div>
-                                        <div class="col-md-4">
-                                            <div class="form-group">
-                                                <label>Batas Confidence</label>
-                                                <input type="number" min="0" max="1" step="0.01"
-                                                    class="${getInputClass(scoringConfidenceThresholdName)}"
-                                                    name="${scoringConfidenceThresholdName}"
-                                                    value="${escapeHtml(scoringData.confidence_threshold)}"
-                                                    placeholder="0.55">
-                                                ${buildInvalidFeedback(scoringConfidenceThresholdName)}
-                                            </div>
-                                        </div>
-                                        <div class="col-md-4 d-flex align-items-center">
-                                            <div class="custom-control custom-switch mt-3">
-                                                <input type="checkbox" class="custom-control-input"
-                                                    id="field-manual-review-${formIndex}-${fieldIndex}"
-                                                    name="${scoringManualReviewName}"
-                                                    value="1" ${scoringData.manual_review_below_confidence ? 'checked' : ''}>
-                                                <label class="custom-control-label"
-                                                    for="field-manual-review-${formIndex}-${fieldIndex}">Perlu review saat confidence rendah</label>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div class="form-group mb-0">
-                                        <label>Aturan Lanjutan (JSON)</label>
-                                        <textarea class="${getInputClass(scoringAdvancedRulesName)}"
-                                            name="${scoringAdvancedRulesName}"
-                                            rows="4"
-                                            placeholder='{"signal_keywords":["etika","kolaborasi"],"target_rows":3}'>${escapeHtml(scoringData.advanced_rules_text)}</textarea>
-                                        ${buildInvalidFeedback(scoringAdvancedRulesName)}
+                                    <div class="text-right mt-3">
+                                        <button type="button" class="btn btn-light btn-sm btn-toggle-scoring-advanced">
+                                            Tampilkan pengaturan lanjutan
+                                        </button>
                                     </div>
                                 </div>
                             </div>
@@ -1495,16 +1910,32 @@
                     : resolveDefaultScoringMethod(selectedType);
                 const scoringEnabled = $fieldCard.find('.field-scoring-enabled').is(':checked');
                 const showNumericConfig = selectedType === 'number' && ['numeric_threshold', 'numeric_range'].includes(normalizedMethod);
-                const showTextConfig = ['text', 'textarea'].includes(selectedType)
-                    || normalizedMethod === 'keyword_coverage'
-                    || (selectedType === repeaterFieldType && normalizedMethod === 'repeater_completeness');
-                const showConfidenceConfig = ['text', 'textarea', repeaterFieldType].includes(selectedType);
+                const showTextConfig = supportsScoringAssistant(selectedType, normalizedMethod);
+                const showConfidenceConfig = showTextConfig;
+                const showPresenceConfig = normalizedMethod === 'presence';
+                const showChoiceConfig = ['radio', 'select', 'checkbox'].includes(selectedType) && !showPresenceConfig;
+                const advancedPanelVisible = !$fieldCard.find('.scoring-advanced-panel').hasClass('d-none');
 
                 $methodSelect.html(buildFieldScoringMethodOptions(selectedType, normalizedMethod)).val(normalizedMethod);
                 $fieldCard.find('.scoring-config-body').toggleClass('d-none', !scoringEnabled);
+                $fieldCard.find('.scoring-main-guidance').text(resolveScoringSummaryMessage(selectedType, normalizedMethod));
+                $fieldCard.find('.scoring-default-summary-content').html(buildScoringSummaryHtml($fieldCard, selectedType, normalizedMethod));
                 $fieldCard.find('.scoring-numeric-wrapper').toggleClass('d-none', !showNumericConfig);
                 $fieldCard.find('.scoring-text-wrapper').toggleClass('d-none', !showTextConfig);
+                $fieldCard.find('.scoring-presence-wrapper').toggleClass('d-none', !showPresenceConfig);
+                $fieldCard.find('.scoring-choice-wrapper').toggleClass('d-none', !showChoiceConfig);
                 $fieldCard.find('.scoring-confidence-wrapper').toggleClass('d-none', !showConfidenceConfig);
+                $fieldCard.find('.scoring-synonym-wrapper').toggleClass('d-none', !showTextConfig);
+                $fieldCard.find('.scoring-numeric-score-wrapper').toggleClass('d-none', !showNumericConfig);
+                $fieldCard.find('.btn-toggle-scoring-advanced').text(
+                    advancedPanelVisible ? 'Sembunyikan pengaturan lanjutan' : 'Tampilkan pengaturan lanjutan'
+                );
+
+                if (showTextConfig) {
+                    applyScoringGuidanceSuggestion($fieldCard);
+                } else {
+                    updateScoringAssistantStatus($fieldCard, '');
+                }
             };
 
             const updateAutoFieldNameHint = ($fieldCard) => {
@@ -2068,6 +2499,35 @@
                 schedulePreviewRender();
             });
 
+            $(document).on('change', '.scoring-config-card input, .scoring-config-card textarea, .scoring-config-card select', function() {
+                toggleScoringWrapper($(this).closest('.assessment-field-card'));
+            });
+
+            $(document).on('click', '.btn-toggle-scoring-advanced', function() {
+                const $fieldCard = $(this).closest('.assessment-field-card');
+                $fieldCard.find('.scoring-advanced-panel').toggleClass('d-none');
+                toggleScoringWrapper($fieldCard);
+            });
+
+            $(document).on('click', '.btn-generate-scoring-helper', function() {
+                const $fieldCard = $(this).closest('.assessment-field-card');
+                applyScoringGuidanceSuggestion($fieldCard, {
+                    force: true,
+                });
+                toggleScoringWrapper($fieldCard);
+                schedulePreviewRender();
+            });
+
+            $(document).on('click', '.btn-copy-description-to-scoring', function() {
+                const $fieldCard = $(this).closest('.assessment-field-card');
+                applyScoringGuidanceSuggestion($fieldCard, {
+                    copyDescriptionToReference: true,
+                    force: true,
+                });
+                toggleScoringWrapper($fieldCard);
+                schedulePreviewRender();
+            });
+
             $previewToggleButton.on('click', function() {
                 if (isPreviewPanelVisible()) {
                     closePreviewPanel();
@@ -2091,6 +2551,9 @@
             });
 
             $('#assessment-builder-form').on('submit', function() {
+                $('.assessment-field-card').each(function() {
+                    applyScoringGuidanceSuggestion($(this));
+                });
                 $('#forms-payload').val(JSON.stringify(collectBuilderPayload()));
                 $('#form-builder-list').find('input, textarea, select').prop('disabled', true);
             });

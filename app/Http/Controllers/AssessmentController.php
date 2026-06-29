@@ -7,6 +7,7 @@ use App\Enum\KompetensiGuru;
 use App\Enum\LevelKompetensi;
 use App\Models\Assessment;
 use App\Support\Assessment\ChoiceOptionNormalizer;
+use App\Support\Assessment\ScoringGuidanceAssistant;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
@@ -703,6 +704,8 @@ class AssessmentController extends Controller
             $config['method'] = 'repeater_completeness';
         }
 
+        $config = $this->applyScoringGuidanceSuggestions($fieldData, $config);
+
         $config = array_filter($config, function ($value, $key) {
             return match ($key) {
                 'enabled', 'manual_review_below_confidence' => true,
@@ -711,6 +714,60 @@ class AssessmentController extends Controller
         }, ARRAY_FILTER_USE_BOTH);
 
         return $config === [] ? null : $config;
+    }
+
+    private function applyScoringGuidanceSuggestions(array $fieldData, array $config): array
+    {
+        $fieldType = trim((string) ($fieldData['tipe_field'] ?? 'text')) ?: 'text';
+        $method = trim((string) ($config['method'] ?? ''));
+        $supportsGuidanceAssistant = (
+            in_array($fieldType, ['text', 'textarea'], true)
+            && in_array($method, ['semantic_similarity', 'keyword_coverage'], true)
+        ) || ($fieldType === 'repeater' && $method === 'repeater_completeness');
+
+        if (! $supportsGuidanceAssistant) {
+            return $config;
+        }
+
+        $sourceText = collect([
+            trim((string) ($config['reference_answer'] ?? '')),
+            trim((string) ($fieldData['deskripsi'] ?? '')),
+            trim((string) ($fieldData['bantuan'] ?? '')),
+        ])->filter()->unique()->implode("\n");
+
+        if ($sourceText === '') {
+            return $config;
+        }
+
+        $repeaterConfig = $fieldType === 'repeater'
+            ? $this->parseRepeaterConfigText($fieldData['repeater_config_text'] ?? null)
+            : null;
+
+        $suggestions = (new ScoringGuidanceAssistant)->suggest($sourceText, $fieldType, [
+            'target_rows' => (int) data_get($repeaterConfig, 'min_rows', 1),
+        ]);
+
+        if (blank($config['keyword_groups_text'] ?? null) && filled($suggestions['keyword_groups_text'] ?? null)) {
+            $config['keyword_groups_text'] = $suggestions['keyword_groups_text'];
+        }
+
+        if (blank($config['synonym_map_text'] ?? null) && filled($suggestions['synonym_map_text'] ?? null)) {
+            $config['synonym_map_text'] = $suggestions['synonym_map_text'];
+        }
+
+        if (! is_numeric($config['min_words'] ?? null) && is_numeric($suggestions['min_words'] ?? null)) {
+            $config['min_words'] = (int) $suggestions['min_words'];
+        }
+
+        if (
+            blank($config['advanced_rules_text'] ?? null)
+            && empty($config['advanced_rules'] ?? [])
+            && ($suggestions['advanced_rules'] ?? []) !== []
+        ) {
+            $config['advanced_rules'] = $suggestions['advanced_rules'];
+        }
+
+        return $config;
     }
 
     private function generateOptionLabel(int $index): string
