@@ -7,9 +7,6 @@
 
 @section('content')
     @php
-        $oldGuruIds = collect(old('guru_ids', []))
-            ->map(fn ($id) => (string) $id)
-            ->all();
         $oldAssessmentIds = collect(old('assessment_ids', old('assessment_id') ? [old('assessment_id')] : []))
             ->map(fn ($id) => (string) $id)
             ->all();
@@ -18,8 +15,8 @@
 
         $assessmentTableItems = $assessmentList
             ->map(function ($assessment) {
-                $totalForms = $assessment->forms->count();
-                $totalFields = $assessment->forms->sum(fn ($form) => $form->fields->count());
+                $totalForms = (int) ($assessment->forms_count ?? 0);
+                $totalFields = (int) ($assessment->fields_count ?? 0);
 
                 return [
                     'id' => (string) $assessment->id,
@@ -41,37 +38,6 @@
                 ];
             })
             ->all();
-
-        $guruTableItems = $guruList
-            ->map(function ($guru) {
-                $descriptionParts = array_filter([
-                    $guru->email,
-                    $guru->satuan_pendidikan ?: 'Instansi belum diisi',
-                    $guru->kabupaten ?: 'Kabupaten belum diisi',
-                    $guru->is_verif === 'sudah' ? 'Terverifikasi' : 'Belum verifikasi',
-                ]);
-
-                return [
-                    'id' => (string) $guru->id,
-                    'label' => $guru->nama_lengkap,
-                    'description' => implode(' | ', $descriptionParts),
-                    'cells' => [
-                        $guru->nama_lengkap,
-                        $guru->email ?: '-',
-                        $guru->satuan_pendidikan ?: 'Instansi belum diisi',
-                        $guru->kabupaten ?: 'Kabupaten belum diisi',
-                        $guru->is_verif === 'sudah' ? 'Terverifikasi' : 'Belum verifikasi',
-                    ],
-                    'payload' => [
-                        'nama' => $guru->nama_lengkap,
-                        'email' => $guru->email,
-                        'satuan_pendidikan' => $guru->satuan_pendidikan,
-                        'kabupaten' => $guru->kabupaten,
-                        'status_verifikasi' => $guru->is_verif === 'sudah' ? 'Terverifikasi' : 'Belum verifikasi',
-                    ],
-                ];
-            })
-            ->all();
     @endphp
 
     @push('styles')
@@ -82,20 +48,8 @@
                 color: #34395e;
             }
 
-            .assignment-summary-list {
-                list-style: none;
-                padding-left: 0;
-                margin-bottom: 0;
-                display: flex;
-                flex-direction: column;
-                gap: 0.75rem;
-            }
-
-            .assignment-summary-list li {
-                border: 1px solid #e4e6fc;
-                border-radius: 10px;
-                padding: 0.75rem;
-                background: #fcfcff;
+            .assignment-select-note {
+                font-size: 0.9rem;
             }
         </style>
     @endpush
@@ -250,17 +204,24 @@
                                 </div>
                                 <div class="card-body">
                                     <p class="mb-3 text-muted">
-                                        Pilih satu atau banyak guru. Jika jumlah target lebih dari {{ $batchThreshold }}
-                                        orang, distribusi otomatis diproses menggunakan batch job.
+                                        Data guru dimuat per halaman agar tidak semua data terpanggil sekaligus. Pilihan
+                                        yang sudah dicentang akan tetap tersimpan saat pindah halaman atau mencari data
+                                        lain. Jika jumlah target lebih dari {{ $batchThreshold }} orang, distribusi
+                                        otomatis diproses menggunakan batch job.
                                     </p>
 
                                     <x-multiple-choice-table id="guru-selector" name="guru_ids"
                                         :headers="['Nama Guru', 'Email', 'Instansi', 'Kabupaten', 'Verifikasi']"
-                                        :items="$guruTableItems" :selected="$oldGuruIds"
-                                        description="Setiap baris bisa dipilih langsung. Tombol pilih semua akan memilih semua data yang sedang tampil."
+                                        :items="[]" :selected="$selectedGuruIds"
+                                        :initial-selected-items="$selectedGuruItems"
+                                        :ajax-url="route('assessment.assignment.guru-options')"
+                                        description="Gunakan pencarian untuk memfilter data guru. Tabel akan memuat data per halaman dan tetap mengingat semua guru yang sudah dipilih."
                                         search-placeholder="Cari nama, email, instansi, atau kabupaten guru..."
                                         empty-message="Belum ada data guru yang bisa dipilih."
                                         selected-title="Guru Terpilih" />
+                                    <div class="assignment-select-note text-muted mt-2" id="guru-selection-caption">
+                                        Belum ada guru dipilih.
+                                    </div>
                                     @error('guru_ids')
                                         <div class="invalid-feedback d-block">{{ $message }}</div>
                                     @enderror
@@ -370,13 +331,6 @@
             let selectedAssessments = [];
             let selectedGurus = [];
 
-            function escapeHtml(value) {
-                const node = document.createElement('div');
-                node.textContent = value || '';
-
-                return node.innerHTML;
-            }
-
             function getSelectedDurationHours() {
                 const durationSelect = document.getElementById('durasi_sesi_jam');
 
@@ -416,12 +370,6 @@
                 if (summaryFields) {
                     summaryFields.textContent = totalFields;
                 }
-
-
-
-
-
-
             }
 
             function updateGuruSummary() {
@@ -462,6 +410,30 @@
                 }
             }
 
+            function updateGuruCaption() {
+                const caption = document.getElementById('guru-selection-caption');
+
+                if (!caption) {
+                    return;
+                }
+
+                if (selectedGurus.length === 0) {
+                    caption.textContent = 'Belum ada guru dipilih.';
+
+                    return;
+                }
+
+                const previewNames = selectedGurus.slice(0, 3).map((guru) => guru.text || guru.id);
+                const extraCount = selectedGurus.length - previewNames.length;
+                let message = previewNames.join(', ');
+
+                if (extraCount > 0) {
+                    message += ' dan ' + extraCount + ' guru lainnya';
+                }
+
+                caption.textContent = selectedGurus.length + ' guru dipilih: ' + message + '.';
+            }
+
             document.addEventListener('multiple-choice-table:change', function(event) {
                 if (event.detail.tableId === 'assessment-selector') {
                     selectedAssessments = event.detail.selectedItems || [];
@@ -469,7 +441,11 @@
                 }
 
                 if (event.detail.tableId === 'guru-selector') {
-                    selectedGurus = event.detail.selectedItems || [];
+                    selectedGurus = (event.detail.selectedItems || []).map((item) => ({
+                        id: String(item.id),
+                        text: item.label || item.id || '',
+                    }));
+                    updateGuruCaption();
                     updateGuruSummary();
                 }
             });
@@ -491,6 +467,7 @@
                 }
 
                 updateAssessmentSummary();
+                updateGuruCaption();
                 updateGuruSummary();
             });
         })();
