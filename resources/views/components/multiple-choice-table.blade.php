@@ -887,7 +887,7 @@
         </div>
     </div>
 
-    <div data-role="mct-hidden-inputs"></div>
+    <div data-role="mct-hidden-inputs "></div>
 
     <div class="multiple-choice-table__table-wrapper table-responsive px-3">
         <table class="table table-striped table-hover multiple-choice-table__table" id="{{ $id }}-table">
