@@ -10,7 +10,7 @@ class FuzzyMembership
         if ($value <= $start) {
             return 1.0;
         }
-// 
+
         if ($value >= $end) {
             return 0.0;
         }

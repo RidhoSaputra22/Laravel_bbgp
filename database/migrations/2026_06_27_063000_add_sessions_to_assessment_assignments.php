@@ -61,7 +61,11 @@ return new class extends Migration
                 });
             }
 
-            if (! $this->foreignKeyExists('assessment_assignment_targets', self::TARGET_SESSION_FOREIGN_KEY)) {
+            if (
+                Schema::hasTable('assessment_assignment_sessions') &&
+                Schema::hasColumn('assessment_assignment_targets', 'assessment_assignment_session_id') &&
+                ! $this->foreignKeyExists('assessment_assignment_targets', self::TARGET_SESSION_FOREIGN_KEY)
+            ) {
                 Schema::table('assessment_assignment_targets', function (Blueprint $table) {
                     $table->foreign('assessment_assignment_session_id', self::TARGET_SESSION_FOREIGN_KEY)
                         ->references('id')

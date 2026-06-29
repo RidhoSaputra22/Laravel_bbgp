@@ -11,7 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
-        if (! Schema::hasColumn('assessment_form_fields', 'deskripsi')) {
+        if (
+            Schema::hasTable('assessment_form_fields') &&
+            ! Schema::hasColumn('assessment_form_fields', 'deskripsi')
+        ) {
             Schema::table('assessment_form_fields', function (Blueprint $table) {
                 $table->text('deskripsi')->nullable()->after('label');
             });
@@ -23,7 +26,10 @@ return new class extends Migration
      */
     public function down(): void
     {
-        if (Schema::hasColumn('assessment_form_fields', 'deskripsi')) {
+        if (
+            Schema::hasTable('assessment_form_fields') &&
+            Schema::hasColumn('assessment_form_fields', 'deskripsi')
+        ) {
             Schema::table('assessment_form_fields', function (Blueprint $table) {
                 $table->dropColumn('deskripsi');
             });
