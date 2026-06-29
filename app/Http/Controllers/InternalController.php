@@ -14,11 +14,11 @@ use App\Models\Pendamping;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Svg\Tag\Rect;
 
 class InternalController extends Controller
 {
     public $title = '';
+
     /**
      * Display a listing of the resource.
      */
@@ -31,8 +31,7 @@ class InternalController extends Controller
             ->get()
             ->groupBy('kegiatan');
 
-
-        $data = array(
+        $data = [
 
             'dataPenugasanPegawai' => Pegawai::orderByDesc('id')->where('jenis_pegawai', 'BBGP')->where('is_verif', 'sudah')->get(),
             'dataPenugasanPpnpn' => Pegawai::orderByDesc('id')->where('jenis_pegawai', 'PPNPN')->where('is_verif', 'sudah')->get(),
@@ -62,7 +61,6 @@ class InternalController extends Controller
                 });
                 // dump($penugasanPegawai);
 
-
                 return [
                     'kegiatan' => $key,
                     'deskripsi' => $items->first()->deskripsi,
@@ -76,14 +74,11 @@ class InternalController extends Controller
                 ];
             })->values(),
 
-        );
+        ];
         $dataPendamping = Pendamping::get();
         $dataPpnpn = PegawaiPpnpn::get();
 
-
-
         // Proses data menjadi array yang diinginkan
-
 
         // dump($jadwal);
         // dd($data['lokaBBGP'][0]);
@@ -105,12 +100,12 @@ class InternalController extends Controller
         }
         $data->is_verif = 'sudah';
         $data->save();
+
         return response()->json([
             'status' => $data,
             'data' => $getData,
         ]);
     }
-
 
     // Lokakarya
     public function indexLokakarya($nik)
@@ -118,7 +113,7 @@ class InternalController extends Controller
         // dump($nik);
         $pegawai = Pegawai::where('no_ktp', $nik)->first();
         // dump($pegawai->no_ktp);
-        $datas = array(
+        $datas = [
             'penugasanLokakarya' => Internal::where('jenis', 'Pendamping Lokakarya')->where('nik', $pegawai->no_ktp)->get(),
             'penugasanPpnpn' => Internal::where('nik', $nik)->get(),
             'getJenisLokakarya' => Internal::where('jenis', 'Pendamping Lokakarya')->where('nik', $nik)->first(),
@@ -135,10 +130,10 @@ class InternalController extends Controller
             // 'getNamaPpnpn' => InternalPpnpn::where('id', $pegawai->id)->first(),
             // 'getJenisPpnpn' => InternalPpnpn::where('jenis', 'Pendamping PPNPN')->where('nik', $nik)->first(),
 
-        );
+        ];
         // dd($datas);
         if (session('role') == 'pegawai') {
-            // return view('pages.admin.pegawai.show', ['menu' => ''], compact('datas'));            
+            // return view('pages.admin.pegawai.show', ['menu' => ''], compact('datas'));
             return redirect()->route('pegawai.show', ['id' => session('no_ktp')])->with('message', 'update');
         }
 
@@ -161,7 +156,7 @@ class InternalController extends Controller
 
         $pegawai = Pegawai::find($id) ?? PegawaiPpnpn::find($id);
 
-        $datas = array(
+        $datas = [
             // 'dataPenugasanLokakarya' => Internal::where('jenis', 'Pendamping Lokakarya')->get(),
             'dataPenugasanPpnpn' => Internal::where('jenis', 'Penugasan PPNPN')->where('nik', $pegawai['no_ktp'])->orderByDesc('id')->first(),
             'dataPenugasanPegawai' => Internal::where('jenis', 'Penugasan Pegawai')->where('nik', $pegawai['no_ktp'])->orderByDesc('id')->first(),
@@ -170,9 +165,8 @@ class InternalController extends Controller
             'dataPegawai' => Pegawai::get(),
             'jabatanPegawai' => JabatanPenugasanPegawai::get(),
             'golongan' => JabatanPenugasanGolongan::get(),
-            'kota' => Kabupaten::get()
-        );
-
+            'kota' => Kabupaten::get(),
+        ];
 
         // dd($datas['dataPenugasanPegawai']);
         // dd(!$datas['dataPenugasanPpnpn']->isEmpty());
@@ -210,9 +204,7 @@ class InternalController extends Controller
     //     $r['tgl_selesai_kegiatan'] = $selesai_kegiatan[0];
     //     $r['jam_selesai'] = $selesai_kegiatan[1];
 
-
     //     Internal::create($r);
-
 
     //     return redirect()->route('pegawai.show', session('no_ktp'))->with('message', 'store');
     // }
@@ -222,6 +214,7 @@ class InternalController extends Controller
     {
         // dd($r->all());
         $r = $request->all();
+        $pegawai = Pegawai::find($r['id_pegawai']) ?? PegawaiPpnpn::find($r['id_pegawai']);
 
         $file = $request->file('bukti_bill');
         // dd($file);
@@ -240,22 +233,26 @@ class InternalController extends Controller
             }
             // $r['bukti_bill'] = $request->file('bukti_bill');
 
-            $nameBukti = date('Y-m-d_H-i-s_') . $r['nik'] . "." . $ext;
+            $nameBukti = date('Y-m-d_H-i-s_').$r['nik'].'.'.$ext;
             $destinationPath = public_path('upload/bukti_bill');
 
             $bukti->move($destinationPath, $nameBukti);
             $r['bukti_bill'] = $nameBukti;
-            $fileUrl = asset('upload/bukti_bill/' . $nameBukti);
+            $fileUrl = asset('upload/bukti_bill/'.$nameBukti);
         }
         // dd($file);
 
-        $mulai_kegiatan = explode(" ", $r["mulai_kegiatan"]);
+        $mulai_kegiatan = explode(' ', $r['mulai_kegiatan']);
         $r['tgl_kegiatan'] = $mulai_kegiatan[0];
         $r['jam_mulai'] = $mulai_kegiatan[1];
 
-        $selesai_kegiatan = explode(" ", $r["selesai_kegiatan"]);
+        $selesai_kegiatan = explode(' ', $r['selesai_kegiatan']);
         $r['tgl_selesai_kegiatan'] = $selesai_kegiatan[0];
         $r['jam_selesai'] = $selesai_kegiatan[1];
+        $r['tempat'] = $r['tempat'] ?? ($r['kota'] ?? null);
+        $r['jabatan'] = $r['jabatan'] ?? ($pegawai->jabatan ?? null);
+        $r['golongan'] = $r['golongan'] ?? ($pegawai->golongan ?? null);
+        $r['is_verif'] = $r['is_verif'] ?? 'sudah';
 
         if ($r['hari_1'] == null) {
             $r['hari_1'] = 0;
@@ -312,7 +309,7 @@ class InternalController extends Controller
         // );
         $penugasan = Internal::find($id);
         // dd($penugasan);
-        $datas = array(
+        $datas = [
             'dataPenugasanLokakarya' => Internal::where('jenis', 'Pendamping Lokakarya')->where('nik', $penugasan->nik)->get(),
             'dataPenugasanPpnpn' => Internal::where('jenis', 'Penugasan PPNPN')->where('nik', $penugasan->nik)->get(),
             'dataPenugasanPegawai' => Internal::where('jenis', 'Penugasan Pegawai')->where('nik', $penugasan->nik)->get(),
@@ -320,9 +317,9 @@ class InternalController extends Controller
             'jabatanPegawai' => JabatanPenugasanPegawai::get(),
             'golongan' => JabatanPenugasanGolongan::get(),
             'kota' => Kabupaten::get(),
-            'mulai_kegiatan' => $penugasan->tgl_kegiatan . ' ' . $penugasan->jam_mulai,
-            'selesai_kegiatan' => $penugasan->tgl_selesai_kegiatan . ' ' . $penugasan->jam_selesai,
-        );
+            'mulai_kegiatan' => $penugasan->tgl_kegiatan.' '.$penugasan->jam_mulai,
+            'selesai_kegiatan' => $penugasan->tgl_selesai_kegiatan.' '.$penugasan->jam_selesai,
+        ];
         $pegawai = Pegawai::where('no_ktp', $penugasan->nik)->first();
         // dd($pegawai);
         $pendamping = Internal::find($id);
@@ -336,7 +333,6 @@ class InternalController extends Controller
         // dd($r->all());
         $loka = Internal::find($request->id);
         // dd($loka);
-
 
         $r = $request->all();
 
@@ -357,20 +353,24 @@ class InternalController extends Controller
             }
             // $r['bukti_bill'] = $request->file('bukti_bill');
 
-            $nameBukti = date('Y-m-d_H-i-s_') . $r['nik'] . "." . $ext;
+            $nameBukti = date('Y-m-d_H-i-s_').$r['nik'].'.'.$ext;
             $destinationPath = public_path('upload/bukti_bill');
 
             $bukti->move($destinationPath, $nameBukti);
             $r['bukti_bill'] = $nameBukti;
-            $fileUrl = asset('upload/bukti_bill/' . $nameBukti);
+            $fileUrl = asset('upload/bukti_bill/'.$nameBukti);
         }
-        $mulai_kegiatan = explode(" ", $r["mulai_kegiatan"]);
+        $mulai_kegiatan = explode(' ', $r['mulai_kegiatan']);
         $r['tgl_kegiatan'] = $mulai_kegiatan[0];
         $r['jam_mulai'] = $mulai_kegiatan[1];
 
-        $selesai_kegiatan = explode(" ", $r["selesai_kegiatan"]);
+        $selesai_kegiatan = explode(' ', $r['selesai_kegiatan']);
         $r['tgl_selesai_kegiatan'] = $selesai_kegiatan[0];
         $r['jam_selesai'] = $selesai_kegiatan[1];
+        $r['tempat'] = $r['tempat'] ?? ($r['kota'] ?? $loka->tempat);
+        $r['jabatan'] = $r['jabatan'] ?? $loka->jabatan;
+        $r['golongan'] = $r['golongan'] ?? $loka->golongan;
+        $r['is_verif'] = $r['is_verif'] ?? ($loka->is_verif ?? 'sudah');
         // dd($loka);
 
         if ($r['hari_1'] == null) {
@@ -469,7 +469,7 @@ class InternalController extends Controller
 
         return response()->json([
             'success' => true,
-            'data' => $r
+            'data' => $r,
         ]);
     }
 
@@ -480,13 +480,13 @@ class InternalController extends Controller
         $pegawai = Pegawai::where('no_ktp', $nik)->first() ?? Pegawai::find($nik);
         // dd($pegawai);
 
-        $datas = array(
+        $datas = [
             'penugasanPegawai' => Internal::where('jenis', 'Penugasan Pegawai')->where('nik', $pegawai->no_ktp)->get(),
             'penugasanPpnpn' => Internal::where('nik', $pegawai->no_ktp)->get(),
             'getJenisPegawai' => Internal::where('jenis', 'Penugasan Pegawai')->where('nik', $pegawai->no_ktp)->first(),
             // 'getJenisPpnpn' => Internal::where('jenis', 'Penugasan PPNPN')->where('nik', $nik)->first(),
 
-        );
+        ];
         // dd($datas);
 
         return view('pages.admin.internal.indexPenugasan', ['menu' => ''], compact('datas'));
@@ -494,20 +494,20 @@ class InternalController extends Controller
 
     public function createPegawai($id)
     {
-        $datas = array(
+        $datas = [
             'dataPenugasanPegawai' => Internal::where('jenis', 'Penugasan Pegawai')->get(),
             'dataPenugasanPpnpn' => Internal::where('jenis', 'Penugasan PPNPN')->get(),
             'dataPegawai' => Pegawai::get(),
             'jabatanPegawai' => JabatanPenugasanPegawai::get(),
             'golongan' => JabatanPenugasanGolongan::get(),
-            'kota' => Kabupaten::get()
+            'kota' => Kabupaten::get(),
 
-        );
+        ];
 
         $pegawai = Pegawai::find($id);
+
         return view('pages.admin.penugasan.pegawai', ['menu' => ''], compact('pegawai', 'datas'));
     }
-
 
     public function storePegawai(Request $r)
     {
@@ -516,18 +516,19 @@ class InternalController extends Controller
         // $r = $r->all();
 
         // dd($r['mulai_kegiatan']);
-        $mulai_kegiatan = explode(" ", $r["mulai_kegiatan"]);
+        $mulai_kegiatan = explode(' ', $r['mulai_kegiatan']);
         $r['tgl_kegiatan'] = $mulai_kegiatan[0];
         $r['jam_mulai'] = $mulai_kegiatan[1];
 
-        $selesai_kegiatan = explode(" ", $r["selesai_kegiatan"]);
+        $selesai_kegiatan = explode(' ', $r['selesai_kegiatan']);
         $r['tgl_selesai_kegiatan'] = $selesai_kegiatan[0];
         $r['jam_selesai'] = $selesai_kegiatan[1];
+        $r['tempat'] = $r['tempat'] ?? ($r['kota'] ?? null);
+        $r['is_verif'] = $r['is_verif'] ?? 'sudah';
 
         // dd($r->all());
 
         Internal::create($r->all());
-
 
         return redirect()->route('internal.index')->with('message', 'store');
     }
@@ -536,24 +537,21 @@ class InternalController extends Controller
     {
         $penugasan = Internal::find($id);
 
-        $datas = array(
+        $datas = [
             'dataPenugasanPegawai' => Internal::where('jenis', 'Penugasan Pegawai')->get(),
             'dataPenugasanPpnpn' => Internal::where('jenis', 'Penugasan PPNPN')->get(),
             'dataPegawai' => Pegawai::find($id),
             'jabatanPegawai' => JabatanPenugasanPegawai::get(),
             'golongan' => JabatanPenugasanGolongan::get(),
-            'mulai_kegiatan' => $penugasan->tgl_kegiatan . ' ' . $penugasan->jam_mulai,
-            'selesai_kegiatan' => $penugasan->tgl_selesai_kegiatan . ' ' . $penugasan->jam_selesai,
-            'kota' => Kabupaten::get()
+            'mulai_kegiatan' => $penugasan->tgl_kegiatan.' '.$penugasan->jam_mulai,
+            'selesai_kegiatan' => $penugasan->tgl_selesai_kegiatan.' '.$penugasan->jam_selesai,
+            'kota' => Kabupaten::get(),
 
-        );
-
-
+        ];
 
         // dd($penugasan);
         return view('pages.admin.internal.editPenugasan', ['menu' => ''], compact('penugasan', 'datas'));
     }
-
 
     public function updatePegawai(Request $r)
     {
@@ -564,11 +562,11 @@ class InternalController extends Controller
         $find = Internal::find($r->id);
         $r = $r->all();
         // dd($r);
-        $mulai_kegiatan = explode(" ", $r["mulai_kegiatan"]);
+        $mulai_kegiatan = explode(' ', $r['mulai_kegiatan']);
         $r['tgl_kegiatan'] = $mulai_kegiatan[0];
         $r['jam_mulai'] = $mulai_kegiatan[1];
 
-        $selesai_kegiatan = explode(" ", $r["selesai_kegiatan"]);
+        $selesai_kegiatan = explode(' ', $r['selesai_kegiatan']);
         $r['tgl_selesai_kegiatan'] = $selesai_kegiatan[0];
         $r['jam_selesai'] = $selesai_kegiatan[1];
 
@@ -582,6 +580,7 @@ class InternalController extends Controller
         if (session('role') == 'pegawai') {
             return redirect()->route('pegawai.show', session('no_ktp'))->with('message', 'update');
         }
+
         return redirect()->route('internal.index.pegawai', $find->nik)->with('message', 'update');
     }
 
@@ -611,9 +610,6 @@ class InternalController extends Controller
         return response()->json(['success' => true]);
     }
 
-
-
-
     //  PEgawai PPNPN
     public function indexPpnpn($nik)
     {
@@ -621,14 +617,14 @@ class InternalController extends Controller
 
         // dd($pegawai);
         // dd($nik);
-        $datas = array(
+        $datas = [
             'pegawaiPpnpn' => Pegawai::where('id', $nik)->first(),
             'penugasanPpnpn' => Internal::where('jenis', 'Penugasan PPNPN')->where('nik', $pegawai->no_ktp)->get(),
             'getNama' => PegawaiPpnpn::where('nik', $nik)->first(),
             // 'getJenisPpnpn' => InternalPpnpn::where('jenis', 'Penugasan PPNPN')->first(),
             // 'getJenisPpnpn' => InternalPpnpn::where('jenis', 'Penugasan PPNPN')->where('nik', $nik)->first(),
 
-        );
+        ];
         // dd($datas);
 
         return view('pages.admin.internal.indexPpnpn', ['menu' => ''], compact('datas'));
@@ -637,17 +633,17 @@ class InternalController extends Controller
     public function createPpnpn($id)
     {
         $pegawai = Pegawai::find($id);
-        $datas = array(
+        $datas = [
             'dataPenugasanPpnpn' => Internal::where('jenis', 'Penugasan PPNPN')->get(),
             'dataPegawai' => Pegawai::get(),
             'jabatanPegawai' => JabatanPenugasanPegawai::get(),
             'golongan' => JabatanPenugasanGolongan::get(),
             'kota' => Kabupaten::get(),
-        );
+        ];
+
         // dd($pegawai);
         return view('pages.admin.penugasan.ppnpn', ['menu' => ''], compact('pegawai', 'datas'));
     }
-
 
     public function storePpnpn(Request $r)
     {
@@ -657,17 +653,20 @@ class InternalController extends Controller
         $r = $r->all();
 
         // dd($r['mulai_kegiatan']);
-        $mulai_kegiatan = explode(" ", $r["mulai_kegiatan"]);
+        $mulai_kegiatan = explode(' ', $r['mulai_kegiatan']);
         $r['tgl_kegiatan'] = $mulai_kegiatan[0];
         $r['jam_mulai'] = $mulai_kegiatan[1];
 
-        $selesai_kegiatan = explode(" ", $r["selesai_kegiatan"]);
+        $selesai_kegiatan = explode(' ', $r['selesai_kegiatan']);
         $r['tgl_selesai_kegiatan'] = $selesai_kegiatan[0];
         $r['jam_selesai'] = $selesai_kegiatan[1];
+        $r['tempat'] = $r['tempat'] ?? ($r['kota'] ?? null);
+        $r['is_verif'] = $r['is_verif'] ?? 'sudah';
 
         // dd($r);
 
         Internal::create($r);
+
         // InternalPpnpn::create($r);
         return redirect()->route('internal.index')->with('message', 'store');
     }
@@ -676,14 +675,14 @@ class InternalController extends Controller
     {
         // $pegawai = PegawaiPpnpn::find($id);
         $penugasan = Internal::where('id', $id)->first();
-        $datas = array(
+        $datas = [
             'dataPegawai' => Pegawai::all(),
             'jabatanPegawai' => JabatanPenugasanPegawai::all(),
             'golongan' => JabatanPenugasanGolongan::all(),
             'kota' => Kabupaten::all(),
-            'mulai_kegiatan' => $penugasan->tgl_kegiatan . ' ' . $penugasan->jam_mulai,
-            'selesai_kegiatan' => $penugasan->tgl_selesai_kegiatan . ' ' . $penugasan->jam_selesai,
-        );
+            'mulai_kegiatan' => $penugasan->tgl_kegiatan.' '.$penugasan->jam_mulai,
+            'selesai_kegiatan' => $penugasan->tgl_selesai_kegiatan.' '.$penugasan->jam_selesai,
+        ];
 
         // dd($datas);
 
@@ -704,11 +703,11 @@ class InternalController extends Controller
         // dd($pegawai);
         $r = $r->all();
 
-        $mulai_kegiatan = explode(" ", $r["mulai_kegiatan"]);
+        $mulai_kegiatan = explode(' ', $r['mulai_kegiatan']);
         $r['tgl_kegiatan'] = $mulai_kegiatan[0];
         $r['jam_mulai'] = $mulai_kegiatan[1];
 
-        $selesai_kegiatan = explode(" ", $r["selesai_kegiatan"]);
+        $selesai_kegiatan = explode(' ', $r['selesai_kegiatan']);
         $r['tgl_selesai_kegiatan'] = $selesai_kegiatan[0];
         $r['jam_selesai'] = $selesai_kegiatan[1];
 
@@ -723,13 +722,12 @@ class InternalController extends Controller
         return redirect()->route('internal.index')->with('message', 'update');
     }
 
-
-
     public function hapusLoka($id)
     {
         // dd($id);
         $data = Internal::find($id);
         $data->delete();
+
         return response()->json($data);
     }
 
@@ -738,6 +736,7 @@ class InternalController extends Controller
         $data = Internal::find($id);
         if ($data) {
             $data->delete();
+
             return response()->json(['success' => true]);
         } else {
             return response()->json(['success' => false]);
@@ -748,15 +747,16 @@ class InternalController extends Controller
     {
         // dd($jenis);
 
-        $datas = array(
+        $datas = [
             'golongan' => JabatanPenugasanGolongan::get(),
             'jabatanPegawai' => JabatanPenugasanPegawai::get(),
             'jabatanPpnpn' => JabatanPenugasanPpnpn::get(),
-            'kota' => Kabupaten::get()
-        );
+            'kota' => Kabupaten::get(),
+        ];
 
         if ($jenis == 'pendamping') {
             $title = 'Pendamping Lokakarya';
+
             return view('pages.admin.internal.createPendamping', ['menu' => 'internal', 'title' => $title, 'datas' => $datas]);
         }
         if ($jenis == 'penugasan ppnpn') {
@@ -764,6 +764,7 @@ class InternalController extends Controller
         } else {
             $title = 'Penugasan Pegawai';
         }
+
         return view('pages.admin.internal.createPenugasan', ['menu' => 'internal', 'title' => $title, 'datas' => $datas]);
     }
 
@@ -840,21 +841,20 @@ class InternalController extends Controller
     public function edit(string $id)
     {
 
-        $datas = array(
+        $datas = [
             'golongan' => JabatanPenugasanGolongan::get(),
             'jabatanPegawai' => JabatanPenugasanPegawai::get(),
             'jabatanPpnpn' => JabatanPenugasanPpnpn::get(),
             'kota' => Kabupaten::get(),
             'penugasan' => Internal::find($id),
             'pendamping' => Pendamping::find($id),
-        );
-
-
+        ];
 
         // dd($datas['penugasan']->jenis);
 
         if ($datas['penugasan']->jenis == 'Pendamping Lokakarya') {
             $title = 'Pendamping Lokakarya';
+
             return view('pages.admin.internal.editPendamping', ['menu' => 'internal', 'title' => $title, 'datas' => $datas]);
         }
 
@@ -889,8 +889,8 @@ class InternalController extends Controller
         $r['is_verif'] = 'sudah';
         $r['jabatan'] = $r['jabatan'] ?? '';
 
-
         $data->update($r);
+
         return redirect()->route('internal.index')->with('message', 'update');
     }
 
@@ -902,6 +902,7 @@ class InternalController extends Controller
         // dd($id);
         $data = Internal::find($id);
         $data->delete();
+
         return response()->json($data);
     }
 
@@ -910,6 +911,7 @@ class InternalController extends Controller
         // dd($id);
         $data = Internal::find($id);
         $data->delete();
+
         return response()->json($data);
     }
 
@@ -932,7 +934,6 @@ class InternalController extends Controller
     //     $r['is_verif'] = 'sudah';
     //     $r['jabatan'] = $r['jabatan'] ?? '';
 
-
     //     $data->update($r);
     //     return redirect()->route('pegawai.show', session('no_ktp'))->with('message', 'update');
     // }
@@ -946,24 +947,24 @@ class InternalController extends Controller
         // Mencari data berdasarkan input yang diterima
         $data = Internal::where(function ($query) use ($input) {
             $query->where('nip', $input['nip']);
-            if (!empty($input['nama'])) {
-                $query->where('nama', 'like', '%' . $input['nama'] . '%');
+            if (! empty($input['nama'])) {
+                $query->where('nama', 'like', '%'.$input['nama'].'%');
             }
-            if (!empty($input['kegiatan'])) {
-                $query->orWhere('kegiatan', 'like', '%' . $input['kegiatan'] . '%');
+            if (! empty($input['kegiatan'])) {
+                $query->orWhere('kegiatan', 'like', '%'.$input['kegiatan'].'%');
             }
-            if (!empty($input['kota'])) {
-                $query->orWhere('kota', 'like', '%' . $input['kota'] . '%');
+            if (! empty($input['kota'])) {
+                $query->orWhere('kota', 'like', '%'.$input['kota'].'%');
             }
-            if (!empty($input['hotel'])) {
-                $query->orWhere('hotel', 'like', '%' . $input['hotel'] . '%');
+            if (! empty($input['hotel'])) {
+                $query->orWhere('hotel', 'like', '%'.$input['hotel'].'%');
             }
         })->get();
+
         // dd($data);
         // Mengembalikan hasil pencarian
         return $data;
     }
-
 
     public function calendar(Request $request)
     {
@@ -997,19 +998,19 @@ class InternalController extends Controller
         // Query untuk mendapatkan data pegawai
         // Query untuk mengambil data pegawai
         // Query untuk mengambil data pegawai
-        $employeeQuery = "SELECT id, nama_lengkap, jenis_pegawai, no_ktp FROM pegawais";
+        $employeeQuery = 'SELECT id, nama_lengkap, jenis_pegawai, no_ktp FROM pegawais';
         $employeeBindings = [];
 
         // Tambahkan pencarian berdasarkan nama
         if ($name) {
-            $employeeQuery .= " WHERE nama_lengkap LIKE ?";
+            $employeeQuery .= ' WHERE nama_lengkap LIKE ?';
             $employeeBindings[] = "%$name%";
         }
 
         // Tambahkan filter berdasarkan status pegawai
         if ($status) {
-            $employeeQuery .= $name ? " AND" : " WHERE";
-            $employeeQuery .= " jenis_pegawai = ?";
+            $employeeQuery .= $name ? ' AND' : ' WHERE';
+            $employeeQuery .= ' jenis_pegawai = ?';
             $employeeBindings[] = $status;
         }
 
@@ -1017,9 +1018,9 @@ class InternalController extends Controller
         $employees = DB::select($employeeQuery, $employeeBindings);
 
         // Query untuk mengambil data penugasan dari tabel internals
-        $internalQuery = "SELECT kegiatan, jenis, deskripsi, nama, nik, tgl_kegiatan, tgl_selesai_kegiatan
+        $internalQuery = 'SELECT kegiatan, jenis, deskripsi, nama, nik, tgl_kegiatan, tgl_selesai_kegiatan
                       FROM internals
-                      WHERE YEAR(tgl_kegiatan) = ? AND MONTH(tgl_kegiatan) = ?";
+                      WHERE YEAR(tgl_kegiatan) = ? AND MONTH(tgl_kegiatan) = ?';
         $internalBindings = [$year, $month];
 
         // Jalankan query untuk mengambil data penugasan

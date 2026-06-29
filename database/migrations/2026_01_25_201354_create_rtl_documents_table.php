@@ -17,8 +17,6 @@ return new class extends Migration
             $table->string('file_path');
             $table->string('original_name');
             $table->timestamps();
-
-            $table->foreign('rtl_id')->references('id')->on('rtls')->onDelete('cascade');
         });
     }
 

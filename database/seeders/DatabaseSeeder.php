@@ -3,8 +3,6 @@
 namespace Database\Seeders;
 
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
-
-use App\Models\LatarJabatan;
 use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
@@ -21,19 +19,25 @@ class DatabaseSeeder extends Seeder
         //     'email' => 'test@example.com',
         // ]);
         $this->call(AdminSeeder::class);
-        $this->call(DataSeeder::class);
+        $this->call(LoginRoleSeeder::class);
         $this->call(StatusKepegawaianSeeder::class);
         $this->call(StatusPendidikanSeeder::class);
         $this->call(PendidikanSeeder::class);
         $this->call(JabatanSeeder::class);
+        $this->call(ProvinsiSeeder::class);
         $this->call(KabupatenSeeder::class);
         $this->call(KecamatanSeeder::class);
-        // $this->call(SekolahSeeder::class);
+        $this->call(SekolahSeeder::class);
         $this->call(JabatanPendidikSeeder::class);
         $this->call(JabatanKependidikanSeeder::class);
         $this->call(JabatanStakeHolderSeeder::class);
+        $this->call(JenisJabatanSeeder::class);
         $this->call(JenisTugasSeeder::class);
         $this->call(LatarJabatanSeeder::class);
         $this->call(JabatanPenugasanSeeder::class);
+        // $this->call(DataSeeder::class);
+        $this->call(AssessmentProtofolioSeeder::class);
+        $this->call(AssessmentPilihanGandaSeeder::class);
+        $this->call(AssessmentStudiKasusSeeder::class);
     }
 }

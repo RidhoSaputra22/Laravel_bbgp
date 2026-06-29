@@ -54,7 +54,7 @@
                                                 <label>Golongan</label>
                                                 <input readonly
                                                     value="{{ $pegawai->golongan == '' || $pegawai->golongan == null || $pegawai->golongan == 'Tidak ada' ? 'Tidak ada' : $pegawai->golongan }}"
-                                                    required name="nip" id="golongan" type="text"
+                                                    required name="golongan" id="golongan" type="text"
                                                     class="form-control">
                                             </div>
                                         </div>

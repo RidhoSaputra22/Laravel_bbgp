@@ -13,7 +13,7 @@ class JenisTugasSeeder extends Seeder
      */
     public function run(): void
     {
-        $data = ['GP (Guru Penggerak', 'PP (Pegawai Penggerak)', 'Fasil (Fasilitator)', 'Instruktur'];
+        $data = ['GP (Guru Penggerak)', 'PP (Pengajar Praktik)', 'Fasil (Fasilitator)', 'Instruktur'];
 
         foreach ($data as $key => $v) {
             JenisTugas::create([

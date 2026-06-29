@@ -75,7 +75,7 @@
 
                   {{-- <li class="{{ $title == 'Data Honor Kegiatan' ? '' : '' }}">
                             <a class="nav-link" href="{{ route('honor.index') }}">
-                                Penomoran 
+                                Penomoran
                             </a>
                         </li> --}}
 
@@ -124,6 +124,23 @@
                </a>
             </li>
 
+            <li class="nav-item dropdown {{ in_array($menu, ['assessment', 'assessment-penugasan'], true) ? 'active' : '' }}">
+               <a href="#" class="nav-link has-dropdown"><i class="fas fa-clipboard-list"></i>
+                  <span>Assessment</span></a>
+               <ul class="dropdown-menu">
+                  <li class="{{ $menu == 'assessment' ? 'active' : '' }}">
+                     <a class="nav-link" href="{{ route('assessment.index') }}">
+                        Buat Assessment
+                     </a>
+                  </li>
+                  <li class="{{ $menu == 'assessment-penugasan' ? 'active' : '' }}">
+                     <a class="nav-link" href="{{ route('assessment.assignment.index') }}">
+                        Penugasan
+                     </a>
+                  </li>
+               </ul>
+            </li>
+
             <li class="menu-header">Landing Page</li>
             <li class="nav-item  {{ $menu == 'agenda' ? 'active' : '' }}">
                <a href="{{ route('agenda.index') }}" class="nav-link "><i class="fas fa-thumbtack"></i>
@@ -167,7 +184,7 @@
 
                   {{-- <li class="{{ $title == 'Data Honor Kegiatan' ? '' : '' }}">
                         <a class="nav-link" href="{{ route('honor.index') }}">
-                            Penomoran 
+                            Penomoran
                         </a>
                     </li> --}}
 
@@ -328,6 +345,12 @@
             <li class="{{ $menu == 'akun' ? 'active' : '' }}">
                <a class="nav-link" href="{{ route('akun.index') }}">
                   <i class="fas fa-user"></i> <span>Data Akun</span>
+               </a>
+            </li>
+
+            <li class="{{ $menu == 'assessment' ? 'active' : '' }}">
+               <a class="nav-link" href="{{ route('assessment.index') }}">
+                  <i class="fas fa-clipboard-list"></i> <span>Assessment</span>
                </a>
             </li>
          @endif

@@ -85,6 +85,9 @@
                         <li class="nav-item {{ $menu == 'sekolah' ? 'active' : '' }}"><a class="nav-link"
                               href="{{ route('user.data-sekolah') }}">Input Data Sekolah</a></li>
 
+                        <li class="nav-item {{ $menu == 'assessment-portal' ? 'active' : '' }}"><a class="nav-link"
+                              href="{{ route('assessment.portal.index') }}">Assessment</a></li>
+
                         {{-- <li class="nav-item {{ $menu == 'statistik' ? 'active' : '' }}"><a class="nav-link" href="{{ route('user.statistik') }}">Statistik</a></li> --}}
 
                         <li class="nav-item"><a class="nav-link" href="{{ route('login') }}">Login</a></li>
