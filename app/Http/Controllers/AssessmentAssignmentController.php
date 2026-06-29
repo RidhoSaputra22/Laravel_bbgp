@@ -84,15 +84,12 @@ class AssessmentAssignmentController extends Controller
             ->all();
 
         $selectedGuruItems = $this->buildSelectedGuruItems($selectedGuruIds);
-        $initialGuruSelectionState = $this->buildInitialGuruSelectionState();
 
         return view('pages.admin.assessment.assignment.create', [
             'menu' => $this->menu,
             'assessmentList' => $assessmentList,
             'selectedGuruIds' => $selectedGuruIds,
             'selectedGuruItems' => $selectedGuruItems,
-            'initialGuruSelectionState' => $initialGuruSelectionState,
-            'guruFilterOptions' => $this->buildGuruFilterOptions(),
             'batchThreshold' => AssessmentAssignmentService::BATCH_THRESHOLD,
             'sessionCapacity' => AssessmentAssignmentService::TARGETS_PER_SESSION,
             'defaultSessionDurationHours' => AssessmentAssignmentService::DEFAULT_SESSION_DURATION_HOURS,
@@ -136,13 +133,16 @@ class AssessmentAssignmentController extends Controller
             ]);
         }
 
-        $scope = $this->normalizeGuruSelectionScope([
-            'q' => $request->input('q', ''),
-            'eksternal_jabatan' => $request->input('eksternal_jabatan', ''),
-            'jenis_jabatan' => $request->input('jenis_jabatan', ''),
-        ]);
+        $keyword = trim((string) $request->input('q', ''));
 
-        $this->applyGuruSelectionScope($query, $scope);
+        if ($keyword !== '') {
+            $query->where(function ($builder) use ($keyword) {
+                $builder->where('nama_lengkap', 'like', '%'.$keyword.'%')
+                    ->orWhere('email', 'like', '%'.$keyword.'%')
+                    ->orWhere('satuan_pendidikan', 'like', '%'.$keyword.'%')
+                    ->orWhere('kabupaten', 'like', '%'.$keyword.'%');
+            });
+        }
 
         $perPage = max(5, min((int) $request->input('per_page', self::GURU_PAGE_SIZE), 50));
         $page = max((int) $request->input('page', 1), 1);
@@ -240,8 +240,6 @@ class AssessmentAssignmentController extends Controller
                 'email',
                 'satuan_pendidikan',
                 'kabupaten',
-                'eksternal_jabatan',
-                'jenis_jabatan',
                 'status_kepegawaian',
                 'is_verif',
             ]);
@@ -270,8 +268,6 @@ class AssessmentAssignmentController extends Controller
     {
         $descriptionParts = array_filter([
             $guru->email ?: null,
-            $guru->eksternal_jabatan ?: null,
-            $guru->jenis_jabatan ?: null,
             $guru->satuan_pendidikan ?: 'Instansi belum diisi',
             $guru->kabupaten ?: 'Kabupaten belum diisi',
             $guru->is_verif === 'sudah' ? 'Terverifikasi' : 'Belum verifikasi',
@@ -284,8 +280,6 @@ class AssessmentAssignmentController extends Controller
             'cells' => [
                 $guru->nama_lengkap,
                 $guru->email ?: '-',
-                $guru->eksternal_jabatan ?: '-',
-                $guru->jenis_jabatan ?: '-',
                 $guru->satuan_pendidikan ?: 'Instansi belum diisi',
                 $guru->kabupaten ?: 'Kabupaten belum diisi',
                 $guru->is_verif === 'sudah' ? 'Terverifikasi' : 'Belum verifikasi',
@@ -293,169 +287,12 @@ class AssessmentAssignmentController extends Controller
             'payload' => [
                 'nama' => $guru->nama_lengkap,
                 'email' => $guru->email,
-                'eksternal_jabatan' => $guru->eksternal_jabatan,
-                'jenis_jabatan' => $guru->jenis_jabatan,
                 'satuan_pendidikan' => $guru->satuan_pendidikan,
                 'kabupaten' => $guru->kabupaten,
                 'status_verifikasi' => $guru->is_verif === 'sudah' ? 'Terverifikasi' : 'Belum verifikasi',
                 'status_kepegawaian' => $guru->status_kepegawaian,
             ],
         ];
-    }
-
-    private function buildGuruFilterOptions(): array
-    {
-        return [
-            'ketenagaan' => $this->mergeOptionValues(
-                ['Tenaga Pendidik', 'Tenaga Kependidikan', 'Stakeholder'],
-                Guru::query()
-                    ->whereNotNull('eksternal_jabatan')
-                    ->where('eksternal_jabatan', '!=', '')
-                    ->distinct()
-                    ->pluck('eksternal_jabatan')
-                    ->all()
-            ),
-            'jabatan_by_ketenagaan' => [
-                'Tenaga Pendidik' => $this->mergeOptionValues(
-                    JabatanPendidik::query()->orderBy('id')->pluck('name')->all(),
-                    Guru::query()
-                        ->where('eksternal_jabatan', 'Tenaga Pendidik')
-                        ->whereNotNull('jenis_jabatan')
-                        ->where('jenis_jabatan', '!=', '')
-                        ->distinct()
-                        ->pluck('jenis_jabatan')
-                        ->all()
-                ),
-                'Tenaga Kependidikan' => $this->mergeOptionValues(
-                    JabatanKependidikan::query()->orderBy('id')->pluck('name')->all(),
-                    Guru::query()
-                        ->where('eksternal_jabatan', 'Tenaga Kependidikan')
-                        ->whereNotNull('jenis_jabatan')
-                        ->where('jenis_jabatan', '!=', '')
-                        ->distinct()
-                        ->pluck('jenis_jabatan')
-                        ->all()
-                ),
-                'Stakeholder' => $this->mergeOptionValues(
-                    JabatanStakeHolder::query()->orderBy('id')->pluck('name')->all(),
-                    Guru::query()
-                        ->where('eksternal_jabatan', 'Stakeholder')
-                        ->whereNotNull('jenis_jabatan')
-                        ->where('jenis_jabatan', '!=', '')
-                        ->distinct()
-                        ->pluck('jenis_jabatan')
-                        ->all()
-                ),
-            ],
-        ];
-    }
-
-    private function mergeOptionValues(array ...$valueSets): array
-    {
-        return collect($valueSets)
-            ->flatten()
-            ->map(fn ($value) => trim((string) $value))
-            ->filter(fn (string $value) => $value !== '')
-            ->unique(fn (string $value) => Str::lower($value))
-            ->values()
-            ->all();
-    }
-
-    private function buildInitialGuruSelectionState(): array
-    {
-        $selectionMode = $this->resolveGuruSelectionMode(request());
-
-        if ($selectionMode !== 'select_all') {
-            return [
-                'mode' => 'manual',
-                'scope' => [
-                    'q' => '',
-                    'filters' => [],
-                ],
-                'excludedIds' => [],
-                'totalMatched' => 0,
-            ];
-        }
-
-        $scope = $this->normalizeGuruSelectionScope(old('guru_selection_scope', []));
-        $excludedIds = $this->normalizeGuruIdList(old('guru_excluded_ids', []));
-
-        return [
-            'mode' => 'select_all',
-            'scope' => $scope,
-            'excludedIds' => array_map('strval', $excludedIds),
-            'totalMatched' => $this->countGuruSelectionByScope($scope, $excludedIds),
-        ];
-    }
-
-    private function resolveGuruSelectionMode(Request $request): string
-    {
-        $mode = trim((string) $request->input(
-            'guru_selection_mode',
-            $request->boolean('guru_select_all') ? 'select_all' : 'manual'
-        ));
-
-        return $mode === 'select_all' ? 'select_all' : 'manual';
-    }
-
-    private function normalizeGuruSelectionScope(array $scope): array
-    {
-        $keyword = trim((string) data_get($scope, 'q', ''));
-        $filters = array_filter([
-            'eksternal_jabatan' => trim((string) data_get($scope, 'eksternal_jabatan', '')),
-            'jenis_jabatan' => trim((string) data_get($scope, 'jenis_jabatan', '')),
-        ], fn (string $value) => $value !== '');
-
-        return [
-            'q' => $keyword,
-            'filters' => $filters,
-        ];
-    }
-
-    private function normalizeGuruIdList(array $guruIds): array
-    {
-        return collect($guruIds)
-            ->filter(fn ($id) => filled($id))
-            ->map(fn ($id) => (int) $id)
-            ->unique()
-            ->values()
-            ->all();
-    }
-
-    private function applyGuruSelectionScope($query, array $scope): void
-    {
-        $normalizedScope = $this->normalizeGuruSelectionScope($scope);
-        $keyword = $normalizedScope['q'];
-
-        foreach ($normalizedScope['filters'] as $column => $value) {
-            $query->where($column, $value);
-        }
-
-        if ($keyword === '') {
-            return;
-        }
-
-        $query->where(function ($builder) use ($keyword) {
-            $builder->where('nama_lengkap', 'like', '%'.$keyword.'%')
-                ->orWhere('email', 'like', '%'.$keyword.'%')
-                ->orWhere('eksternal_jabatan', 'like', '%'.$keyword.'%')
-                ->orWhere('jenis_jabatan', 'like', '%'.$keyword.'%')
-                ->orWhere('satuan_pendidikan', 'like', '%'.$keyword.'%')
-                ->orWhere('kabupaten', 'like', '%'.$keyword.'%');
-        });
-    }
-
-    private function countGuruSelectionByScope(array $scope, array $excludedIds = []): int
-    {
-        $query = $this->guruSelectionQuery();
-
-        $this->applyGuruSelectionScope($query, $scope);
-
-        if ($excludedIds !== []) {
-            $query->whereNotIn('id', $excludedIds);
-        }
-
-        return (int) $query->count('id');
     }
 
     private function validatePayload(Request $request): array
