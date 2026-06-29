@@ -16,6 +16,10 @@
         $sessionScheduleText = $meta['session_schedule_text'] ?? '-';
         $submissionStatusLabel = $meta['label'] ?? 'Dikirim';
         $submissionStatusTone = $meta['badge'] ?? 'success';
+        $autoSubmitted = ($summary['submission_mode'] ?? null) === 'deadline_auto';
+        $primarySubmissionBadge = $autoSubmitted
+            ? 'Assessment selesai otomatis karena batas waktu berakhir'
+            : 'Assessment berhasil dikirim';
         $assignmentDateText = $meta['date_text'] ?? '-';
         $assessmentTotal = (int) ($meta['assessment_total'] ?? 0);
         $formTotal = (int) ($meta['form_total'] ?? 0);
@@ -106,7 +110,7 @@
 
                         <div class="flex flex-wrap gap-2">
                             <x-assessment::ui.status-badge tone="success" class="rounded-sm px-3 py-1.5">
-                                Assessment berhasil dikirim
+                                {{ $primarySubmissionBadge }}
                             </x-assessment::ui.status-badge>
 
                             <x-assessment::ui.status-badge :tone="$submissionStatusTone" class="rounded-sm px-3 py-1.5">
@@ -131,6 +135,12 @@
                         <i class="far fa-calendar-check"></i>
                         Dikirim: {{ $submittedAtLabel }}
                     </span>
+                    @if ($autoSubmitted)
+                        <span class="inline-flex items-center gap-2">
+                            <i class="fas fa-hourglass-end"></i>
+                            Soal yang kosong otomatis dinilai 0
+                        </span>
+                    @endif
                     <span class="inline-flex items-center gap-2">
                         <i class="fas fa-layer-group"></i>
                         {{ $assessmentTotal }} assessment

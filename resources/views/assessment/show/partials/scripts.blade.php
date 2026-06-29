@@ -75,8 +75,14 @@
                 currentAssessmentIndex: Number(config.initialIndex ?? 0),
                 totalAssessments: Number(config.totalAssessments ?? 0),
                 assessmentItems: Array.isArray(config.assessmentItems) ? config.assessmentItems : [],
+                autosaveUrl: typeof config.autosaveUrl === 'string' ? config.autosaveUrl : '',
+                resultUrl: typeof config.resultUrl === 'string' ? config.resultUrl : '',
+                deadlineAt: typeof config.deadlineAt === 'string' ? config.deadlineAt : null,
                 showFinishModal: false,
                 isSubmitting: false,
+                isAutosaving: false,
+                deadlineWatcherId: null,
+                deadlineSubmissionTriggered: false,
 
                 init() {
                     this.$nextTick(() => {
@@ -97,7 +103,14 @@
                                 this.clearFieldError(fieldWrapper);
                             });
                         });
+
+                        this.startDeadlineWatcher();
                     });
+                },
+                destroy() {
+                    if (this.deadlineWatcherId) {
+                        clearInterval(this.deadlineWatcherId);
+                    }
                 },
                 formElement() {
                     return this.$refs.assessmentExamForm ?? null;
@@ -111,8 +124,11 @@
 
                     return form.querySelector(`[data-assessment-panel="${index}"]`);
                 },
+                isBusy() {
+                    return this.isSubmitting || this.isAutosaving || this.deadlineSubmissionTriggered;
+                },
                 openFinishModal() {
-                    if (this.isSubmitting) {
+                    if (this.isBusy()) {
                         return;
                     }
 
@@ -123,7 +139,7 @@
                     this.showFinishModal = true;
                 },
                 submitConfirmedForm() {
-                    if (this.isSubmitting) {
+                    if (this.isBusy()) {
                         return;
                     }
 
@@ -150,7 +166,7 @@
                     form.submit();
                 },
                 handleSubmit() {
-                    if (this.isSubmitting) {
+                    if (this.isBusy()) {
                         return;
                     }
 
@@ -169,6 +185,7 @@
                         index: 0,
                         form_count: 0,
                         question_count: 0,
+                        field_ids: [],
                     };
                 },
                 isFirstAssessment() {
@@ -186,8 +203,8 @@
 
                     return Math.round(((this.currentAssessmentIndex + 1) / this.totalAssessments) * 100);
                 },
-                goToAssessment(index) {
-                    if (this.isSubmitting || this.totalAssessments <= 0) {
+                async goToAssessment(index) {
+                    if (this.isBusy() || this.totalAssessments <= 0) {
                         return;
                     }
 
@@ -197,8 +214,16 @@
                         return;
                     }
 
-                    if (boundedIndex > this.currentAssessmentIndex && !this.validateCurrentAssessment()) {
-                        return;
+                    if (boundedIndex > this.currentAssessmentIndex) {
+                        if (!this.validateCurrentAssessment()) {
+                            return;
+                        }
+
+                        const snapshotStatus = await this.saveCurrentAssessmentSnapshot();
+
+                        if (snapshotStatus !== 'saved') {
+                            return;
+                        }
                     }
 
                     this.currentAssessmentIndex = boundedIndex;
@@ -207,6 +232,149 @@
                     this.$nextTick(() => {
                         this.scrollToTop();
                     });
+                },
+                async saveCurrentAssessmentSnapshot() {
+                    if (!this.autosaveUrl) {
+                        return 'saved';
+                    }
+
+                    const form = this.formElement();
+                    const currentMeta = this.currentAssessmentMeta();
+                    const fieldIds = Array.isArray(currentMeta.field_ids) ? currentMeta.field_ids : [];
+
+                    if (!form || fieldIds.length === 0) {
+                        return 'saved';
+                    }
+
+                    this.clearAllFieldErrors();
+                    this.isAutosaving = true;
+
+                    try {
+                        const formData = new FormData(form);
+                        formData.append('active_assessment_index', String(this.currentAssessmentIndex));
+                        fieldIds.forEach((fieldId) => {
+                            formData.append('field_ids[]', String(fieldId));
+                        });
+
+                        const response = await fetch(this.autosaveUrl, {
+                            method: 'POST',
+                            body: formData,
+                            headers: {
+                                Accept: 'application/json',
+                                'X-Requested-With': 'XMLHttpRequest',
+                            },
+                        });
+                        const payload = await this.parseJsonResponse(response);
+
+                        if (!response.ok) {
+                            if (response.status === 422 && payload?.errors) {
+                                this.applyServerErrors(payload.errors);
+                            } else if (payload?.message) {
+                                window.alert(payload.message);
+                            } else {
+                                window.alert('Snapshot jawaban belum berhasil disimpan.');
+                            }
+
+                            return 'failed';
+                        }
+
+                        if (payload?.status === 'expired_submitted' && payload?.redirect_url) {
+                            window.location.href = payload.redirect_url;
+
+                            return 'expired';
+                        }
+
+                        return 'saved';
+                    } catch (error) {
+                        window.alert('Terjadi kendala saat menyimpan snapshot jawaban. Silakan coba lagi.');
+
+                        return 'failed';
+                    } finally {
+                        this.isAutosaving = false;
+                    }
+                },
+                async submitExpiredBecauseDeadline() {
+                    if (this.deadlineSubmissionTriggered) {
+                        return;
+                    }
+
+                    const form = this.formElement();
+
+                    if (!form) {
+                        return;
+                    }
+
+                    this.deadlineSubmissionTriggered = true;
+                    this.isSubmitting = true;
+                    this.showFinishModal = false;
+
+                    try {
+                        const formData = new FormData(form);
+                        formData.append('active_assessment_index', String(this.currentAssessmentIndex));
+
+                        const response = await fetch(form.action, {
+                            method: 'POST',
+                            body: formData,
+                            headers: {
+                                Accept: 'application/json',
+                                'X-Requested-With': 'XMLHttpRequest',
+                            },
+                        });
+                        const payload = await this.parseJsonResponse(response);
+
+                        if (payload?.redirect_url) {
+                            window.location.href = payload.redirect_url;
+
+                            return;
+                        }
+
+                        if (response.ok && this.resultUrl) {
+                            window.location.href = this.resultUrl;
+
+                            return;
+                        }
+
+                        if (payload?.errors) {
+                            this.applyServerErrors(payload.errors);
+                        }
+
+                        if (this.resultUrl) {
+                            window.location.href = this.resultUrl;
+                            return;
+                        }
+
+                        window.location.reload();
+                    } catch (error) {
+                        if (this.resultUrl) {
+                            window.location.href = this.resultUrl;
+                            return;
+                        }
+
+                        window.location.reload();
+                    } finally {
+                        this.deadlineSubmissionTriggered = false;
+                        this.isSubmitting = false;
+                    }
+                },
+                startDeadlineWatcher() {
+                    if (!this.deadlineAt) {
+                        return;
+                    }
+
+                    const checkDeadline = () => {
+                        if (Date.now() <= new Date(this.deadlineAt).getTime()) {
+                            return;
+                        }
+
+                        if (this.deadlineWatcherId) {
+                            clearInterval(this.deadlineWatcherId);
+                        }
+
+                        this.submitExpiredBecauseDeadline();
+                    };
+
+                    checkDeadline();
+                    this.deadlineWatcherId = window.setInterval(checkDeadline, 1000);
                 },
                 validateCurrentAssessment() {
                     const validation = this.validateAssessment(this.currentAssessmentIndex);
@@ -270,6 +438,7 @@
                     const fieldType = fieldWrapper.dataset.fieldType ?? 'text';
                     const fieldLabel = fieldWrapper.dataset.fieldLabel ?? 'field ini';
                     const isRequired = fieldWrapper.dataset.required === '1';
+                    const hasExistingFile = fieldWrapper.dataset.hasExistingFile === '1';
                     let message = null;
 
                     if (fieldType === 'radio') {
@@ -290,15 +459,13 @@
                         const input = fieldWrapper.querySelector('input[type="file"]');
                         const uploadedFile = input?.files?.[0] ?? null;
 
-                        if (isRequired && !uploadedFile) {
+                        if (isRequired && !uploadedFile && !hasExistingFile) {
                             message = `File untuk pertanyaan ${fieldLabel} wajib diunggah.`;
                         } else if (uploadedFile && uploadedFile.size > 5 * 1024 * 1024) {
                             message = `File untuk pertanyaan ${fieldLabel} maksimal 5 MB.`;
                         }
                     } else if (fieldType === 'repeater') {
-                        const repeaterInputs = Array.from(fieldWrapper.querySelectorAll(
-                            'input, select, textarea'
-                        ));
+                        const repeaterInputs = Array.from(fieldWrapper.querySelectorAll('input, select, textarea'));
                         const rows = new Map();
 
                         repeaterInputs.forEach((input) => {
@@ -336,8 +503,7 @@
 
                                 if (missingRequiredInput) {
                                     const columnLabel = missingRequiredInput.dataset.repeaterLabel || 'Kolom';
-                                    message =
-                                        `${columnLabel} pada baris ${Number(index) + 1} untuk pertanyaan ${fieldLabel} wajib diisi.`;
+                                    message = `${columnLabel} pada baris ${Number(index) + 1} untuk pertanyaan ${fieldLabel} wajib diisi.`;
                                     break;
                                 }
                             }
@@ -383,6 +549,60 @@
                         valid: false,
                         fieldId,
                     };
+                },
+                applyServerErrors(errors) {
+                    this.clearAllFieldErrors();
+
+                    Object.entries(errors || {}).forEach(([key, messages]) => {
+                        const match = String(key).match(/^answers\.(\d+)(?:\.|$)/);
+
+                        if (!match) {
+                            return;
+                        }
+
+                        const fieldId = match[1];
+                        const form = this.formElement();
+                        const fieldWrapper = form?.querySelector(`[data-field-id="${fieldId}"]`);
+
+                        if (!fieldWrapper) {
+                            return;
+                        }
+
+                        const message = Array.isArray(messages) ? messages[0] : messages;
+                        this.setFieldError(fieldWrapper, String(message || 'Input tidak valid.'));
+                    });
+
+                    const firstKey = Object.keys(errors || {}).find((key) => /^answers\.\d+/.test(String(key)));
+
+                    if (!firstKey) {
+                        return;
+                    }
+
+                    const match = String(firstKey).match(/^answers\.(\d+)(?:\.|$)/);
+
+                    if (!match) {
+                        return;
+                    }
+
+                    this.focusFieldById(match[1]);
+                },
+                clearAllFieldErrors() {
+                    const form = this.formElement();
+
+                    if (!form) {
+                        return;
+                    }
+
+                    form.querySelectorAll('[data-assessment-field]').forEach((fieldWrapper) => {
+                        this.clearFieldError(fieldWrapper);
+                    });
+                },
+                async parseJsonResponse(response) {
+                    try {
+                        return await response.json();
+                    } catch (error) {
+                        return null;
+                    }
                 },
                 setFieldError(fieldWrapper, message) {
                     fieldWrapper.classList.add('border-red-500/50', 'bg-red-50/50');
@@ -444,9 +664,7 @@
                     }, 180);
                 },
                 resolveFocusTarget(fieldWrapper) {
-                    return fieldWrapper.querySelector(
-                        'input:not([type="hidden"]), select, textarea, button'
-                    );
+                    return fieldWrapper.querySelector('input:not([type="hidden"]), select, textarea, button');
                 },
                 scrollToTop() {
                     const topAnchor = this.$refs.assessmentFlowTop;

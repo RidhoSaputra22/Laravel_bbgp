@@ -19,93 +19,86 @@ class AssessmentAttemptService
         private readonly AssessmentAutoScoringService $autoScoringService
     ) {}
 
-    public function submit(AssessmentAttempt $attempt, array $answers, array $files): AssessmentAttempt
-    {
+    public function saveSnapshot(
+        AssessmentAttempt $attempt,
+        array $answers,
+        array $files,
+        array $fieldIds
+    ): AssessmentAttempt {
         if ($attempt->status === 'submitted') {
-            return $attempt->load([
-                'answers',
-                'target.assignment.assessments.forms.fields',
-                'target.session',
-                'target.guru',
-            ]);
+            return $this->loadAttemptRelations($attempt);
         }
 
         $snapshot = $attempt->structure_snapshot ?? [];
-        $fields = $this->flattenFields($snapshot);
-        $normalizedAnswers = $this->validateAndNormalizeAnswers($attempt, $fields, $answers, $files);
-        $submittedAt = now();
+        $allFields = $this->flattenFields($snapshot);
+        $processedFieldIds = $this->normalizeFieldIds($fieldIds);
+        $fields = $this->filterFieldsByIds($allFields, $processedFieldIds);
 
-        DB::transaction(function () use ($attempt, $normalizedAnswers, $snapshot, $submittedAt) {
-            $submittedFieldIds = array_keys($normalizedAnswers);
+        if ($fields === []) {
+            return $this->loadAttemptRelations($attempt);
+        }
 
-            if ($submittedFieldIds === []) {
-                $attempt->answers()->delete();
-            } else {
-                $attempt->answers()
-                    ->whereNotIn('assessment_form_field_id', $submittedFieldIds)
-                    ->delete();
-            }
+        $existingAnswers = $attempt->answers()
+            ->whereIn('assessment_form_field_id', $processedFieldIds)
+            ->get()
+            ->keyBy('assessment_form_field_id');
+        $normalizedAnswers = $this->validateAndNormalizeAnswers(
+            $fields,
+            $answers,
+            $files,
+            $existingAnswers,
+            true
+        );
+        $savedAt = now();
 
-            foreach ($normalizedAnswers as $fieldId => $normalizedAnswer) {
-                $persistedAnswer = $this->prepareAnswerForPersistence($attempt, $normalizedAnswer);
-
-                AssessmentAttemptAnswer::updateOrCreate(
-                    [
-                        'assessment_attempt_id' => $attempt->id,
-                        'assessment_form_field_id' => $fieldId,
-                    ],
-                    [
-                        'assessment_id' => $persistedAnswer['assessment_id'],
-                        'assessment_form_id' => $persistedAnswer['assessment_form_id'],
-                        'answer_text' => $persistedAnswer['answer_text'],
-                        'answer_payload' => $persistedAnswer['answer_payload'],
-                        'answer_file_path' => $persistedAnswer['answer_file_path'],
-                        'answered_at' => $submittedAt,
-                    ]
-                );
-            }
+        DB::transaction(function () use ($attempt, $normalizedAnswers, $processedFieldIds, $snapshot, $savedAt) {
+            $this->persistNormalizedAnswers(
+                $attempt,
+                $normalizedAnswers['answers'],
+                $processedFieldIds,
+                $normalizedAnswers['preserve_existing_answer_field_ids'],
+                $savedAt
+            );
 
             $freshAnswers = $attempt->answers()->get();
             $attempt->setRelation('answers', $freshAnswers);
-            $this->autoScoringService->scoreAttempt($attempt);
-            $freshAnswers = $attempt->answers()->get();
-            $attempt->setRelation('answers', $freshAnswers);
-
             $summary = $this->buildSummaryFromSnapshot(
                 $snapshot,
                 $freshAnswers,
-                $attempt->started_at ?: $submittedAt,
-                $submittedAt
+                $attempt->started_at ?: $savedAt,
+                $savedAt
             );
-            $scoringSummary = $this->scoringService->buildSummary($attempt);
 
             $attempt->forceFill([
-                'status' => 'submitted',
-                'result_summary' => $summary,
-                'scoring_summary' => $scoringSummary,
+                'status' => 'in_progress',
                 'answered_questions' => (int) $summary['answered_questions'],
                 'answered_required_questions' => (int) $summary['answered_required_questions'],
-                'submitted_at' => $submittedAt,
-                'last_answered_at' => $submittedAt,
+                'last_answered_at' => $savedAt,
             ])->save();
-
-            $target = $attempt->target;
-
-            if ($target) {
-                $target->forceFill([
-                    'status' => 'selesai',
-                    'started_at' => $target->started_at ?: $attempt->started_at ?: $submittedAt,
-                    'submitted_at' => $submittedAt,
-                ])->save();
-            }
         });
 
-        return $attempt->fresh([
-            'answers',
-            'target.assignment.assessments.forms.fields',
-            'target.session',
-            'target.guru',
-        ]);
+        return $this->loadAttemptRelations($attempt->fresh());
+    }
+
+    public function submit(AssessmentAttempt $attempt, array $answers, array $files): AssessmentAttempt
+    {
+        if ($attempt->status === 'submitted') {
+            return $this->loadAttemptRelations($attempt);
+        }
+
+        return $this->finalizeAttempt($attempt, $answers, $files, false);
+    }
+
+    public function submitExpired(
+        AssessmentAttempt $attempt,
+        array $answers = [],
+        array $files = []
+    ): AssessmentAttempt {
+        if ($attempt->status === 'submitted') {
+            return $this->loadAttemptRelations($attempt);
+        }
+
+        return $this->finalizeAttempt($attempt, $answers, $files, true);
     }
 
     public function buildResultSummary(AssessmentAttempt $attempt): array
@@ -184,31 +177,131 @@ class AssessmentAttemptService
             ->all();
     }
 
-    private function validateAndNormalizeAnswers(
+    private function finalizeAttempt(
         AssessmentAttempt $attempt,
+        array $answers,
+        array $files,
+        bool $forceZeroForUnanswered
+    ): AssessmentAttempt {
+        $snapshot = $attempt->structure_snapshot ?? [];
+        $fields = $this->flattenFields($snapshot);
+        $processedFieldIds = collect($fields)
+            ->pluck('id')
+            ->map(fn ($id) => (int) $id)
+            ->filter(fn ($id) => $id > 0)
+            ->values()
+            ->all();
+        $existingAnswers = $attempt->answers()
+            ->whereIn('assessment_form_field_id', $processedFieldIds)
+            ->get()
+            ->keyBy('assessment_form_field_id');
+        $normalizedAnswers = $this->validateAndNormalizeAnswers(
+            $fields,
+            $answers,
+            $files,
+            $existingAnswers,
+            ! $forceZeroForUnanswered
+        );
+        $submittedAt = now();
+
+        DB::transaction(function () use (
+            $attempt,
+            $snapshot,
+            $fields,
+            $processedFieldIds,
+            $normalizedAnswers,
+            $submittedAt,
+            $forceZeroForUnanswered
+        ) {
+            $this->persistNormalizedAnswers(
+                $attempt,
+                $normalizedAnswers['answers'],
+                $processedFieldIds,
+                $normalizedAnswers['preserve_existing_answer_field_ids'],
+                $submittedAt
+            );
+
+            $freshAnswers = $attempt->answers()->get();
+            $attempt->setRelation('answers', $freshAnswers);
+            $this->autoScoringService->scoreAttempt($attempt);
+
+            if ($forceZeroForUnanswered) {
+                $this->stampZeroScoreForUnansweredFields($attempt, $fields, $submittedAt);
+            }
+
+            $freshAnswers = $attempt->answers()->get();
+            $attempt->setRelation('answers', $freshAnswers);
+            $summary = $this->buildSummaryFromSnapshot(
+                $snapshot,
+                $freshAnswers,
+                $attempt->started_at ?: $submittedAt,
+                $submittedAt
+            );
+
+            $summary['submission_mode'] = $forceZeroForUnanswered ? 'deadline_auto' : 'manual';
+            $summary['submission_note'] = $forceZeroForUnanswered
+                ? 'Batas waktu berakhir. Jawaban terakhir yang tersimpan diproses otomatis dan soal kosong diberi skor 0.'
+                : 'Jawaban dikirim langsung oleh peserta.';
+            $summary['auto_submitted_at'] = $forceZeroForUnanswered ? $submittedAt->toIso8601String() : null;
+
+            $scoringSummary = $this->scoringService->buildSummary($attempt);
+
+            $attempt->forceFill([
+                'status' => 'submitted',
+                'result_summary' => $summary,
+                'scoring_summary' => $scoringSummary,
+                'answered_questions' => (int) $summary['answered_questions'],
+                'answered_required_questions' => (int) $summary['answered_required_questions'],
+                'submitted_at' => $submittedAt,
+                'last_answered_at' => $submittedAt,
+            ])->save();
+
+            $target = $attempt->target;
+
+            if ($target) {
+                $target->forceFill([
+                    'status' => 'selesai',
+                    'started_at' => $target->started_at ?: $attempt->started_at ?: $submittedAt,
+                    'submitted_at' => $submittedAt,
+                ])->save();
+            }
+        });
+
+        return $this->loadAttemptRelations($attempt->fresh());
+    }
+
+    private function validateAndNormalizeAnswers(
         array $fields,
         array $answers,
-        array $files
+        array $files,
+        Collection $existingAnswers,
+        bool $requireRequiredFields
     ): array {
         $messages = [];
         $normalized = [];
+        $preserveExistingAnswerFieldIds = [];
 
         foreach ($fields as $field) {
             $fieldId = (string) $field['id'];
             $fieldKey = 'answers.'.$fieldId;
             $fieldType = $field['tipe_field'];
             $fieldLabel = $field['label'];
-            $isRequired = (bool) ($field['is_required'] ?? false);
+            $isRequired = $requireRequiredFields && (bool) ($field['is_required'] ?? false);
             $uploadedFile = $files[$fieldId] ?? null;
+            $existingAnswer = $existingAnswers->get((int) $fieldId);
 
             if ($fieldType === 'file') {
-                if ($isRequired && ! $uploadedFile) {
+                if ($isRequired && ! $uploadedFile && ! filled($existingAnswer?->answer_file_path)) {
                     $messages[$fieldKey] = "File untuk pertanyaan {$fieldLabel} wajib diunggah.";
 
                     continue;
                 }
 
                 if (! $uploadedFile) {
+                    if (filled($existingAnswer?->answer_file_path)) {
+                        $preserveExistingAnswerFieldIds[] = (int) $fieldId;
+                    }
+
                     continue;
                 }
 
@@ -262,7 +355,6 @@ class AssessmentAttemptService
                     ->map(fn ($value) => (string) $value)
                     ->unique()
                     ->all();
-
                 $invalidValues = array_diff($selectedValues, $allowedValues);
 
                 if ($invalidValues !== []) {
@@ -273,7 +365,8 @@ class AssessmentAttemptService
 
                 $selectedOptions = collect($normalizedOptions)
                     ->filter(function (array $option) use ($selectedValues) {
-                        return $selectedValues->contains(fn ($selectedValue) => in_array((string) $selectedValue, $option['aliases'] ?? [], true));
+                        return collect($selectedValues)
+                            ->contains(fn ($selectedValue) => in_array((string) $selectedValue, $option['aliases'] ?? [], true));
                     })
                     ->values();
 
@@ -297,7 +390,11 @@ class AssessmentAttemptService
             }
 
             if ($fieldType === 'repeater') {
-                $normalizedRepeater = $this->normalizeRepeaterAnswer($field, $answers[$fieldId] ?? null);
+                $normalizedRepeater = $this->normalizeRepeaterAnswer(
+                    $field,
+                    $answers[$fieldId] ?? null,
+                    $requireRequiredFields
+                );
 
                 if ($normalizedRepeater['message']) {
                     $messages[$fieldKey] = $normalizedRepeater['message'];
@@ -404,9 +501,7 @@ class AssessmentAttemptService
 
             if ($fieldType === 'select') {
                 $matchedOption = collect(ChoiceOptionNormalizer::normalizeMany($field['opsi_field'] ?? []))
-                    ->first(function (array $option) use ($textValue) {
-                        return in_array($textValue, $option['aliases'] ?? [], true);
-                    });
+                    ->first(fn (array $option) => in_array($textValue, $option['aliases'] ?? [], true));
 
                 if (! is_array($matchedOption)) {
                     $messages[$fieldKey] = "Pilihan jawaban pada pertanyaan {$fieldLabel} tidak valid.";
@@ -424,10 +519,10 @@ class AssessmentAttemptService
                 'answer_payload' => array_filter([
                     'type' => $fieldType,
                     'value' => $textValue,
-                    'label' => isset($matchedOption) && is_array($matchedOption)
+                    'label' => is_array($matchedOption ?? null)
                         ? (trim((string) ($matchedOption['label'] ?? '')) ?: null)
                         : null,
-                    'score' => isset($matchedOption) && is_array($matchedOption) && is_numeric($matchedOption['score'] ?? null)
+                    'score' => is_array($matchedOption ?? null) && is_numeric($matchedOption['score'] ?? null)
                         ? (float) $matchedOption['score']
                         : null,
                 ], static fn ($value) => $value !== null && $value !== ''),
@@ -439,11 +534,17 @@ class AssessmentAttemptService
             throw ValidationException::withMessages($messages);
         }
 
-        return $normalized;
+        return [
+            'answers' => $normalized,
+            'preserve_existing_answer_field_ids' => array_values(array_unique($preserveExistingAnswerFieldIds)),
+        ];
     }
 
-    private function normalizeRepeaterAnswer(array $field, mixed $value): array
-    {
+    private function normalizeRepeaterAnswer(
+        array $field,
+        mixed $value,
+        bool $requireRequiredFields
+    ): array {
         $config = is_array($field['opsi_field'] ?? null) ? $field['opsi_field'] : [];
         $columns = collect($config['columns'] ?? [])
             ->filter(fn ($column) => is_array($column))
@@ -476,7 +577,7 @@ class AssessmentAttemptService
             ->filter(fn ($row) => is_array($row))
             ->values();
         $normalizedRows = [];
-        $minRows = max((int) ($config['min_rows'] ?? 0), 0);
+        $minRows = $requireRequiredFields ? max((int) ($config['min_rows'] ?? 0), 0) : 0;
         $maxRows = max((int) ($config['max_rows'] ?? 0), 0);
 
         foreach ($rows as $rowIndex => $row) {
@@ -549,7 +650,11 @@ class AssessmentAttemptService
             }
 
             foreach ($columns as $column) {
-                if ($column['is_required'] && ($normalizedRow[$column['nama_field']] ?? '') === '') {
+                if (
+                    $requireRequiredFields &&
+                    $column['is_required'] &&
+                    ($normalizedRow[$column['nama_field']] ?? '') === ''
+                ) {
                     return [
                         'rows' => [],
                         'columns' => $columns,
@@ -561,7 +666,7 @@ class AssessmentAttemptService
             $normalizedRows[] = $normalizedRow;
         }
 
-        if ((bool) ($field['is_required'] ?? false) && $normalizedRows === []) {
+        if ($requireRequiredFields && (bool) ($field['is_required'] ?? false) && $normalizedRows === []) {
             return [
                 'rows' => [],
                 'columns' => $columns,
@@ -590,6 +695,107 @@ class AssessmentAttemptService
             'columns' => $columns,
             'message' => null,
         ];
+    }
+
+    private function persistNormalizedAnswers(
+        AssessmentAttempt $attempt,
+        array $normalizedAnswers,
+        array $processedFieldIds,
+        array $preservedFieldIds,
+        Carbon $answeredAt
+    ): void {
+        $fieldIdsToDelete = array_values(array_diff(
+            $processedFieldIds,
+            array_keys($normalizedAnswers),
+            $preservedFieldIds
+        ));
+
+        if ($fieldIdsToDelete !== []) {
+            $attempt->answers()
+                ->whereIn('assessment_form_field_id', $fieldIdsToDelete)
+                ->delete();
+        }
+
+        foreach ($normalizedAnswers as $fieldId => $normalizedAnswer) {
+            $persistedAnswer = $this->prepareAnswerForPersistence($attempt, $normalizedAnswer);
+
+            AssessmentAttemptAnswer::updateOrCreate(
+                [
+                    'assessment_attempt_id' => $attempt->id,
+                    'assessment_form_field_id' => $fieldId,
+                ],
+                [
+                    'assessment_id' => $persistedAnswer['assessment_id'],
+                    'assessment_form_id' => $persistedAnswer['assessment_form_id'],
+                    'answer_text' => $persistedAnswer['answer_text'],
+                    'answer_payload' => $persistedAnswer['answer_payload'],
+                    'answer_file_path' => $persistedAnswer['answer_file_path'],
+                    'answered_at' => $answeredAt,
+                    'auto_score' => null,
+                    'auto_score_reason' => null,
+                    'auto_score_metadata' => null,
+                    'auto_scored_at' => null,
+                    'assessor_score' => null,
+                    'assessor_notes' => null,
+                    'assessor_user_id' => null,
+                    'assessor_scored_at' => null,
+                ]
+            );
+        }
+    }
+
+    private function stampZeroScoreForUnansweredFields(
+        AssessmentAttempt $attempt,
+        array $fields,
+        Carbon $submittedAt
+    ): void {
+        $answersByFieldId = $attempt->answers()->get()->keyBy('assessment_form_field_id');
+
+        foreach ($fields as $field) {
+            $fieldId = (int) ($field['id'] ?? 0);
+
+            if ($fieldId <= 0) {
+                continue;
+            }
+
+            $existingAnswer = $answersByFieldId->get($fieldId);
+
+            if ($this->answerHasContent($existingAnswer)) {
+                continue;
+            }
+
+            AssessmentAttemptAnswer::updateOrCreate(
+                [
+                    'assessment_attempt_id' => $attempt->id,
+                    'assessment_form_field_id' => $fieldId,
+                ],
+                [
+                    'assessment_id' => $field['assessment_id'] ?? null,
+                    'assessment_form_id' => $field['assessment_form_id'] ?? null,
+                    'answer_text' => null,
+                    'answer_payload' => [
+                        'type' => $field['tipe_field'] ?? 'text',
+                        'forced_zero_for_unanswered' => true,
+                        'submission_mode' => 'deadline_auto',
+                    ],
+                    'answer_file_path' => null,
+                    'answered_at' => null,
+                    'auto_score' => 0,
+                    'auto_score_reason' => 'Pertanyaan tidak dijawab hingga batas waktu berakhir.',
+                    'auto_score_metadata' => [
+                        'confidence' => 1,
+                        'source' => 'deadline_auto_zero',
+                        'requires_manual_review' => false,
+                        'forced_zero_for_unanswered' => true,
+                    ],
+                    'auto_scored_at' => $submittedAt,
+                    'assessor_score' => null,
+                    'assessor_notes' => null,
+                    'assessor_user_id' => null,
+                    'assessor_scored_at' => null,
+                ]
+            );
+        }
     }
 
     private function prepareAnswerForPersistence(AssessmentAttempt $attempt, array $normalizedAnswer): array
@@ -688,7 +894,6 @@ class AssessmentAttemptService
         $completionPercentage = $totalQuestions > 0
             ? (int) round(($answeredQuestions / $totalQuestions) * 100)
             : 0;
-
         $durationMinutes = ($startedAt && $submittedAt)
             ? $startedAt->diffInMinutes($submittedAt)
             : 0;
@@ -730,6 +935,28 @@ class AssessmentAttemptService
             ->isNotEmpty();
     }
 
+    private function filterFieldsByIds(array $fields, array $fieldIds): array
+    {
+        if ($fieldIds === []) {
+            return [];
+        }
+
+        return collect($fields)
+            ->filter(fn ($field) => in_array((int) ($field['id'] ?? 0), $fieldIds, true))
+            ->values()
+            ->all();
+    }
+
+    private function normalizeFieldIds(array $fieldIds): array
+    {
+        return collect($fieldIds)
+            ->map(fn ($fieldId) => (int) $fieldId)
+            ->filter(fn ($fieldId) => $fieldId > 0)
+            ->unique()
+            ->values()
+            ->all();
+    }
+
     private function flattenFields(array $snapshot): array
     {
         return collect($snapshot['assessments'] ?? [])
@@ -737,5 +964,15 @@ class AssessmentAttemptService
             ->flatMap(fn ($form) => $form['fields'] ?? [])
             ->values()
             ->all();
+    }
+
+    private function loadAttemptRelations(AssessmentAttempt $attempt): AssessmentAttempt
+    {
+        return $attempt->load([
+            'answers',
+            'target.assignment.assessments.forms.fields',
+            'target.session',
+            'target.guru',
+        ]);
     }
 }

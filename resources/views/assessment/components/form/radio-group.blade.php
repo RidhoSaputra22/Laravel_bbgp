@@ -16,8 +16,20 @@
         ->values();
     $selectedValue = $selectedValues->first();
     $idPrefix = $idPrefix ?: trim((string) preg_replace('/[^A-Za-z0-9_-]+/', '-', $name), '-');
+    $resolveDisplayLabel = static function (int $index): string {
+        $label = '';
+        $sequence = $index + 1;
+
+        while ($sequence > 0) {
+            $remainder = ($sequence - 1) % 26;
+            $label = chr(65 + $remainder) . $label;
+            $sequence = intdiv($sequence - 1, 26);
+        }
+
+        return $label;
+    };
     $normalizedOptions = collect(\App\Support\Assessment\ChoiceOptionNormalizer::normalizeMany($options ?? []))
-        ->map(function ($option, $index) {
+        ->map(function ($option, $index) use ($resolveDisplayLabel) {
             $value = trim((string) ($option['value'] ?? ''));
             $label = trim((string) ($option['label'] ?? $value));
             $matchValues = collect($option['aliases'] ?? [$value, $label])
@@ -30,7 +42,7 @@
             return [
                 'index' => $index,
                 'value' => $value,
-                'label' => $value,
+                'label' => $resolveDisplayLabel($index),
                 'description' => $label !== '' ? $label : null,
                 'match_values' => $matchValues,
             ];

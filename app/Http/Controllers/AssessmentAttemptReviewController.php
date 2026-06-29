@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Enum\LevelKompetensi;
 use App\Models\AssessmentAssignmentTarget;
+use App\Services\Assessment\AssessmentAttemptLifecycleService;
 use App\Services\Assessment\AssessmentAttemptReviewService;
 use App\Services\Assessment\AssessmentAttemptService;
 use Illuminate\Http\Request;
@@ -13,6 +14,7 @@ use Illuminate\Validation\Rule;
 class AssessmentAttemptReviewController extends Controller
 {
     public function __construct(
+        private readonly AssessmentAttemptLifecycleService $attemptLifecycleService,
         private readonly AssessmentAttemptService $attemptService,
         private readonly AssessmentAttemptReviewService $reviewService
     ) {}
@@ -93,6 +95,8 @@ class AssessmentAttemptReviewController extends Controller
             'guru',
             'attempt.answers',
         ])->findOrFail($targetId);
+
+        $target = $this->attemptLifecycleService->syncExpiredTarget($target);
 
         abort_unless($target->attempt && $target->attempt->status === 'submitted', 404);
 

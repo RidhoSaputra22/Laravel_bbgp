@@ -29,11 +29,11 @@
     <x-slot name="footer">
         <div class="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
             <x-assessment::ui.button type="button" variant="outline"
-                x-bind:disabled="isSubmitting" @click="showFinishModal = false">
+                x-bind:disabled="isBusy()" @click="showFinishModal = false">
                 Kembali Cek Jawaban
             </x-assessment::ui.button>
 
-            <x-assessment::ui.button type="button"  x-bind:disabled="isSubmitting"
+            <x-assessment::ui.button type="button"  x-bind:disabled="isBusy()"
                 @click="submitConfirmedForm()">
                 <span x-show="!isSubmitting" class="inline-flex items-center">
                     <i class="fas fa-paper-plane mr-2"></i>

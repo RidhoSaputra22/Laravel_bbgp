@@ -88,6 +88,9 @@ abstract class BaseInstrumentScoringEngine
             : null;
         $assessorScore = is_numeric($answer?->assessor_score) ? (float) $answer->assessor_score : null;
         $autoScore = is_numeric($answer?->auto_score) ? (float) $answer->auto_score : ($autoResult['score'] ?? null);
+        $forcedZeroForUnanswered = ! $answered
+            && is_numeric($answer?->auto_score)
+            && (bool) data_get($answer?->auto_score_metadata ?? [], 'forced_zero_for_unanswered', false);
         $manualPending = false;
         $score = null;
         $scoreSource = null;
@@ -96,10 +99,14 @@ abstract class BaseInstrumentScoringEngine
         if ($answered && $assessorScore !== null) {
             $score = $assessorScore;
             $scoreSource = 'manual_assessor_override';
-        } elseif ($answered && $autoScore !== null) {
+        } elseif (($answered || $forcedZeroForUnanswered) && $autoScore !== null) {
             $score = $autoScore;
-            $scoreSource = $autoResult['source'] ?? 'auto_score';
-            $manualPending = (bool) ($autoResult['requires_manual_review'] ?? false);
+            $scoreSource = $forcedZeroForUnanswered
+                ? (string) data_get($answer?->auto_score_metadata ?? [], 'source', 'deadline_auto_zero')
+                : ($autoResult['source'] ?? 'auto_score');
+            $manualPending = $forcedZeroForUnanswered
+                ? false
+                : (bool) ($autoResult['requires_manual_review'] ?? false);
         } elseif ($answered && ($fieldConfig['enabled'] ?? false)) {
             $manualPending = true;
             $scoreSource = 'auto_unavailable';
@@ -117,6 +124,7 @@ abstract class BaseInstrumentScoringEngine
             'level' => $score !== null ? \App\Enum\LevelKompetensi::fromScore((float) $score)?->shortLabel() : null,
             'score_source' => $scoreSource,
             'manual_pending' => $manualPending,
+            'forced_zero_for_unanswered' => $forcedZeroForUnanswered,
             'assessor_score' => $assessorScore,
             'auto_score' => $autoScore !== null ? round((float) $autoScore, 2) : null,
             'auto_confidence' => $confidence,

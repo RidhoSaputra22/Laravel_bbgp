@@ -10,6 +10,7 @@ use App\Models\Guru;
 use App\Models\JabatanKependidikan;
 use App\Models\JabatanPendidik;
 use App\Models\JabatanStakeHolder;
+use App\Services\Assessment\AssessmentAttemptLifecycleService;
 use App\Services\AssessmentAssignmentService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -24,7 +25,8 @@ class AssessmentAssignmentController extends Controller
     private string $menu = 'assessment-penugasan';
 
     public function __construct(
-        private readonly AssessmentAssignmentService $assignmentService
+        private readonly AssessmentAssignmentService $assignmentService,
+        private readonly AssessmentAttemptLifecycleService $attemptLifecycleService
     ) {}
 
     public function index()
@@ -204,6 +206,16 @@ class AssessmentAssignmentController extends Controller
         ])
             ->withCount(['targets', 'sessions'])
             ->findOrFail($id);
+
+        $this->attemptLifecycleService->syncExpiredTargets($assignment->targets);
+        $assignment->load([
+            'assessments.forms.fields',
+            'creator',
+            'sessions.targets',
+            'targets.guru',
+            'targets.session',
+            'targets.attempt',
+        ]);
 
         return view('pages.admin.assessment.assignment.show', [
             'menu' => $this->menu,

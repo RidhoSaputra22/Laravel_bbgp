@@ -3,16 +3,24 @@
 @section('content')
     @php
         $snapshot = $attempt->structure_snapshot ?? [];
+        $answerLookup = $answerLookup ?? [];
         $assessmentItems = collect($snapshot['assessments'] ?? [])
             ->values()
             ->map(function ($assessment, $index) {
                 $forms = collect($assessment['forms'] ?? [])->values();
+                $fieldIds = $forms
+                    ->flatMap(fn($form) => collect($form['fields'] ?? [])->pluck('id'))
+                    ->map(fn($id) => (int) $id)
+                    ->filter(fn($id) => $id > 0)
+                    ->values()
+                    ->all();
 
                 return [
                     'index' => $index,
                     'data' => $assessment,
                     'form_count' => $forms->count(),
                     'question_count' => $forms->sum(fn($form) => count($form['fields'] ?? [])),
+                    'field_ids' => $fieldIds,
                 ];
             })
             ->all();
@@ -24,9 +32,10 @@
         $sessionEndAt = $session?->waktu_selesai;
         $attemptStartedAt = $attempt->started_at ?? $target->started_at;
         $assignmentDeadlineAt = $target->assignment->tanggal_selesai?->copy()->endOfDay();
-        $countdownTargetAt = $sessionEndAt ?: $assignmentDeadlineAt;
-        $countdownTitle = $sessionEndAt ? 'Sisa Waktu Sesi' : 'Sisa Waktu Penugasan';
-        $countdownCaption = $sessionEndAt
+        $countdownTargetAt = \App\Support\Assessment\AssessmentTargetTiming::resolveDeadlineAt($target);
+        $usesSessionDeadline = $countdownTargetAt && $sessionEndAt && $countdownTargetAt->equalTo($sessionEndAt);
+        $countdownTitle = $usesSessionDeadline ? 'Sisa Waktu Sesi' : 'Sisa Waktu Penugasan';
+        $countdownCaption = $usesSessionDeadline
             ? 'Gunakan hitung mundur ini sebagai acuan sebelum sesi assessment Anda ditutup.'
             : 'Timer mengikuti batas akhir penugasan karena waktu selesai sesi belum tersedia.';
         $formatDateTime = fn($value) => $value ? $value->format('d M Y H:i') . ' WITA' : '-';
@@ -45,11 +54,9 @@
             ],
             [
                 'label' => 'Batas Selesai',
-                'value' => $sessionEndAt
-                    ? $formatDateTime($sessionEndAt)
-                    : ($assignmentDeadlineAt
-                        ? $formatDateTime($assignmentDeadlineAt)
-                        : 'Tanpa batas waktu'),
+                'value' => $countdownTargetAt
+                    ? $formatDateTime($countdownTargetAt)
+                    : 'Tanpa batas waktu',
             ],
             [
                 'label' => 'Mulai Dikerjakan',
@@ -79,6 +86,7 @@
                 'index' => $assessmentItem['index'],
                 'form_count' => $assessmentItem['form_count'],
                 'question_count' => $assessmentItem['question_count'],
+                'field_ids' => $assessmentItem['field_ids'],
             ])
             ->values()
             ->all();
@@ -116,6 +124,9 @@
         initialIndex: {{ $initialAssessmentIndex }},
         totalAssessments: {{ $assessmentCount }},
         assessmentItems: @js($assessmentNavigationItems),
+        autosaveUrl: @js(route('assessment.portal.autosave', $target->id)),
+        resultUrl: @js(route('assessment.portal.result', $target->id)),
+        deadlineAt: @js(optional($countdownTargetAt)->toIso8601String()),
     })" class="space-y-6 **:text-xs sm:**:text-sm">
         <section class="grid gap-8 p-6 grid-cols-1 xl:grid-cols-[minmax(0,2fr)_minmax(320px,1fr)] md:gap-10 md:p-14">
             <div class="space-y-8 md:space-y-12" x-ref="assessmentFlowTop">

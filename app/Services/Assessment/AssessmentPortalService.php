@@ -5,6 +5,7 @@ namespace App\Services\Assessment;
 use App\Models\AssessmentAssignmentTarget;
 use App\Models\AssessmentAttempt;
 use App\Models\Guru;
+use App\Support\Assessment\AssessmentTargetTiming;
 use Illuminate\Support\Collection;
 
 class AssessmentPortalService
@@ -136,11 +137,15 @@ class AssessmentPortalService
         }
 
         if ($attempt && $attempt->status === 'submitted') {
+            $submittedAutomatically = data_get($attempt->result_summary ?? [], 'submission_mode') === 'deadline_auto';
+
             return array_merge($meta, [
                 'status' => 'submitted',
-                'label' => 'Selesai',
-                'badge' => 'primary',
-                'description' => 'Assessment sudah dikirim. Anda dapat melihat hasilnya kembali kapan saja.',
+                'label' => $submittedAutomatically ? 'Selesai Otomatis' : 'Selesai',
+                'badge' => $submittedAutomatically ? 'secondary' : 'primary',
+                'description' => $submittedAutomatically
+                    ? 'Batas waktu berakhir. Jawaban terakhir yang tersimpan diproses otomatis dan soal kosong diberi skor 0.'
+                    : 'Assessment sudah dikirim. Anda dapat melihat hasilnya kembali kapan saja.',
                 'can_open' => false,
                 'can_view_result' => true,
             ]);
@@ -178,7 +183,7 @@ class AssessmentPortalService
             ]);
         }
 
-        $assignmentStartAt = $this->resolveAssignmentStartAt($assignment);
+        $assignmentStartAt = AssessmentTargetTiming::resolveAssignmentStartAt($assignment);
 
         if ($assignmentStartAt && $now->lt($assignmentStartAt)) {
             return array_merge($meta, [
@@ -190,7 +195,9 @@ class AssessmentPortalService
             ]);
         }
 
-        if ($assignment->tanggal_selesai && $now->gt($assignment->tanggal_selesai->copy()->endOfDay())) {
+        $deadlineAt = AssessmentTargetTiming::resolveDeadlineAt($target);
+
+        if ($deadlineAt && $now->greaterThanOrEqualTo($deadlineAt)) {
             return array_merge($meta, [
                 'status' => 'expired',
                 'label' => 'Sudah Ditutup',
@@ -247,22 +254,6 @@ class AssessmentPortalService
 
         return 'Tanpa batas tanggal';
     }
-
-    private function resolveAssignmentStartAt($assignment): ?\Illuminate\Support\Carbon
-    {
-        if (! $assignment->tanggal_mulai) {
-            return null;
-        }
-
-        if ($assignment->jam_mulai_label) {
-            return \Illuminate\Support\Carbon::parse(
-                $assignment->tanggal_mulai->format('Y-m-d').' '.$assignment->jam_mulai_label
-            );
-        }
-
-        return $assignment->tanggal_mulai->copy()->startOfDay();
-    }
-
     private function formatDateTime(\Illuminate\Support\Carbon $dateTime): string
     {
         return $dateTime->format('d M Y H:i').' WITA';
