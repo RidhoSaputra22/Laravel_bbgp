@@ -6,10 +6,11 @@ class FuzzyMembership
 {
     public static function low(float $value, float $start = 0.2, float $end = 0.45): float
     {
+
         if ($value <= $start) {
             return 1.0;
         }
-
+// 
         if ($value >= $end) {
             return 0.0;
         }
