@@ -173,14 +173,14 @@ class PesertaKegiatanController extends Controller
         $getDataPeserta->alamat_rumah = $r->alamat_rumah;
         $getDataPeserta->kabupaten_rumah = $r->kabupaten_rumah;
         $getDataPeserta->npwp = $r->npwp;
-        
+
         // Handle gender mapping
         if (isset($getDataPeserta->gender)) {
             $getDataPeserta->gender = $r->jkl ?? $r->gender;
         } else if (isset($getDataPeserta->jkl)) {
             $getDataPeserta->jkl = $r->jkl ?? $r->gender;
         }
-        
+
         $getDataPeserta->save();
         // $getNik = PesertaKegiatan::where('no_ktp', $r['no_ktp'])->first();
         // if ($getNik != null) {
@@ -266,7 +266,7 @@ class PesertaKegiatanController extends Controller
         $pdf->setPaper('a4', 'potrait'); // Set kertas ke mode landscape
         // $pdf->setPaper([0, 0, 1600, 800]); // Lebar 800px, Tinggi 1000px
 
-        // Download PDF dengan nama file 
+        // Download PDF dengan nama file
         // return $pdf->stream('Biodata-' . $peserta->nama . '-' . $namaKegiatan . '.pdf');
         return $pdf->stream('Biodata-' . $peserta->nama . '-' . $namaKegiatan . '.pdf');
     }
@@ -275,7 +275,7 @@ class PesertaKegiatanController extends Controller
     {
         // dd('gas user');
         $peserta = PesertaKegiatan::find($id);
-        // dd($peserta->no_ktp);
+        dd($peserta);
 
         $namaKegiatan = $peserta->kegiatan->nama_kegiatan;
 
@@ -293,7 +293,7 @@ class PesertaKegiatanController extends Controller
         $pdf->setPaper('a4', 'potrait'); // Set kertas ke mode landscape
         // $pdf->setPaper([0, 0, 1600, 800]); // Lebar 800px, Tinggi 1000px
 
-        // Download PDF dengan nama file 
+        // Download PDF dengan nama file
         // return $pdf->stream('Biodata-' . $peserta->nama . '-' . $namaKegiatan . '.pdf');
         return $pdf->download('Biodata-' . $peserta->nama . '-' . $namaKegiatan . '.pdf');
     }

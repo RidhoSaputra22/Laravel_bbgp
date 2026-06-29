@@ -12,6 +12,40 @@
             ->all();
         $selectedDurationHours = (int) old('durasi_sesi_jam', $defaultSessionDurationHours);
         $selectedStartTime = old('jam_mulai');
+        $initialGuruSelectionState = $initialGuruSelectionState ?? [
+            'mode' => 'manual',
+            'scope' => ['q' => '', 'filters' => []],
+            'excludedIds' => [],
+            'totalMatched' => 0,
+        ];
+        $oldGuruKetenagaan = old(
+            'guru_filter_eksternal_jabatan',
+            data_get($initialGuruSelectionState, 'scope.filters.eksternal_jabatan', '')
+        );
+        $oldGuruJabatan = old(
+            'guru_filter_jenis_jabatan',
+            data_get($initialGuruSelectionState, 'scope.filters.jenis_jabatan', '')
+        );
+        $initialGuruSearchValue = data_get($initialGuruSelectionState, 'scope.q', '');
+        $guruKetenagaanOptions = collect($guruFilterOptions['ketenagaan'] ?? [])->values()->all();
+        $guruJabatanOptionsByKetenagaan = collect($guruFilterOptions['jabatan_by_ketenagaan'] ?? [])
+            ->map(fn ($options) => collect($options)->values()->all())
+            ->all();
+        $initialGuruJabatanOptions = collect($guruJabatanOptionsByKetenagaan[$oldGuruKetenagaan] ?? [])
+            ->when(
+                $oldGuruKetenagaan === '',
+                fn ($collection) => collect($guruJabatanOptionsByKetenagaan)
+                    ->flatten()
+                    ->merge($collection)
+                    ->filter(fn ($value) => filled($value))
+                    ->unique()
+                    ->values()
+            )
+            ->when(
+                filled($oldGuruJabatan),
+                fn ($collection) => $collection->push($oldGuruJabatan)->unique()->values()
+            )
+            ->all();
 
         $assessmentTableItems = $assessmentList
             ->map(function ($assessment) {
@@ -211,14 +245,57 @@
                                     </p>
 
                                     <x-multiple-choice-table id="guru-selector" name="guru_ids"
-                                        :headers="['Nama Guru', 'Email', 'Instansi', 'Kabupaten', 'Verifikasi']"
+                                        :headers="['Nama Guru', 'Email', 'Ketenagaan', 'Jabatan', 'Instansi', 'Kabupaten', 'Verifikasi']"
                                         :items="[]" :selected="$selectedGuruIds"
                                         :initial-selected-items="$selectedGuruItems"
                                         :ajax-url="route('assessment.assignment.guru-options')"
-                                        description="Gunakan pencarian untuk memfilter data guru. Tabel akan memuat data per halaman dan tetap mengingat semua guru yang sudah dipilih."
-                                        search-placeholder="Cari nama, email, instansi, atau kabupaten guru..."
+                                        selection-name="guru" :remote-bulk-select="true"
+                                        :initial-selection-state="$initialGuruSelectionState"
+                                        :initial-search-value="$initialGuruSearchValue"
+                                        description="Gunakan pencarian, filter ketenagaan, atau filter jabatan untuk memfilter data guru. Tabel akan memuat data per halaman dan tetap mengingat semua guru yang sudah dipilih."
+                                        search-placeholder="Cari nama, email, ketenagaan, jabatan, instansi, atau kabupaten guru..."
                                         empty-message="Belum ada data guru yang bisa dipilih."
-                                        selected-title="Guru Terpilih" />
+                                        selected-title="Guru Terpilih">
+                                        <x-slot name="toolbarFilters">
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    <div class="form-group mb-md-0">
+                                                        <label for="guru-filter-eksternal-jabatan">Ketenagaan</label>
+                                                        <select name="guru_filter_eksternal_jabatan"
+                                                            id="guru-filter-eksternal-jabatan" class="form-control"
+                                                            data-role="mct-filter"
+                                                            data-filter-param="eksternal_jabatan">
+                                                            <option value="">Semua ketenagaan</option>
+                                                            @foreach ($guruKetenagaanOptions as $ketenagaanOption)
+                                                                <option value="{{ $ketenagaanOption }}"
+                                                                    @selected($oldGuruKetenagaan === $ketenagaanOption)>
+                                                                    {{ $ketenagaanOption }}
+                                                                </option>
+                                                            @endforeach
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <div class="form-group mb-0">
+                                                        <label for="guru-filter-jenis-jabatan">Jabatan</label>
+                                                        <select name="guru_filter_jenis_jabatan"
+                                                            id="guru-filter-jenis-jabatan" class="form-control"
+                                                            data-role="mct-filter"
+                                                            data-filter-param="jenis_jabatan"
+                                                            data-selected-value="{{ $oldGuruJabatan }}">
+                                                            <option value="">Semua jabatan</option>
+                                                            @foreach ($initialGuruJabatanOptions as $jabatanOption)
+                                                                <option value="{{ $jabatanOption }}"
+                                                                    @selected($oldGuruJabatan === $jabatanOption)>
+                                                                    {{ $jabatanOption }}
+                                                                </option>
+                                                            @endforeach
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </x-slot>
+                                    </x-multiple-choice-table>
                                     <div class="assignment-select-note text-muted mt-2" id="guru-selection-caption">
                                         Belum ada guru dipilih.
                                     </div>
@@ -328,8 +405,14 @@
             const sessionCapacity = {{ $sessionCapacity }};
             const defaultDurationHours = {{ $defaultSessionDurationHours }};
             const batchThreshold = {{ $batchThreshold }};
+            const guruJabatanOptionsByKetenagaan = @json($guruJabatanOptionsByKetenagaan);
             let selectedAssessments = [];
-            let selectedGurus = [];
+            let selectedGurus = {
+                mode: 'manual',
+                count: 0,
+                items: [],
+                excludedCount: 0,
+            };
 
             function getSelectedDurationHours() {
                 const durationSelect = document.getElementById('durasi_sesi_jam');
@@ -373,7 +456,7 @@
             }
 
             function updateGuruSummary() {
-                const totalGuru = selectedGurus.length;
+                const totalGuru = Number(selectedGurus.count || 0);
                 const totalSessions = totalGuru > 0 ? Math.ceil(totalGuru / sessionCapacity) : 0;
                 const durationHours = getSelectedDurationHours();
                 const distributionMethod = totalGuru === 0 ? '-' : (totalGuru > batchThreshold ? 'Batch Job' : 'Langsung');
@@ -417,21 +500,87 @@
                     return;
                 }
 
-                if (selectedGurus.length === 0) {
+                if (Number(selectedGurus.count || 0) === 0) {
                     caption.textContent = 'Belum ada guru dipilih.';
 
                     return;
                 }
 
-                const previewNames = selectedGurus.slice(0, 3).map((guru) => guru.text || guru.id);
-                const extraCount = selectedGurus.length - previewNames.length;
+                if (selectedGurus.mode === 'select_all') {
+                    let message = 'Semua ' + selectedGurus.count + ' guru sesuai filter aktif dipilih';
+
+                    if (Number(selectedGurus.excludedCount || 0) > 0) {
+                        message += ' dengan ' + selectedGurus.excludedCount + ' guru dikecualikan';
+                    }
+
+                    caption.textContent = message + '.';
+
+                    return;
+                }
+
+                const previewNames = selectedGurus.items.slice(0, 3).map((guru) => guru.text || guru.id);
+                const extraCount = selectedGurus.items.length - previewNames.length;
                 let message = previewNames.join(', ');
 
                 if (extraCount > 0) {
                     message += ' dan ' + extraCount + ' guru lainnya';
                 }
 
-                caption.textContent = selectedGurus.length + ' guru dipilih: ' + message + '.';
+                caption.textContent = selectedGurus.count + ' guru dipilih: ' + message + '.';
+            }
+
+            function getGuruSelectorElement() {
+                return document.querySelector('[data-multiple-choice-table][data-table-id="guru-selector"]');
+            }
+
+            function refreshGuruSelector() {
+                const guruSelectorElement = getGuruSelectorElement();
+
+                if (!guruSelectorElement) {
+                    return;
+                }
+
+                guruSelectorElement.dispatchEvent(new CustomEvent('multiple-choice-table:refresh', {
+                    detail: {
+                        resetPage: true,
+                    },
+                }));
+            }
+
+            function getAllGuruJabatanOptions() {
+                return Object.values(guruJabatanOptionsByKetenagaan)
+                    .flat()
+                    .filter((value, index, array) => value && array.indexOf(value) === index);
+            }
+
+            function populateGuruJabatanOptions(selectedKetenagaan, selectedJabatan = '') {
+                const jabatanSelect = document.getElementById('guru-filter-jenis-jabatan');
+
+                if (!jabatanSelect) {
+                    return;
+                }
+
+                const optionValues = selectedKetenagaan && Array.isArray(guruJabatanOptionsByKetenagaan[selectedKetenagaan]) ?
+                    guruJabatanOptionsByKetenagaan[selectedKetenagaan] :
+                    getAllGuruJabatanOptions();
+
+                jabatanSelect.innerHTML = '';
+
+                const defaultOption = document.createElement('option');
+                defaultOption.value = '';
+                defaultOption.textContent = selectedKetenagaan === '' ?
+                    'Semua jabatan' :
+                    'Semua jabatan pada ketenagaan ini';
+                jabatanSelect.appendChild(defaultOption);
+
+                optionValues.forEach((optionValue) => {
+                    const option = document.createElement('option');
+                    option.value = optionValue;
+                    option.textContent = optionValue;
+                    jabatanSelect.appendChild(option);
+                });
+
+                jabatanSelect.value = optionValues.includes(selectedJabatan) ? selectedJabatan : '';
             }
 
             document.addEventListener('multiple-choice-table:change', function(event) {
@@ -441,10 +590,15 @@
                 }
 
                 if (event.detail.tableId === 'guru-selector') {
-                    selectedGurus = (event.detail.selectedItems || []).map((item) => ({
-                        id: String(item.id),
-                        text: item.label || item.id || '',
-                    }));
+                    selectedGurus = {
+                        mode: event.detail.selectionMode || 'manual',
+                        count: Number(event.detail.selectedCount || 0),
+                        excludedCount: Number(event.detail.excludedCount || 0),
+                        items: (event.detail.selectedItems || []).map((item) => ({
+                            id: String(item.id),
+                            text: item.label || item.id || '',
+                        })),
+                    };
                     updateGuruCaption();
                     updateGuruSummary();
                 }
@@ -453,6 +607,24 @@
             document.addEventListener('DOMContentLoaded', function() {
                 const durationSelect = document.getElementById('durasi_sesi_jam');
                 const startTimeInput = document.getElementById('jam_mulai');
+                const ketenagaanSelect = document.getElementById('guru-filter-eksternal-jabatan');
+                const jabatanSelect = document.getElementById('guru-filter-jenis-jabatan');
+
+                if (ketenagaanSelect && jabatanSelect) {
+                    populateGuruJabatanOptions(
+                        ketenagaanSelect.value || '',
+                        jabatanSelect.dataset.selectedValue || jabatanSelect.value || ''
+                    );
+
+                    ketenagaanSelect.addEventListener('change', function() {
+                        populateGuruJabatanOptions(this.value || '', jabatanSelect.value || '');
+                        refreshGuruSelector();
+                    });
+
+                    jabatanSelect.addEventListener('change', function() {
+                        refreshGuruSelector();
+                    });
+                }
 
                 if (durationSelect) {
                     durationSelect.addEventListener('change', function() {

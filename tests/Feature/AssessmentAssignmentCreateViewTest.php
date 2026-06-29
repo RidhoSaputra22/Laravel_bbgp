@@ -38,8 +38,8 @@ class AssessmentAssignmentCreateViewTest extends TestCase
                     [
                         'id' => '12',
                         'label' => 'Guru Pertama',
-                        'description' => 'guru1@example.com | Instansi A | Kota A | Terverifikasi',
-                        'cells' => ['Guru Pertama', 'guru1@example.com', 'Instansi A', 'Kota A', 'Terverifikasi'],
+                        'description' => 'guru1@example.com | Tenaga Pendidik | Guru | Instansi A | Kota A | Terverifikasi',
+                        'cells' => ['Guru Pertama', 'guru1@example.com', 'Tenaga Pendidik', 'Guru', 'Instansi A', 'Kota A', 'Terverifikasi'],
                         'payload' => [
                             'nama' => 'Guru Pertama',
                         ],
@@ -47,11 +47,28 @@ class AssessmentAssignmentCreateViewTest extends TestCase
                     [
                         'id' => '18',
                         'label' => 'Guru Kedua',
-                        'description' => 'guru2@example.com | Instansi B | Kota B | Terverifikasi',
-                        'cells' => ['Guru Kedua', 'guru2@example.com', 'Instansi B', 'Kota B', 'Terverifikasi'],
+                        'description' => 'guru2@example.com | Stakeholder | Kepala Dinas | Instansi B | Kota B | Terverifikasi',
+                        'cells' => ['Guru Kedua', 'guru2@example.com', 'Stakeholder', 'Kepala Dinas', 'Instansi B', 'Kota B', 'Terverifikasi'],
                         'payload' => [
                             'nama' => 'Guru Kedua',
                         ],
+                    ],
+                ],
+                'initialGuruSelectionState' => [
+                    'mode' => 'manual',
+                    'scope' => [
+                        'q' => '',
+                        'filters' => [],
+                    ],
+                    'excludedIds' => [],
+                    'totalMatched' => 0,
+                ],
+                'guruFilterOptions' => [
+                    'ketenagaan' => ['Tenaga Pendidik', 'Tenaga Kependidikan', 'Stakeholder'],
+                    'jabatan_by_ketenagaan' => [
+                        'Tenaga Pendidik' => ['Guru', 'Dosen'],
+                        'Tenaga Kependidikan' => ['Pengawas', 'Kepala Sekolah'],
+                        'Stakeholder' => ['Kepala Dinas', 'Staff'],
                     ],
                 ],
                 'batchThreshold' => 25,
@@ -63,6 +80,12 @@ class AssessmentAssignmentCreateViewTest extends TestCase
         $response->assertSee('data-table-id="guru-selector"', false);
         $response->assertSee('guru-options', false);
         $response->assertSee('data-ajax-url=', false);
+        $response->assertSee('data-selection-name="guru"', false);
+        $response->assertSee('data-remote-bulk-select="true"', false);
+        $response->assertSee('Ketenagaan');
+        $response->assertSee('Jabatan');
+        $response->assertSee('Semua ketenagaan');
+        $response->assertSee('Semua jabatan');
         $response->assertSee('3 form / 9 pertanyaan');
         $response->assertDontSee('assignment-select2', false);
     }

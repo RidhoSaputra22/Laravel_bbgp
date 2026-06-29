@@ -11,6 +11,10 @@
     'ajaxUrl' => null,
     'pageSize' => 10,
     'initialSelectedItems' => [],
+    'selectionName' => null,
+    'remoteBulkSelect' => false,
+    'initialSelectionState' => [],
+    'initialSearchValue' => '',
 ])
 
 @php
@@ -28,6 +32,26 @@
         ->filter(fn ($item) => filled($item['id']))
         ->values()
         ->all();
+    $normalizedInitialSelectionState = [
+        'mode' => data_get($initialSelectionState, 'mode', 'manual'),
+        'scope' => [
+            'q' => (string) data_get($initialSelectionState, 'scope.q', ''),
+            'filters' => collect(data_get($initialSelectionState, 'scope.filters', []))
+                ->mapWithKeys(function ($value, $key) {
+                    $normalizedValue = trim((string) $value);
+
+                    return $normalizedValue === '' ? [] : [(string) $key => $normalizedValue];
+                })
+                ->all(),
+        ],
+        'excludedIds' => collect(data_get($initialSelectionState, 'excludedIds', []))
+            ->map(fn ($value) => (string) $value)
+            ->filter(fn ($value) => $value !== '')
+            ->values()
+            ->all(),
+        'totalMatched' => max((int) data_get($initialSelectionState, 'totalMatched', 0), 0),
+    ];
+    $normalizedInitialSearchValue = (string) ($initialSearchValue ?: data_get($normalizedInitialSelectionState, 'scope.q', ''));
 @endphp
 
 @once
@@ -60,6 +84,10 @@
                 overflow-x: auto;
                 overflow-y: visible;
                 position: relative;
+            }
+
+            .multiple-choice-table__toolbar-filters {
+                margin-bottom: 1rem;
             }
 
             .multiple-choice-table__table {
@@ -270,6 +298,10 @@
                     const pageSize = Math.max(Number(element.dataset.pageSize || 10), 1);
                     const selectedTitle = element.dataset.selectedTitle || 'Data Terpilih';
                     const emptyMessage = element.dataset.emptyMessage || 'Data tidak tersedia.';
+                    const selectionName = String(element.dataset.selectionName || '').trim();
+                    const remoteBulkSelectEnabled = isRemote &&
+                        ['1', 'true'].includes(String(element.dataset.remoteBulkSelect || '').toLowerCase()) &&
+                        selectionName !== '';
 
                     const searchInput = element.querySelector('[data-role="mct-search"]');
                     const selectAllButton = element.querySelector('[data-action="select-all"]');
@@ -286,9 +318,12 @@
                     const nextPageButton = element.querySelector('[data-action="next-page"]');
                     const footerNode = element.querySelector('[data-role="mct-footer"]');
                     const columnCount = Number(element.dataset.columnCount || 1);
+                    const filterInputs = Array.from(element.querySelectorAll('[data-role="mct-filter"][data-filter-param]'));
 
                     const selectedMap = new Map();
                     const initialSelectedItems = parseJson(element.dataset.initialSelectedItems, []);
+                    const initialSelectionState = parseJson(element.dataset.initialSelectionState, {});
+                    const initialSearchValue = String(element.dataset.initialSearchValue || '').trim();
                     let currentPage = 1;
                     let lastPage = 1;
                     let totalItems = 0;
@@ -298,6 +333,126 @@
                     let searchTimer = null;
                     let dataTable = null;
                     let localRows = [];
+                    let bulkSelection = {
+                        active: false,
+                        scope: {
+                            q: '',
+                            filters: {},
+                        },
+                        excludedIds: new Set(),
+                        totalMatched: 0,
+                    };
+
+                    function normalizeScope(rawScope) {
+                        const scope = rawScope && typeof rawScope === 'object' ? rawScope : {};
+                        const filters = scope.filters && typeof scope.filters === 'object' ? scope.filters : {};
+                        const normalizedFilters = {};
+
+                        Object.keys(filters).forEach((filterKey) => {
+                            const filterValue = String(filters[filterKey] ?? '').trim();
+
+                            if (filterValue !== '') {
+                                normalizedFilters[filterKey] = filterValue;
+                            }
+                        });
+
+                        return {
+                            q: String(scope.q ?? '').trim(),
+                            filters: normalizedFilters,
+                        };
+                    }
+
+                    function getCurrentFilterState() {
+                        const filters = {};
+
+                        filterInputs.forEach((input) => {
+                            const filterParam = String(input.dataset.filterParam || '').trim();
+                            const filterValue = String(input.value || '').trim();
+
+                            if (filterParam !== '' && filterValue !== '') {
+                                filters[filterParam] = filterValue;
+                            }
+                        });
+
+                        return filters;
+                    }
+
+                    function getCurrentScope() {
+                        return normalizeScope({
+                            q: String(searchInput ? searchInput.value : '').trim(),
+                            filters: getCurrentFilterState(),
+                        });
+                    }
+
+                    function getActiveRemoteScope() {
+                        if (remoteBulkSelectEnabled && bulkSelection.active) {
+                            return bulkSelection.scope;
+                        }
+
+                        return getCurrentScope();
+                    }
+
+                    function itemMatchesScope(item, scope) {
+                        const normalizedScope = normalizeScope(scope);
+
+                        if (normalizedScope.q !== '' && !String(item.search || '').includes(normalizedScope.q.toLowerCase())) {
+                            return false;
+                        }
+
+                        return Object.entries(normalizedScope.filters).every(([filterKey, filterValue]) => {
+                            return String(item.payload?.[filterKey] ?? '').trim() === filterValue;
+                        });
+                    }
+
+                    function isItemSelected(item) {
+                        if (remoteBulkSelectEnabled && bulkSelection.active && itemMatchesScope(item, bulkSelection.scope)) {
+                            return !bulkSelection.excludedIds.has(item.id);
+                        }
+
+                        return selectedMap.has(item.id);
+                    }
+
+                    function getExcludedCount() {
+                        return remoteBulkSelectEnabled && bulkSelection.active ? bulkSelection.excludedIds.size : 0;
+                    }
+
+                    function getSelectionCount() {
+                        if (remoteBulkSelectEnabled && bulkSelection.active) {
+                            return Math.max(bulkSelection.totalMatched - getExcludedCount(), 0);
+                        }
+
+                        return selectedMap.size;
+                    }
+
+                    function setScopeLockState(locked) {
+                        if (!remoteBulkSelectEnabled) {
+                            return;
+                        }
+
+                        if (searchInput) {
+                            searchInput.readOnly = locked;
+                            searchInput.classList.toggle('bg-light', locked);
+                        }
+
+                        filterInputs.forEach((input) => {
+                            input.disabled = locked;
+                        });
+
+                        if (selectAllButton) {
+                            selectAllButton.textContent = locked ? 'Semua Terpilih' : 'Pilih Semua';
+                        }
+                    }
+
+                    function clearBulkSelection() {
+                        bulkSelection = {
+                            active: false,
+                            scope: getCurrentScope(),
+                            excludedIds: new Set(),
+                            totalMatched: 0,
+                        };
+
+                        setScopeLockState(false);
+                    }
 
                     initialSelectedItems
                         .map(normalizeItem)
@@ -305,6 +460,31 @@
                         .forEach((item) => {
                             selectedMap.set(item.id, item);
                         });
+
+                    if (remoteBulkSelectEnabled && initialSelectionState.mode === 'select_all') {
+                        bulkSelection = {
+                            active: true,
+                            scope: normalizeScope(initialSelectionState.scope),
+                            excludedIds: new Set(
+                                Array.isArray(initialSelectionState.excludedIds) ?
+                                    initialSelectionState.excludedIds
+                                        .map((value) => String(value))
+                                        .filter((value) => value !== '') :
+                                    []
+                            ),
+                            totalMatched: Math.max(Number(initialSelectionState.totalMatched || 0), 0),
+                        };
+
+                        if (searchInput) {
+                            searchInput.value = bulkSelection.scope.q;
+                        }
+
+                        keyword = bulkSelection.scope.q;
+                        setScopeLockState(true);
+                    } else if (searchInput && initialSearchValue !== '') {
+                        searchInput.value = initialSearchValue;
+                        keyword = initialSearchValue;
+                    }
 
                     function getCheckbox(row) {
                         return row.querySelector('[data-role="mct-checkbox"]');
@@ -323,12 +503,24 @@
                     }
 
                     function getSelectedItems() {
+                        if (remoteBulkSelectEnabled && bulkSelection.active) {
+                            return [];
+                        }
+
                         return Array.from(selectedMap.values()).map((item) => ({
                             id: item.id,
                             label: item.label,
                             description: item.description,
                             payload: item.payload,
                         }));
+                    }
+
+                    function appendHiddenInput(name, value) {
+                        const input = document.createElement('input');
+                        input.type = 'hidden';
+                        input.name = name;
+                        input.value = value;
+                        hiddenInputsNode.appendChild(input);
                     }
 
                     function emitChange() {
@@ -339,8 +531,19 @@
                             detail: {
                                 tableId: tableId,
                                 inputName: inputName,
-                                selectedIds: selectedItems.map((item) => item.id),
+                                selectedIds: remoteBulkSelectEnabled && bulkSelection.active ?
+                                    [] :
+                                    selectedItems.map((item) => item.id),
                                 selectedItems: selectedItems,
+                                selectedCount: getSelectionCount(),
+                                excludedCount: getExcludedCount(),
+                                selectionMode: remoteBulkSelectEnabled && bulkSelection.active ? 'select_all' : 'manual',
+                                selectAllScope: remoteBulkSelectEnabled && bulkSelection.active ? {
+                                    q: bulkSelection.scope.q,
+                                    filters: bulkSelection.scope.filters,
+                                    excludedIds: Array.from(bulkSelection.excludedIds),
+                                    totalMatched: bulkSelection.totalMatched,
+                                } : null,
                             },
                         }));
                     }
@@ -352,12 +555,33 @@
 
                         hiddenInputsNode.innerHTML = '';
 
+                        if (remoteBulkSelectEnabled) {
+                            appendHiddenInput(selectionName + '_selection_mode', bulkSelection.active ? 'select_all' : 'manual');
+                        }
+
+                        if (remoteBulkSelectEnabled && bulkSelection.active) {
+                            appendHiddenInput(selectionName + '_select_all', '1');
+
+                            if (bulkSelection.scope.q !== '') {
+                                appendHiddenInput(selectionName + '_selection_scope[q]', bulkSelection.scope.q);
+                            }
+
+                            Object.entries(bulkSelection.scope.filters).forEach(([filterKey, filterValue]) => {
+                                appendHiddenInput(
+                                    selectionName + '_selection_scope[' + filterKey + ']',
+                                    filterValue
+                                );
+                            });
+
+                            Array.from(bulkSelection.excludedIds).forEach((guruId) => {
+                                appendHiddenInput(selectionName + '_excluded_ids[]', guruId);
+                            });
+
+                            return;
+                        }
+
                         Array.from(selectedMap.values()).forEach((item) => {
-                            const input = document.createElement('input');
-                            input.type = 'hidden';
-                            input.name = inputName + '[]';
-                            input.value = item.id;
-                            hiddenInputsNode.appendChild(input);
+                            appendHiddenInput(inputName + '[]', item.id);
                         });
                     }
 
@@ -366,26 +590,42 @@
                             return;
                         }
 
-                        const selectedItems = Array.from(selectedMap.values());
+                        const selectedCount = getSelectionCount();
 
-                        if (selectedItems.length === 0) {
+                        if (selectedCount === 0) {
                             selectedSummaryNode.textContent = '';
                             selectedSummaryNode.classList.remove('is-visible');
 
                             return;
                         }
 
-                        const previewLabels = selectedItems.slice(0, 3).map((item) => item.label);
-                        let summaryText = selectedTitle + ': ' + selectedItems.length + ' dipilih';
+                        let summaryText = selectedTitle + ': ';
 
-                        if (previewLabels.length > 0) {
-                            summaryText += ' (' + previewLabels.join(', ');
+                        if (remoteBulkSelectEnabled && bulkSelection.active) {
+                            summaryText += 'semua ' + selectedCount + ' dipilih';
 
-                            if (selectedItems.length > previewLabels.length) {
-                                summaryText += ' dan ' + (selectedItems.length - previewLabels.length) + ' lainnya';
+                            if (bulkSelection.scope.q !== '' || Object.keys(bulkSelection.scope.filters).length > 0) {
+                                summaryText += ' sesuai filter aktif';
                             }
 
-                            summaryText += ')';
+                            if (getExcludedCount() > 0) {
+                                summaryText += ' (' + getExcludedCount() + ' dikecualikan)';
+                            }
+                        } else {
+                            const selectedItems = Array.from(selectedMap.values());
+                            const previewLabels = selectedItems.slice(0, 3).map((item) => item.label);
+
+                            summaryText += selectedItems.length + ' dipilih';
+
+                            if (previewLabels.length > 0) {
+                                summaryText += ' (' + previewLabels.join(', ');
+
+                                if (selectedItems.length > previewLabels.length) {
+                                    summaryText += ' dan ' + (selectedItems.length - previewLabels.length) + ' lainnya';
+                                }
+
+                                summaryText += ')';
+                            }
                         }
 
                         selectedSummaryNode.textContent = summaryText;
@@ -418,7 +658,9 @@
 
                         const visibleRows = getVisibleRows();
                         const visibleSelectedCount = visibleRows.filter((row) => {
-                            return selectedMap.has(String(row.dataset.itemId || ''));
+                            const item = hydrateItemFromRow(row);
+
+                            return item.id !== '' && isItemSelected(item);
                         }).length;
 
                         masterCheckbox.checked = visibleRows.length > 0 && visibleSelectedCount === visibleRows.length;
@@ -428,7 +670,8 @@
                     function syncRenderedRows() {
                         getRenderedRows().forEach((row) => {
                             const checkbox = getCheckbox(row);
-                            const isSelected = selectedMap.has(String(row.dataset.itemId || ''));
+                            const item = hydrateItemFromRow(row);
+                            const isSelected = item.id !== '' && isItemSelected(item);
 
                             if (checkbox) {
                                 checkbox.checked = isSelected;
@@ -452,6 +695,16 @@
                             const item = hydrateItemFromRow(row);
 
                             if (!item.id) {
+                                return;
+                            }
+
+                            if (remoteBulkSelectEnabled && bulkSelection.active) {
+                                if (checked) {
+                                    bulkSelection.excludedIds.delete(item.id);
+                                } else {
+                                    bulkSelection.excludedIds.add(item.id);
+                                }
+
                                 return;
                             }
 
@@ -530,7 +783,7 @@
                             return buildRowMarkup(
                                 item,
                                 tableId,
-                                selectedMap.has(item.id),
+                                isItemSelected(item),
                                 ((currentPage - 1) * pageSize) + index + 1,
                                 inputName
                             );
@@ -540,7 +793,7 @@
                         syncRenderedRows();
                     }
 
-                    function fetchRemoteRows() {
+                    function fetchRemoteRows(onComplete = null) {
                         if (!isRemote) {
                             return;
                         }
@@ -549,13 +802,19 @@
                             tbodyNode.innerHTML = buildEmptyRowMarkup(columnCount, 'Memuat data guru...');
                         }
 
+                        const scope = getActiveRemoteScope();
                         const params = new URLSearchParams();
                         params.set('page', String(currentPage));
                         params.set('per_page', String(pageSize));
+                        keyword = scope.q;
 
-                        if (keyword !== '') {
-                            params.set('q', keyword);
+                        if (scope.q !== '') {
+                            params.set('q', scope.q);
                         }
+
+                        Object.entries(scope.filters).forEach(([filterParam, filterValue]) => {
+                            params.set(filterParam, filterValue);
+                        });
 
                         $.getJSON(ajaxUrl + '?' + params.toString())
                             .done(function(response) {
@@ -576,6 +835,13 @@
                                 if (emptySearchState) {
                                     emptySearchState.classList.add('d-none');
                                 }
+
+                                if (typeof onComplete === 'function') {
+                                    onComplete({
+                                        scope: scope,
+                                        totalItems: totalItems,
+                                    });
+                                }
                             })
                             .fail(function() {
                                 totalItems = 0;
@@ -584,8 +850,58 @@
                                 lastPage = 1;
                                 renderRemoteRows([], 'Gagal memuat data guru. Coba lagi.');
                                 updatePaginationFooter();
+
+                                if (typeof onComplete === 'function') {
+                                    onComplete(null);
+                                }
                             });
                     }
+
+                    function activateRemoteBulkSelection() {
+                        if (!remoteBulkSelectEnabled) {
+                            return;
+                        }
+
+                        if (searchTimer) {
+                            window.clearTimeout(searchTimer);
+                            searchTimer = null;
+                        }
+
+                        currentPage = 1;
+
+                        fetchRemoteRows(function(result) {
+                            if (!result || result.totalItems <= 0) {
+                                syncState();
+
+                                return;
+                            }
+
+                            selectedMap.clear();
+                            bulkSelection = {
+                                active: true,
+                                scope: normalizeScope(result.scope),
+                                excludedIds: new Set(),
+                                totalMatched: result.totalItems,
+                            };
+
+                            setScopeLockState(true);
+                            syncState();
+                        });
+                    }
+
+                    element.addEventListener('multiple-choice-table:refresh', function(event) {
+                        if (event && event.detail && event.detail.resetPage !== false) {
+                            currentPage = 1;
+                        }
+
+                        if (isRemote) {
+                            fetchRemoteRows();
+
+                            return;
+                        }
+
+                        applySearch();
+                    });
 
                     function initLocalMode() {
                         localRows = Array.from(element.querySelectorAll('[data-role="mct-row"]'));
@@ -633,10 +949,14 @@
                     }
 
                     function applySearch() {
-                        const nextKeyword = ((searchInput ? searchInput.value : '') || '').trim().toLowerCase();
+                        const rawKeyword = ((searchInput ? searchInput.value : '') || '').trim();
 
                         if (isRemote) {
-                            keyword = nextKeyword;
+                            if (remoteBulkSelectEnabled && bulkSelection.active) {
+                                return;
+                            }
+
+                            keyword = rawKeyword;
                             currentPage = 1;
 
                             if (searchTimer) {
@@ -649,6 +969,8 @@
 
                             return;
                         }
+
+                        const nextKeyword = rawKeyword.toLowerCase();
 
                         if (dataTable) {
                             dataTable.search(nextKeyword).draw();
@@ -683,6 +1005,12 @@
 
                     if (selectAllButton) {
                         selectAllButton.addEventListener('click', function() {
+                            if (remoteBulkSelectEnabled) {
+                                activateRemoteBulkSelection();
+
+                                return;
+                            }
+
                             setRowsSelection(getVisibleRows(), true);
                         });
                     }
@@ -690,6 +1018,7 @@
                     if (clearButton) {
                         clearButton.addEventListener('click', function() {
                             selectedMap.clear();
+                            clearBulkSelection();
                             syncState();
                         });
                     }
@@ -746,11 +1075,15 @@
     data-table-id="{{ $id }}"
     data-input-name="{{ $name }}"
     data-selected-title="{{ $selectedTitle }}"
+    data-selection-name="{{ $selectionName ?? '' }}"
+    data-remote-bulk-select="{{ $remoteBulkSelect ? 'true' : 'false' }}"
     data-ajax-url="{{ $ajaxUrl ?? '' }}"
     data-page-size="{{ $pageSize }}"
     data-column-count="{{ count($headers) + 1 }}"
     data-empty-message="{{ $emptyMessage }}"
-    data-initial-selected-items='@json($normalizedInitialSelectedItems)'>
+    data-initial-selected-items='@json($normalizedInitialSelectedItems)'
+    data-initial-selection-state='@json($normalizedInitialSelectionState)'
+    data-initial-search-value="{{ $normalizedInitialSearchValue }}">
     <div class="multiple-choice-table__toolbar">
         <div class="multiple-choice-table__search">
             <input type="text" class="form-control" data-role="mct-search" placeholder="{{ $searchPlaceholder }}">
@@ -768,9 +1101,15 @@
         </div>
     </div>
 
+    @if (isset($toolbarFilters) && $toolbarFilters->isNotEmpty())
+        <div class="multiple-choice-table__toolbar-filters">
+            {{ $toolbarFilters }}
+        </div>
+    @endif
+
     <div data-role="mct-hidden-inputs"></div>
 
-    <div class="multiple-choice-table__table-wrapper table-responsive px-3">
+    <div class="multiple-choice-table__table-wrapper table-responsive ">
         <table class="table table-striped table-hover multiple-choice-table__table" id="{{ $id }}-table">
             <thead>
                 <tr>
