@@ -32,8 +32,23 @@ return new class extends Migration
         if (Schema::hasTable('assessment_attempt_answers') && ! Schema::hasColumn('assessment_attempt_answers', 'auto_score')) {
             Schema::table('assessment_attempt_answers', function (Blueprint $table) {
                 $table->decimal('auto_score', 5, 2)->nullable()->after('answer_payload');
+            });
+        }
+
+        if (Schema::hasTable('assessment_attempt_answers') && ! Schema::hasColumn('assessment_attempt_answers', 'auto_score_reason')) {
+            Schema::table('assessment_attempt_answers', function (Blueprint $table) {
                 $table->text('auto_score_reason')->nullable()->after('auto_score');
+            });
+        }
+
+        if (Schema::hasTable('assessment_attempt_answers') && ! Schema::hasColumn('assessment_attempt_answers', 'auto_score_metadata')) {
+            Schema::table('assessment_attempt_answers', function (Blueprint $table) {
                 $table->json('auto_score_metadata')->nullable()->after('auto_score_reason');
+            });
+        }
+
+        if (Schema::hasTable('assessment_attempt_answers') && ! Schema::hasColumn('assessment_attempt_answers', 'auto_scored_at')) {
+            Schema::table('assessment_attempt_answers', function (Blueprint $table) {
                 $table->timestamp('auto_scored_at')->nullable()->after('auto_score_metadata');
             });
         }
@@ -44,15 +59,20 @@ return new class extends Migration
      */
     public function down(): void
     {
-        if (Schema::hasTable('assessment_attempt_answers') && Schema::hasColumn('assessment_attempt_answers', 'auto_score')) {
-            Schema::table('assessment_attempt_answers', function (Blueprint $table) {
-                $table->dropColumn([
-                    'auto_score',
-                    'auto_score_reason',
-                    'auto_score_metadata',
-                    'auto_scored_at',
-                ]);
-            });
+        if (Schema::hasTable('assessment_attempt_answers')) {
+            $columnsToDrop = [];
+
+            foreach (['auto_score', 'auto_score_reason', 'auto_score_metadata', 'auto_scored_at'] as $column) {
+                if (Schema::hasColumn('assessment_attempt_answers', $column)) {
+                    $columnsToDrop[] = $column;
+                }
+            }
+
+            if ($columnsToDrop !== []) {
+                Schema::table('assessment_attempt_answers', function (Blueprint $table) use ($columnsToDrop) {
+                    $table->dropColumn($columnsToDrop);
+                });
+            }
         }
 
         if (Schema::hasTable('assessment_form_fields') && Schema::hasColumn('assessment_form_fields', 'scoring_config')) {

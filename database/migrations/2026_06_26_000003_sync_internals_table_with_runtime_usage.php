@@ -90,18 +90,32 @@ return new class extends Migration
             }
         });
 
-        DB::statement('ALTER TABLE internals MODIFY tempat VARCHAR(255) NULL');
-        DB::statement('ALTER TABLE internals MODIFY jabatan VARCHAR(255) NULL');
-        DB::statement('ALTER TABLE internals MODIFY golongan VARCHAR(255) NULL');
-        DB::statement("ALTER TABLE internals MODIFY is_verif ENUM('sudah','belum') NOT NULL DEFAULT 'belum'");
+        if (Schema::hasColumn('internals', 'tempat')) {
+            DB::statement('ALTER TABLE internals MODIFY tempat VARCHAR(255) NULL');
+        }
 
-        if (Schema::hasColumn('internals', 'kota')) {
+        if (Schema::hasColumn('internals', 'jabatan')) {
+            DB::statement('ALTER TABLE internals MODIFY jabatan VARCHAR(255) NULL');
+        }
+
+        if (Schema::hasColumn('internals', 'golongan')) {
+            DB::statement('ALTER TABLE internals MODIFY golongan VARCHAR(255) NULL');
+        }
+
+        if (Schema::hasColumn('internals', 'is_verif')) {
+            DB::statement("ALTER TABLE internals MODIFY is_verif ENUM('sudah','belum') NOT NULL DEFAULT 'belum'");
+        }
+
+        if (Schema::hasColumn('internals', 'kota') && Schema::hasColumn('internals', 'tempat')) {
             DB::table('internals')
                 ->whereNull('kota')
                 ->update(['kota' => DB::raw('tempat')]);
         }
 
-        if (Schema::hasColumn('internals', 'tgl_selesai_kegiatan')) {
+        if (
+            Schema::hasColumn('internals', 'tgl_selesai_kegiatan') &&
+            Schema::hasColumn('internals', 'tgl_kegiatan')
+        ) {
             DB::table('internals')
                 ->whereNull('tgl_selesai_kegiatan')
                 ->update(['tgl_selesai_kegiatan' => DB::raw('tgl_kegiatan')]);
