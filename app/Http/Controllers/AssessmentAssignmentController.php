@@ -4,14 +4,19 @@ namespace App\Http\Controllers;
 
 use App\Models\Assessment;
 use App\Models\AssessmentAssignment;
+use App\Models\AssessmentForm;
+use App\Models\AssessmentFormField;
 use App\Models\Guru;
 use App\Services\AssessmentAssignmentService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 
 class AssessmentAssignmentController extends Controller
 {
+    private const GURU_PAGE_SIZE = 10;
+
     private string $menu = 'assessment-penugasan';
 
     public function __construct(
@@ -37,34 +42,121 @@ class AssessmentAssignmentController extends Controller
     {
         $this->authorizeAccess();
 
-        $assessmentList = Assessment::with(['forms.fields'])
-            ->withCount('forms')
-            ->where('is_active', true)
+        $assessmentList = Assessment::query()
+            ->select([
+                'id',
+                'kode_assessment',
+                'judul',
+                'status',
+            ])
+            ->selectSub(
+                AssessmentForm::query()
+                    ->selectRaw('count(*)')
+                    ->whereColumn('assessment_id', 'assessments.id')
+                    ->where('is_active', true),
+                'forms_count'
+            )
+            ->selectSub(
+                AssessmentFormField::query()
+                    ->selectRaw('count(*)')
+                    ->join('assessment_forms', 'assessment_forms.id', '=', 'assessment_form_fields.assessment_form_id')
+                    ->whereColumn('assessment_forms.assessment_id', 'assessments.id')
+                    ->where('assessment_forms.is_active', true)
+                    ->where('assessment_form_fields.is_active', true),
+                'fields_count'
+            )
+            ->where('assessments.is_active', true)
             ->whereIn('status', ['draft', 'publish'])
             ->orderBy('judul')
             ->get();
 
-        $guruList = Guru::query()
-            ->select([
-                'id',
-                'nama_lengkap',
-                'email',
-                'satuan_pendidikan',
-                'kabupaten',
-                'status_kepegawaian',
-                'is_verif',
-            ])
-            ->orderBy('nama_lengkap')
-            ->get();
+        $selectedGuruIds = collect(old('guru_ids', []))
+            ->filter(fn ($id) => filled($id))
+            ->map(fn ($id) => (int) $id)
+            ->unique()
+            ->values()
+            ->all();
+
+        $selectedGuruItems = $this->buildSelectedGuruItems($selectedGuruIds);
 
         return view('pages.admin.assessment.assignment.create', [
             'menu' => $this->menu,
             'assessmentList' => $assessmentList,
-            'guruList' => $guruList,
+            'selectedGuruIds' => $selectedGuruIds,
+            'selectedGuruItems' => $selectedGuruItems,
             'batchThreshold' => AssessmentAssignmentService::BATCH_THRESHOLD,
             'sessionCapacity' => AssessmentAssignmentService::TARGETS_PER_SESSION,
             'defaultSessionDurationHours' => AssessmentAssignmentService::DEFAULT_SESSION_DURATION_HOURS,
             'sessionDurationOptions' => AssessmentAssignmentService::SESSION_DURATION_OPTIONS,
+        ]);
+    }
+
+    public function guruOptions(Request $request): JsonResponse
+    {
+        $this->authorizeAccess();
+
+        $query = $this->guruSelectionQuery();
+
+        $requestedIds = collect($request->input('ids', []))
+            ->filter(fn ($id) => filled($id))
+            ->map(fn ($id) => (int) $id)
+            ->unique()
+            ->values();
+
+        if ($requestedIds->isNotEmpty()) {
+            $guruById = $query
+                ->whereIn('id', $requestedIds->all())
+                ->get()
+                ->keyBy('id');
+
+            return response()->json([
+                'items' => $requestedIds
+                    ->map(fn (int $guruId) => $guruById->get($guruId))
+                    ->filter()
+                    ->map(fn (Guru $guru) => $this->transformGuruTableItem($guru))
+                    ->values()
+                    ->all(),
+                'pagination' => [
+                    'current_page' => 1,
+                    'last_page' => 1,
+                    'per_page' => $requestedIds->count(),
+                    'total' => $requestedIds->count(),
+                    'from' => $requestedIds->isEmpty() ? 0 : 1,
+                    'to' => $requestedIds->count(),
+                ],
+            ]);
+        }
+
+        $keyword = trim((string) $request->input('q', ''));
+
+        if ($keyword !== '') {
+            $query->where(function ($builder) use ($keyword) {
+                $builder->where('nama_lengkap', 'like', '%'.$keyword.'%')
+                    ->orWhere('email', 'like', '%'.$keyword.'%')
+                    ->orWhere('satuan_pendidikan', 'like', '%'.$keyword.'%')
+                    ->orWhere('kabupaten', 'like', '%'.$keyword.'%');
+            });
+        }
+
+        $perPage = max(5, min((int) $request->input('per_page', self::GURU_PAGE_SIZE), 50));
+        $page = max((int) $request->input('page', 1), 1);
+        $paginator = $query
+            ->orderBy('nama_lengkap')
+            ->paginate($perPage, ['*'], 'page', $page);
+
+        return response()->json([
+            'items' => $paginator->getCollection()
+                ->map(fn (Guru $guru) => $this->transformGuruTableItem($guru))
+                ->values()
+                ->all(),
+            'pagination' => [
+                'current_page' => $paginator->currentPage(),
+                'last_page' => $paginator->lastPage(),
+                'per_page' => $paginator->perPage(),
+                'total' => $paginator->total(),
+                'from' => $paginator->firstItem() ?? 0,
+                'to' => $paginator->lastItem() ?? 0,
+            ],
         ]);
     }
 
@@ -121,6 +213,70 @@ class AssessmentAssignmentController extends Controller
             in_array(session('role'), ['admin', 'superadmin', 'kepala', 'database'], true),
             403
         );
+    }
+
+    private function guruSelectionQuery()
+    {
+        return Guru::query()
+            ->select([
+                'id',
+                'nama_lengkap',
+                'email',
+                'satuan_pendidikan',
+                'kabupaten',
+                'status_kepegawaian',
+                'is_verif',
+            ]);
+    }
+
+    private function buildSelectedGuruItems(array $selectedGuruIds): array
+    {
+        if ($selectedGuruIds === []) {
+            return [];
+        }
+
+        $guruById = $this->guruSelectionQuery()
+            ->whereIn('id', $selectedGuruIds)
+            ->get()
+            ->keyBy('id');
+
+        return collect($selectedGuruIds)
+            ->map(fn (int $guruId) => $guruById->get($guruId))
+            ->filter()
+            ->map(fn (Guru $guru) => $this->transformGuruTableItem($guru))
+            ->values()
+            ->all();
+    }
+
+    private function transformGuruTableItem(Guru $guru): array
+    {
+        $descriptionParts = array_filter([
+            $guru->email ?: null,
+            $guru->satuan_pendidikan ?: 'Instansi belum diisi',
+            $guru->kabupaten ?: 'Kabupaten belum diisi',
+            $guru->is_verif === 'sudah' ? 'Terverifikasi' : 'Belum verifikasi',
+        ]);
+
+        return [
+            'id' => (string) $guru->id,
+            'label' => $guru->nama_lengkap,
+            'description' => implode(' | ', $descriptionParts),
+            'cells' => [
+                $guru->nama_lengkap,
+                $guru->email ?: '-',
+                $guru->satuan_pendidikan ?: 'Instansi belum diisi',
+                $guru->kabupaten ?: 'Kabupaten belum diisi',
+                $guru->is_verif === 'sudah' ? 'Terverifikasi' : 'Belum verifikasi',
+            ],
+            'payload' => [
+                'nama' => $guru->nama_lengkap,
+                'email' => $guru->email,
+                'satuan_pendidikan' => $guru->satuan_pendidikan,
+                'kabupaten' => $guru->kabupaten,
+                'status_verifikasi' => $guru->is_verif === 'sudah' ? 'Terverifikasi' : 'Belum verifikasi',
+                'status_kepegawaian' => $guru->status_kepegawaian,
+            ],
+        ];
     }
 
     private function validatePayload(Request $request): array

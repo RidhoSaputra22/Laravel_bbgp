@@ -54,7 +54,7 @@ Route::group(
 
         Route::get('/statistik', 'UserController@statistik')->name('user.statistik');
         Route::get('/api/statistics/month/{month}', 'UserController@getMonthStatistics')->name('user.statistik.month');
-        Route::get('/api/statistics/activities/{month}', 'UserController@getActivitiesByMonth')->name('user.statistik.month');
+        Route::get('/api/statistics/activities/{month}', 'UserController@getActivitiesByMonth')->name('user.statistik.activities.month');
         Route::get('/api/statistics/activity/{activityId}/{participantType}', 'UserController@getActivityStatistics')->name('user.statistik.activity');
 
         // Menu Sekolah
@@ -64,7 +64,6 @@ Route::group(
         Route::get('/data-sekolah/{id}/edit', 'SekolahController@edit')->name('edit.data-sekolah');
         Route::put('/data-sekolah/{id}', 'SekolahController@update')->name('update.data-sekolah');
 
-        Route::get('/eksternal', 'UserController@guru')->name('user.guru');
         Route::get('/eksternal/form/{jenis}', 'UserController@form_guru')->name('user.form_guru');
         Route::post('/eksternal/daftar', 'UserController@daftar_guru')->name('user.daftar_guru');
 
@@ -139,7 +138,7 @@ Route::group(
             Route::get('/profile/{id}', 'AdminController@profile')->name('profile.index');
             Route::put('/profile/update', 'AdminController@profile_update')->name('profile.update');
 
-            Route::get('/fetch-sekolah', ['GuruController@index', 'fetchSekolah'])->name('fetchSekolah');
+            Route::get('/fetch-sekolah', 'GuruController@fetchSekolah')->name('fetchSekolah');
 
             // Guru / Eksternal
             Route::prefix('eksternal')->group(function () {
@@ -161,9 +160,9 @@ Route::group(
                 Route::put('/updateByUser', 'GuruController@updateByUser')->name('guru.update.user');
                 Route::get('/cari', 'GuruController@cari')->name('guru.cari');
 
-                Route::get('/data-sekolah/{id}', [UserSekolahController::class, 'show'])->name('show.data-sekolah');
-                Route::get('/data-sekolah/{id}/edit', [UserSekolahController::class, 'edit'])->name('edit.data-sekolah');
-                Route::put('/data-sekolah/{id}', [UserSekolahController::class, 'update'])->name('update.data-sekolah');
+                Route::get('/data-sekolah/{id}', [UserSekolahController::class, 'show'])->name('user.show.data-sekolah');
+                Route::get('/data-sekolah/{id}/edit', [UserSekolahController::class, 'edit'])->name('user.edit.data-sekolah');
+                Route::put('/data-sekolah/{id}', [UserSekolahController::class, 'update'])->name('user.update.data-sekolah');
 
                 Route::get('/sekolah', [AdminSekolahController::class, 'index'])->name('admin.data-sekolah.index');
                 Route::get('/sekolah/export', [AdminSekolahController::class, 'export'])->name('admin.data-sekolah.export');
@@ -270,7 +269,7 @@ Route::group(
                 Route::get('/createPegawai/{id}', 'InternalController@createPegawai')->name('internal.create.pegawai');
                 Route::post('/storePegawai', 'InternalController@storePegawai')->name('internal.store.pegawai');
                 Route::get('/editPegawai/{id}', 'InternalController@editPegawai')->name('internal.edit.pegawai');
-                Route::post('/updatePegawai', 'InternalController@updatePegawai')->name('internal.update.pegawai');
+                Route::post('/updatePegawai', 'InternalController@updatePegawai')->name('internal.update.pegawai.post');
                 Route::post('/updatePegawaiAll', 'InternalController@updatePegawaiAll')->name('updateAllEmployees');
 
                 Route::post('/hapusPegawai/{id}', 'InternalController@hapusPenugasan')->name('internal.hapus.penugasan');
@@ -331,6 +330,7 @@ Route::group(
                 Route::prefix('penugasan')->group(function () {
                     Route::get('/', 'AssessmentAssignmentController@index')->name('assessment.assignment.index');
                     Route::get('/create', 'AssessmentAssignmentController@create')->name('assessment.assignment.create');
+                    Route::get('/guru-options', 'AssessmentAssignmentController@guruOptions')->name('assessment.assignment.guru-options');
                     Route::post('/store', 'AssessmentAssignmentController@store')->name('assessment.assignment.store');
                     Route::get('/show/{id}', 'AssessmentAssignmentController@show')->name('assessment.assignment.show');
                     Route::get('/review/{targetId}', 'AssessmentAttemptReviewController@show')->name('assessment.assignment.review.show');
@@ -370,7 +370,6 @@ Route::group(
                 Route::put('/update', 'HonorController@update')->name('honor.update');
                 Route::post('/hapus/{id}', 'HonorController@destroy')->name('honor.hapus');
                 Route::get('/cetak/{jabatan}', 'HonorController@cetak')->name('honor.cetak');
-                Route::get('/cetak/{jabatan}', 'HonorController@cetak')->name('honor.cetak');
 
                 // Route::get('/cetakExcelPanitia/{kegiatan}', 'HonorController@honorPanitia')->name('honor.cetakExcelPanitia');
                 // Route::get('/cetakExcelNarasumber/{kegiatan}', 'HonorController@honorNarasumber')->name('honor.cetakExcelNarasumber');
@@ -406,14 +405,13 @@ Route::group(
                 Route::get('/cetak/{id}', 'KuitansiController@cetak')->name('kuitansi.cetak');
                 Route::get('/cetakRill/{id}', 'KuitansiController@cetakRill')->name('kuitansi.cetakRill');
                 Route::get('/cetakPJmutlak/{id}', 'KuitansiController@cetakPJmutlak')->name('kuitansi.cetakPJmutlak');
-                Route::get('/cetakPJmutlak/{id}', 'KuitansiController@cetakPJmutlak')->name('kuitansi.cetakPJmutlak');
                 Route::get('/cetakAmplop/{id}', 'KuitansiController@cetakAmplop')->name('kuitansi.cetakAmplop');
                 Route::get('/cetakPermintaan', 'KuitansiController@cetakPermintaan')->name('kuitansi.cetakPermintaan');
                 Route::get('/cetakLampiran', 'KuitansiController@cetakLampiran')->name('kuitansi.cetakLampiran');
                 Route::get('/cetakExcel/{id_kegiatan}', 'KuitansiController@cetakExcel')->name('kuitansi.cetakexcel');
 
                 Route::get('/storeNomor', 'KuitansiController@storeNomor')->name('kuitansi.storeNomor');
-                Route::get('/penomoran', 'KuitansiController@Penomoran')->name('honor.penomoran');
+                Route::get('/penomoran', 'KuitansiController@Penomoran')->name('kuitansi.penomoran');
             });
 
             //kuitansiLoka
