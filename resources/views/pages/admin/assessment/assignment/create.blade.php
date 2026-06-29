@@ -12,6 +12,40 @@
             ->all();
         $selectedDurationHours = (int) old('durasi_sesi_jam', $defaultSessionDurationHours);
         $selectedStartTime = old('jam_mulai');
+        $initialGuruSelectionState = $initialGuruSelectionState ?? [
+            'mode' => 'manual',
+            'scope' => ['q' => '', 'filters' => []],
+            'excludedIds' => [],
+            'totalMatched' => 0,
+        ];
+        $oldGuruKetenagaan = old(
+            'guru_filter_eksternal_jabatan',
+            data_get($initialGuruSelectionState, 'scope.filters.eksternal_jabatan', '')
+        );
+        $oldGuruJabatan = old(
+            'guru_filter_jenis_jabatan',
+            data_get($initialGuruSelectionState, 'scope.filters.jenis_jabatan', '')
+        );
+        $initialGuruSearchValue = data_get($initialGuruSelectionState, 'scope.q', '');
+        $guruKetenagaanOptions = collect($guruFilterOptions['ketenagaan'] ?? [])->values()->all();
+        $guruJabatanOptionsByKetenagaan = collect($guruFilterOptions['jabatan_by_ketenagaan'] ?? [])
+            ->map(fn ($options) => collect($options)->values()->all())
+            ->all();
+        $initialGuruJabatanOptions = collect($guruJabatanOptionsByKetenagaan[$oldGuruKetenagaan] ?? [])
+            ->when(
+                $oldGuruKetenagaan === '',
+                fn ($collection) => collect($guruJabatanOptionsByKetenagaan)
+                    ->flatten()
+                    ->merge($collection)
+                    ->filter(fn ($value) => filled($value))
+                    ->unique()
+                    ->values()
+            )
+            ->when(
+                filled($oldGuruJabatan),
+                fn ($collection) => $collection->push($oldGuruJabatan)->unique()->values()
+            )
+            ->all();
 
         $assessmentTableItems = $assessmentList
             ->map(function ($assessment) {
@@ -328,6 +362,7 @@
             const sessionCapacity = {{ $sessionCapacity }};
             const defaultDurationHours = {{ $defaultSessionDurationHours }};
             const batchThreshold = {{ $batchThreshold }};
+            const guruJabatanOptionsByKetenagaan = @json($guruJabatanOptionsByKetenagaan);
             let selectedAssessments = [];
             let selectedGurus = [];
 
@@ -373,7 +408,7 @@
             }
 
             function updateGuruSummary() {
-                const totalGuru = selectedGurus.length;
+                const totalGuru = Number(selectedGurus.count || 0);
                 const totalSessions = totalGuru > 0 ? Math.ceil(totalGuru / sessionCapacity) : 0;
                 const durationHours = getSelectedDurationHours();
                 const distributionMethod = totalGuru === 0 ? '-' : (totalGuru > batchThreshold ? 'Batch Job' : 'Langsung');
@@ -453,6 +488,24 @@
             document.addEventListener('DOMContentLoaded', function() {
                 const durationSelect = document.getElementById('durasi_sesi_jam');
                 const startTimeInput = document.getElementById('jam_mulai');
+                const ketenagaanSelect = document.getElementById('guru-filter-eksternal-jabatan');
+                const jabatanSelect = document.getElementById('guru-filter-jenis-jabatan');
+
+                if (ketenagaanSelect && jabatanSelect) {
+                    populateGuruJabatanOptions(
+                        ketenagaanSelect.value || '',
+                        jabatanSelect.dataset.selectedValue || jabatanSelect.value || ''
+                    );
+
+                    ketenagaanSelect.addEventListener('change', function() {
+                        populateGuruJabatanOptions(this.value || '', jabatanSelect.value || '');
+                        refreshGuruSelector();
+                    });
+
+                    jabatanSelect.addEventListener('change', function() {
+                        refreshGuruSelector();
+                    });
+                }
 
                 if (durationSelect) {
                     durationSelect.addEventListener('change', function() {

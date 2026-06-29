@@ -1,7 +1,9 @@
 @php
+    $savedAnswer = $answerLookup[(int) $field['id']] ?? [];
+    $savedPayload = is_array($savedAnswer['payload'] ?? null) ? $savedAnswer['payload'] : [];
     $fieldError = $errors->first('answers.' . $field['id']);
-    $oldValue = old('answers.' . $field['id']);
-    $checkboxValues = collect(old('answers.' . $field['id'], []))
+    $oldValue = old('answers.' . $field['id'], $savedPayload['value'] ?? $savedAnswer['text'] ?? null);
+    $checkboxValues = collect(old('answers.' . $field['id'], $savedPayload['values'] ?? []))
         ->map(fn($value) => (string) $value)
         ->all();
     $repeaterConfig = is_array($field['opsi_field'] ?? null) ? $field['opsi_field'] : [];
@@ -9,13 +11,16 @@
         ->filter(fn($column) => is_array($column))
         ->values()
         ->all();
-    $repeaterRows = collect(old('answers.' . $field['id'], []))
+    $repeaterRows = collect(old('answers.' . $field['id'], $savedAnswer['rows'] ?? []))
         ->filter(fn($row) => is_array($row))
         ->values()
         ->all();
     $answerName = 'answers[' . $field['id'] . ']';
     $fieldType = $field['tipe_field'];
     $isRequired = (bool) ($field['is_required'] ?? false);
+    $existingFileUrl = $savedAnswer['file_url'] ?? null;
+    $existingFileName = $savedPayload['original_name'] ?? ($savedAnswer['text'] ?? null);
+    $hasExistingFile = filled($existingFileUrl) || filled($savedAnswer['file_path'] ?? null);
     $inputType = match ($field['tipe_field']) {
         'number' => 'number',
         'date' => 'date',
@@ -26,7 +31,7 @@
 
 <div class="mb-8 rounded-sm " data-assessment-field
     data-field-id="{{ $field['id'] }}" data-field-type="{{ $fieldType }}" data-field-label="{{ $field['label'] }}"
-    data-required="{{ $isRequired ? '1' : '0' }}">
+    data-required="{{ $isRequired ? '1' : '0' }}" data-has-existing-file="{{ $hasExistingFile ? '1' : '0' }}">
     @switch($fieldType)
         @case('textarea')
             <x-assessment::form.textarea :label="$field['label']" :description="$field['deskripsi']"
@@ -66,6 +71,24 @@
         @case('file')
             <x-assessment::form.file-input :label="$field['label']" :description="$field['deskripsi']"
                 :name="$answerName" :required="$isRequired" :error="$fieldError" />
+
+            @if ($hasExistingFile)
+                <div class="rounded-sm border border-[#dce8f1] bg-[#f8fbfe] px-4 py-3 text-sm text-slate-600">
+                    <div class="font-semibold text-slate-800">File snapshot tersimpan</div>
+                    <div class="mt-1">
+                        {{ $existingFileName ?: 'Lampiran tersimpan' }}
+                    </div>
+                    @if ($existingFileUrl)
+                        <a href="{{ $existingFileUrl }}" target="_blank" rel="noopener"
+                            class="mt-2 inline-flex items-center text-[#1376bd] hover:underline">
+                            Lihat file saat ini
+                        </a>
+                    @endif
+                    <div class="mt-2 text-xs text-slate-500">
+                        Pilih file baru hanya jika ingin mengganti lampiran yang sudah tersimpan.
+                    </div>
+                </div>
+            @endif
         @break
 
         @case('repeater')

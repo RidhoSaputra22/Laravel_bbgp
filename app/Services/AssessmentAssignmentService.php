@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Jobs\ProcessAssessmentAssignmentTargetsJob;
 use App\Models\Assessment;
 use App\Models\AssessmentAssignment;
+use App\Models\Guru;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Bus;
@@ -27,7 +28,7 @@ class AssessmentAssignmentService
     public function createAssignment(array $payload, ?int $assignedBy = null): AssessmentAssignment
     {
         $assessmentIds = $this->normalizeAssessmentIds($payload['assessment_ids'] ?? []);
-        $guruIds = $this->normalizeGuruIds($payload['guru_ids'] ?? []);
+        $guruIds = $this->resolveGuruIds($payload);
         $sessionDurationHours = (int) ($payload['durasi_sesi_jam'] ?? self::DEFAULT_SESSION_DURATION_HOURS);
         $startTime = $this->normalizeStartTime($payload['jam_mulai'] ?? null);
         $shouldBatch = count($guruIds) > self::BATCH_THRESHOLD;
@@ -179,6 +180,66 @@ class AssessmentAssignmentService
     private function normalizeGuruIds(array $guruIds): array
     {
         return array_values(array_unique(array_map('intval', $guruIds)));
+    }
+
+    private function resolveGuruIds(array $payload): array
+    {
+        if (($payload['guru_selection_mode'] ?? 'manual') !== 'select_all') {
+            return $this->normalizeGuruIds($payload['guru_ids'] ?? []);
+        }
+
+        $scope = $this->normalizeGuruSelectionScope($payload['guru_selection_scope'] ?? []);
+        $excludedIds = $this->normalizeGuruIds($payload['guru_excluded_ids'] ?? []);
+        $query = Guru::query()->select(['id', 'nama_lengkap']);
+
+        $this->applyGuruSelectionScope($query, $scope);
+
+        if ($excludedIds !== []) {
+            $query->whereNotIn('id', $excludedIds);
+        }
+
+        return $query
+            ->orderBy('nama_lengkap')
+            ->pluck('id')
+            ->map(fn ($guruId) => (int) $guruId)
+            ->all();
+    }
+
+    private function normalizeGuruSelectionScope(array $scope): array
+    {
+        $nestedFilters = data_get($scope, 'filters', []);
+        $filters = array_filter([
+            'eksternal_jabatan' => trim((string) data_get($nestedFilters, 'eksternal_jabatan', data_get($scope, 'eksternal_jabatan', ''))),
+            'jenis_jabatan' => trim((string) data_get($nestedFilters, 'jenis_jabatan', data_get($scope, 'jenis_jabatan', ''))),
+        ], fn (string $value) => $value !== '');
+
+        return [
+            'q' => trim((string) data_get($scope, 'q', '')),
+            'filters' => $filters,
+        ];
+    }
+
+    private function applyGuruSelectionScope($query, array $scope): void
+    {
+        $normalizedScope = $this->normalizeGuruSelectionScope($scope);
+        $keyword = $normalizedScope['q'];
+
+        foreach ($normalizedScope['filters'] as $column => $value) {
+            $query->where($column, $value);
+        }
+
+        if ($keyword === '') {
+            return;
+        }
+
+        $query->where(function ($builder) use ($keyword) {
+            $builder->where('nama_lengkap', 'like', '%'.$keyword.'%')
+                ->orWhere('email', 'like', '%'.$keyword.'%')
+                ->orWhere('eksternal_jabatan', 'like', '%'.$keyword.'%')
+                ->orWhere('jenis_jabatan', 'like', '%'.$keyword.'%')
+                ->orWhere('satuan_pendidikan', 'like', '%'.$keyword.'%')
+                ->orWhere('kabupaten', 'like', '%'.$keyword.'%');
+        });
     }
 
     private function normalizeAssessmentIds(array $assessmentIds): array

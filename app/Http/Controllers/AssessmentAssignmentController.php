@@ -7,10 +7,15 @@ use App\Models\AssessmentAssignment;
 use App\Models\AssessmentForm;
 use App\Models\AssessmentFormField;
 use App\Models\Guru;
+use App\Models\JabatanKependidikan;
+use App\Models\JabatanPendidik;
+use App\Models\JabatanStakeHolder;
+use App\Services\Assessment\AssessmentAttemptLifecycleService;
 use App\Services\AssessmentAssignmentService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 
 class AssessmentAssignmentController extends Controller
@@ -20,7 +25,8 @@ class AssessmentAssignmentController extends Controller
     private string $menu = 'assessment-penugasan';
 
     public function __construct(
-        private readonly AssessmentAssignmentService $assignmentService
+        private readonly AssessmentAssignmentService $assignmentService,
+        private readonly AssessmentAttemptLifecycleService $attemptLifecycleService
     ) {}
 
     public function index()
@@ -201,6 +207,16 @@ class AssessmentAssignmentController extends Controller
             ->withCount(['targets', 'sessions'])
             ->findOrFail($id);
 
+        $this->attemptLifecycleService->syncExpiredTargets($assignment->targets);
+        $assignment->load([
+            'assessments.forms.fields',
+            'creator',
+            'sessions.targets',
+            'targets.guru',
+            'targets.session',
+            'targets.attempt',
+        ]);
+
         return view('pages.admin.assessment.assignment.show', [
             'menu' => $this->menu,
             'assignment' => $assignment,
@@ -281,7 +297,7 @@ class AssessmentAssignmentController extends Controller
 
     private function validatePayload(Request $request): array
     {
-        return Validator::make(
+        $validator = Validator::make(
             $request->all(),
             [
                 'judul_penugasan' => 'required|string|max:255',
@@ -304,8 +320,13 @@ class AssessmentAssignmentController extends Controller
                     'integer',
                     Rule::in(AssessmentAssignmentService::SESSION_DURATION_OPTIONS),
                 ],
-                'guru_ids' => 'required|array|min:1',
+                'guru_selection_mode' => 'nullable|string|in:manual,select_all',
+                'guru_ids' => 'nullable|array',
                 'guru_ids.*' => 'required|integer|distinct|exists:gurus,id',
+                'guru_selection_scope' => 'nullable|array',
+                'guru_selection_scope.*' => 'nullable|string',
+                'guru_excluded_ids' => 'nullable|array',
+                'guru_excluded_ids.*' => 'required|integer|distinct|exists:gurus,id',
             ],
             [
                 'judul_penugasan.required' => 'Judul penugasan wajib diisi.',
@@ -317,11 +338,39 @@ class AssessmentAssignmentController extends Controller
                 'jam_mulai.date_format' => 'Format jam mulai harus berupa HH:MM.',
                 'durasi_sesi_jam.required' => 'Durasi sesi assessment wajib dipilih.',
                 'durasi_sesi_jam.in' => 'Durasi sesi assessment harus sesuai pilihan yang tersedia.',
-                'guru_ids.required' => 'Minimal pilih satu guru untuk ditugasi.',
-                'guru_ids.min' => 'Minimal pilih satu guru untuk ditugasi.',
                 'guru_ids.*.exists' => 'Ada guru yang dipilih tetapi datanya tidak ditemukan.',
+                'guru_excluded_ids.*.exists' => 'Ada guru yang dikecualikan tetapi datanya tidak ditemukan.',
                 'tanggal_selesai.after_or_equal' => 'Tanggal selesai harus sama atau setelah tanggal mulai.',
             ]
-        )->validate();
+        );
+
+        $validator->after(function ($validator) use ($request) {
+            $selectionMode = $this->resolveGuruSelectionMode($request);
+
+            if ($selectionMode === 'select_all') {
+                $scope = $this->normalizeGuruSelectionScope($request->input('guru_selection_scope', []));
+                $excludedIds = $this->normalizeGuruIdList($request->input('guru_excluded_ids', []));
+
+                if ($this->countGuruSelectionByScope($scope, $excludedIds) < 1) {
+                    $validator->errors()->add('guru_ids', 'Minimal pilih satu guru untuk ditugasi.');
+                }
+
+                return;
+            }
+
+            if ($this->normalizeGuruIdList($request->input('guru_ids', [])) === []) {
+                $validator->errors()->add('guru_ids', 'Minimal pilih satu guru untuk ditugasi.');
+            }
+        });
+
+        $validated = $validator->validate();
+        $selectionMode = $this->resolveGuruSelectionMode($request);
+
+        $validated['guru_selection_mode'] = $selectionMode;
+        $validated['guru_ids'] = $this->normalizeGuruIdList($validated['guru_ids'] ?? []);
+        $validated['guru_selection_scope'] = $this->normalizeGuruSelectionScope($validated['guru_selection_scope'] ?? []);
+        $validated['guru_excluded_ids'] = $this->normalizeGuruIdList($validated['guru_excluded_ids'] ?? []);
+
+        return $validated;
     }
 }

@@ -8,6 +8,7 @@ use App\Models\AssessmentAssignmentTarget;
 use App\Models\AssessmentAttempt;
 use App\Models\Guru;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Blade;
 use Tests\TestCase;
 
 class AssessmentShowViewTest extends TestCase
@@ -143,5 +144,34 @@ class AssessmentShowViewTest extends TestCase
         $response->assertSee('data-field-type="email"', false);
         $response->assertSee('openFinishModal()', false);
         $response->assertSee('validateAllAssessments()', false);
+    }
+
+    public function test_radio_group_displays_sequential_labels_while_preserving_randomized_option_values(): void
+    {
+        $html = Blade::render(
+            <<<'BLADE'
+            <x-assessment::form.radio-group
+                name="answers[301]"
+                :options="$options"
+                :selected="[]"
+                id-prefix="field-301"
+            />
+            BLADE,
+            [
+                'options' => [
+                    ['label' => 'Mengurai aturan diskusi kepada Bima.', 'value' => 'B'],
+                    ['label' => 'Melaksanakan strategi pengelolaan diskusi.', 'value' => 'C'],
+                    ['label' => 'Mengenali faktor yang memengaruhi perilaku Bima.', 'value' => 'A'],
+                    ['label' => 'Mengembangkan pendekatan pembinaan perilaku kolaboratif.', 'value' => 'E'],
+                    ['label' => 'Menelaah faktor penyebab dominasi Bima.', 'value' => 'D'],
+                ],
+            ]
+        );
+
+        $this->assertMatchesRegularExpression('/value="B"[\s\S]*?<h1 class="font-semibold">\s*A\.\s*<\/h1>/', $html);
+        $this->assertMatchesRegularExpression('/value="C"[\s\S]*?<h1 class="font-semibold">\s*B\.\s*<\/h1>/', $html);
+        $this->assertMatchesRegularExpression('/value="A"[\s\S]*?<h1 class="font-semibold">\s*C\.\s*<\/h1>/', $html);
+        $this->assertMatchesRegularExpression('/value="E"[\s\S]*?<h1 class="font-semibold">\s*D\.\s*<\/h1>/', $html);
+        $this->assertMatchesRegularExpression('/value="D"[\s\S]*?<h1 class="font-semibold">\s*E\.\s*<\/h1>/', $html);
     }
 }

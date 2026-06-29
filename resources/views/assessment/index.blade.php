@@ -104,11 +104,20 @@
         </div>
 
         <aside class="min-w-0">
-            <x-assessment::ui.card class="overflow-hidden" padding="p-0" rounded="rounded-sm"
-                >
-                <div class="flex gap-3 items-center border-b border-slate-300 px-6 py-5">
-                    <i class="fa fa-user " aria-hidden="true"></i>
-                    <h1 class="text-md font-medium">Data Diri Peserta </h1>
+            <x-assessment::ui.card class="overflow-hidden" padding="p-0" rounded="rounded-sm">
+                <div class="flex items-center justify-between gap-3 border-b border-slate-300 px-6 py-5">
+                    <div class="flex items-center gap-3">
+                        <i class="fa fa-user" aria-hidden="true"></i>
+                        <h1 class="text-md font-medium">Data Diri Peserta</h1>
+                    </div>
+
+                    <form action="{{ route('assessment.portal.logout') }}" method="POST" class="shrink-0">
+                        @csrf
+
+                        <x-assessment::ui.button type="submit" variant="outline" icon="fas fa-sign-out-alt">
+                            Logout
+                        </x-assessment::ui.button>
+                    </form>
                 </div>
 
                 <div class="px-6 py-1 grid grid-cols-2">

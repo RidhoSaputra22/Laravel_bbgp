@@ -6,6 +6,7 @@ use App\Models\Assessment;
 use App\Models\AssessmentAssignment;
 use App\Models\AssessmentAssignmentSession;
 use App\Models\AssessmentAssignmentTarget;
+use App\Models\AssessmentAttempt;
 use App\Models\AssessmentForm;
 use App\Models\AssessmentFormField;
 use App\Services\Assessment\AssessmentPortalService;
@@ -67,6 +68,57 @@ class AssessmentPortalServiceTest extends TestCase
         $this->assertSame('27 Jun 2026 08:00 WITA - 28 Jun 2026', $meta['date_text']);
         $this->assertStringContainsString('27 Jun 2026 08:00 WITA', $meta['description']);
         $this->assertSame('Jadwal sesi belum ditentukan', $meta['session_schedule_text']);
+    }
+
+    public function test_build_target_meta_marks_target_as_expired_once_session_deadline_has_passed(): void
+    {
+        Carbon::setTestNow('2026-06-27 14:05:00');
+
+        $service = new AssessmentPortalService(
+            $this->createMock(AssessmentQuestionRandomizerService::class)
+        );
+
+        $target = $this->makeTarget([
+            'assignment_start_date' => '2026-06-27',
+            'assignment_start_time' => '08:00:00',
+            'session_start_at' => '2026-06-27 11:00:00',
+            'session_end_at' => '2026-06-27 14:00:00',
+        ]);
+
+        $meta = $service->buildTargetMeta($target);
+
+        $this->assertSame('expired', $meta['status']);
+        $this->assertFalse($meta['can_open']);
+        $this->assertSame('Sudah Ditutup', $meta['label']);
+    }
+
+    public function test_build_target_meta_uses_auto_submission_label_for_deadline_finalization(): void
+    {
+        Carbon::setTestNow('2026-06-27 15:00:00');
+
+        $service = new AssessmentPortalService(
+            $this->createMock(AssessmentQuestionRandomizerService::class)
+        );
+
+        $target = $this->makeTarget([
+            'assignment_start_date' => '2026-06-27',
+            'assignment_start_time' => '08:00:00',
+            'session_start_at' => '2026-06-27 11:00:00',
+            'session_end_at' => '2026-06-27 14:00:00',
+        ]);
+
+        $target->setRelation('attempt', new AssessmentAttempt([
+            'status' => 'submitted',
+            'result_summary' => [
+                'submission_mode' => 'deadline_auto',
+            ],
+        ]));
+
+        $meta = $service->buildTargetMeta($target);
+
+        $this->assertSame('submitted', $meta['status']);
+        $this->assertSame('Selesai Otomatis', $meta['label']);
+        $this->assertStringContainsString('skor 0', $meta['description']);
     }
 
     private function makeTarget(array $overrides): AssessmentAssignmentTarget

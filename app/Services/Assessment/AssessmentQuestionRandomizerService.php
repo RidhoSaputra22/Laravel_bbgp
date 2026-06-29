@@ -2,6 +2,7 @@
 
 namespace App\Services\Assessment;
 
+use App\Enum\AssessmentInstrumentType;
 use App\Models\AssessmentAssignmentTarget;
 use App\Models\AssessmentFormField;
 use App\Support\Assessment\AssessmentStructureMetadataResolver;
@@ -16,11 +17,13 @@ class AssessmentQuestionRandomizerService
     public function buildSnapshot(AssessmentAssignmentTarget $target): array
     {
         $assignment = $target->assignment;
+        $targetId = (int) ($target->getKey() ?? 0);
 
         $assessments = $assignment->assessments
             ->filter(fn ($assessment) => (bool) $assessment->is_active)
             ->values()
-            ->map(function ($assessment) {
+            ->map(function ($assessment) use ($targetId) {
+                $instrumentType = AssessmentInstrumentType::tryFromMixed($assessment->instrument_type);
                 $assessmentMeta = $this->metadataResolver->decorateAssessment([
                     'id' => $assessment->id,
                     'kode_assessment' => $assessment->kode_assessment,
@@ -33,7 +36,7 @@ class AssessmentQuestionRandomizerService
                 $forms = $assessment->forms
                     ->filter(fn ($form) => (bool) $form->is_active)
                     ->values()
-                    ->map(function ($form) use ($assessment, $assessmentMeta) {
+                    ->map(function ($form) use ($assessment, $assessmentMeta, $instrumentType, $targetId) {
                         $formMeta = $this->metadataResolver->decorateForm([
                             'id' => $form->id,
                             'judul_form' => $form->judul_form,
@@ -52,9 +55,14 @@ class AssessmentQuestionRandomizerService
                         ], $assessmentMeta);
                         $fields = $form->fields
                             ->filter(fn ($field) => (bool) $field->is_active)
-                            ->shuffle()
                             ->values()
-                            ->map(fn ($field) => $this->mapField($field, $assessment->id, $form->id))
+                            ->map(fn ($field) => $this->mapField(
+                                $field,
+                                $assessment->id,
+                                $form->id,
+                                $instrumentType,
+                                $targetId
+                            ))
                             ->all();
 
                         if ($fields === []) {
@@ -115,12 +123,22 @@ class AssessmentQuestionRandomizerService
             'meta' => [
                 'total_questions' => $allFields->count(),
                 'required_questions' => $allFields->where('is_required', true)->count(),
+                'randomization' => [
+                    'version' => 2,
+                    'question_order' => 'fixed',
+                    'choice_order' => 'radio_options_for_pilihan_ganda_kompleks',
+                ],
             ],
         ];
     }
 
-    private function mapField(AssessmentFormField $field, int $assessmentId, int $formId): array
-    {
+    private function mapField(
+        AssessmentFormField $field,
+        int $assessmentId,
+        int $formId,
+        ?AssessmentInstrumentType $instrumentType,
+        int $targetId
+    ): array {
         return [
             'id' => $field->id,
             'assessment_id' => $assessmentId,
@@ -131,20 +149,34 @@ class AssessmentQuestionRandomizerService
             'tipe_field' => $field->tipe_field,
             'placeholder' => $field->placeholder,
             'bantuan' => $field->bantuan,
-            'opsi_field' => $this->mapFieldOptions($field),
+            'opsi_field' => $this->mapFieldOptions($field, $instrumentType, $targetId, $assessmentId, $formId),
             'validasi' => $field->validasi,
             'scoring_config' => $field->scoring_config,
             'is_required' => (bool) $field->is_required,
         ];
     }
 
-    private function mapFieldOptions(AssessmentFormField $field): array
-    {
+    private function mapFieldOptions(
+        AssessmentFormField $field,
+        ?AssessmentInstrumentType $instrumentType,
+        int $targetId,
+        int $assessmentId,
+        int $formId
+    ): array {
         if ($field->tipe_field === 'repeater') {
             return is_array($field->opsi_field) ? $field->opsi_field : [];
         }
 
-        return $this->normalizeOptions($field->opsi_field);
+        $options = $this->normalizeOptions($field->opsi_field);
+
+        if (! $this->shouldRandomizeChoiceOptions($field, $instrumentType)) {
+            return $options;
+        }
+
+        return collect($options)
+            ->shuffle($this->resolveChoiceOptionSeed($targetId, $assessmentId, $formId, (int) $field->id))
+            ->values()
+            ->all();
     }
 
     private function normalizeOptions(?array $options): array
@@ -160,5 +192,31 @@ class AssessmentQuestionRandomizerService
             ->filter(fn ($option) => $option['value'] !== '')
             ->values()
             ->all();
+    }
+
+    private function shouldRandomizeChoiceOptions(
+        AssessmentFormField $field,
+        ?AssessmentInstrumentType $instrumentType
+    ): bool {
+        return $instrumentType === AssessmentInstrumentType::PILIHAN_GANDA_KOMPLEKS
+            && $field->tipe_field === 'radio';
+    }
+
+    private function resolveChoiceOptionSeed(
+        int $targetId,
+        int $assessmentId,
+        int $formId,
+        int $fieldId
+    ): int {
+        return (int) sprintf(
+            '%u',
+            crc32(implode('|', [
+                'assessment-choice',
+                $targetId,
+                $assessmentId,
+                $formId,
+                $fieldId,
+            ]))
+        );
     }
 }

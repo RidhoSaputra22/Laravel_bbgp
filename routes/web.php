@@ -112,6 +112,7 @@ Route::prefix('assessment')
         Route::middleware('assessment.portal')->group(function () {
             Route::get('/dashboard', [AssessmentPortalController::class, 'dashboard'])->name('dashboard');
             Route::get('/show/{id}', [AssessmentPortalController::class, 'show'])->name('show');
+            Route::post('/show/{id}/autosave', [AssessmentPortalController::class, 'autosave'])->name('autosave');
             Route::post('/show/{id}/submit', [AssessmentPortalController::class, 'submit'])->name('submit');
             Route::get('/result/{id}', [AssessmentPortalController::class, 'result'])->name('result');
             Route::post('/logout', [AssessmentPortalAuthController::class, 'logout'])->name('logout');

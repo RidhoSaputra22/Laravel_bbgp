@@ -62,6 +62,10 @@
                 position: relative;
             }
 
+            .multiple-choice-table__toolbar-filters {
+                margin-bottom: 1rem;
+            }
+
             .multiple-choice-table__table {
                 margin-bottom: 0;
                 border-collapse: separate;
@@ -359,6 +363,8 @@
                             input.value = item.id;
                             hiddenInputsNode.appendChild(input);
                         });
+
+                        return filters;
                     }
 
                     function updateSelectedSummary() {
@@ -411,8 +417,28 @@
                         return localRows.filter((row) => !row.classList.contains('d-none'));
                     }
 
-                    function updateMasterCheckbox() {
-                        if (!masterCheckbox) {
+                    function isItemSelected(item) {
+                        if (remoteBulkSelectEnabled && bulkSelection.active && itemMatchesScope(item, bulkSelection.scope)) {
+                            return !bulkSelection.excludedIds.has(item.id);
+                        }
+
+                        return selectedMap.has(item.id);
+                    }
+
+                    function getExcludedCount() {
+                        return remoteBulkSelectEnabled && bulkSelection.active ? bulkSelection.excludedIds.size : 0;
+                    }
+
+                    function getSelectionCount() {
+                        if (remoteBulkSelectEnabled && bulkSelection.active) {
+                            return Math.max(bulkSelection.totalMatched - getExcludedCount(), 0);
+                        }
+
+                        return selectedMap.size;
+                    }
+
+                    function setScopeLockState(locked) {
+                        if (!remoteBulkSelectEnabled) {
                             return;
                         }
 
@@ -461,6 +487,31 @@
                                 selectedMap.delete(item.id);
                             }
                         });
+                    }
+
+                    function getSelectedItems() {
+                        if (remoteBulkSelectEnabled && bulkSelection.active) {
+                            return [];
+                        }
+
+                        return Array.from(selectedMap.values()).map((item) => ({
+                            id: item.id,
+                            label: item.label,
+                            description: item.description,
+                            payload: item.payload,
+                        }));
+                    }
+
+                    function appendHiddenInput(name, value) {
+                        const input = document.createElement('input');
+                        input.type = 'hidden';
+                        input.name = name;
+                        input.value = value;
+                        hiddenInputsNode.appendChild(input);
+                    }
+
+                    function emitChange() {
+                        const selectedItems = getSelectedItems();
 
                         syncState();
                     }
@@ -655,24 +706,92 @@
                             return;
                         }
 
-                        let visibleCount = 0;
+                        const visibleRows = getVisibleRows();
+                        const visibleSelectedCount = visibleRows.filter((row) => {
+                            const item = hydrateItemFromRow(row);
+
+                            return item.id !== '' && isItemSelected(item);
+                        }).length;
+
+                        masterCheckbox.checked = visibleRows.length > 0 && visibleSelectedCount === visibleRows.length;
+                        masterCheckbox.indeterminate = visibleSelectedCount > 0 && visibleSelectedCount < visibleRows.length;
+                    }
 
                         localRows.forEach((row) => {
                             const haystack = (row.dataset.search || '').toLowerCase();
                             const isVisible = nextKeyword === '' || haystack.includes(nextKeyword);
 
-                            row.classList.toggle('d-none', !isVisible);
+                            if (!item.id) {
+                                return;
+                            }
 
-                            if (isVisible) {
-                                visibleCount += 1;
+                            if (remoteBulkSelectEnabled && bulkSelection.active) {
+                                if (checked) {
+                                    bulkSelection.excludedIds.delete(item.id);
+                                } else {
+                                    bulkSelection.excludedIds.add(item.id);
+                                }
+
+                                return;
+                            }
+
+                            if (checked) {
+                                selectedMap.set(item.id, item);
+                            } else {
+                                selectedMap.delete(item.id);
                             }
                         });
 
-                        if (emptySearchState) {
-                            emptySearchState.classList.toggle('d-none', visibleCount !== 0);
+                        syncState();
+                    }
+
+                    function bindRowEvents(rows) {
+                        rows.forEach((row) => {
+                            const checkbox = getCheckbox(row);
+
+                            if (!checkbox || row.dataset.bound === 'true') {
+                                return;
+                            }
+
+                            row.dataset.bound = 'true';
+
+                            checkbox.addEventListener('change', function() {
+                                setRowsSelection([row], checkbox.checked);
+                            });
+
+                            row.addEventListener('click', function(event) {
+                                if (event.target.closest('input, label, button, a')) {
+                                    return;
+                                }
+
+                                checkbox.checked = !checkbox.checked;
+                                setRowsSelection([row], checkbox.checked);
+                            });
+                        });
+                    }
+
+                    function updatePaginationFooter() {
+                        if (!isRemote || !footerNode) {
+                            return;
                         }
 
-                        updateMasterCheckbox();
+                        if (paginationInfoNode) {
+                            paginationInfoNode.textContent = totalItems === 0 ?
+                                'Tidak ada data guru.' :
+                                'Menampilkan ' + rangeFrom + ' sampai ' + rangeTo + ' dari ' + totalItems + ' entri';
+                        }
+
+                        if (paginationLabelNode) {
+                            paginationLabelNode.textContent = 'Halaman ' + currentPage + ' / ' + lastPage;
+                        }
+
+                        if (previousPageButton) {
+                            previousPageButton.disabled = currentPage <= 1;
+                        }
+
+                        if (nextPageButton) {
+                            nextPageButton.disabled = currentPage >= lastPage;
+                        }
                     }
 
                     if (searchInput) {

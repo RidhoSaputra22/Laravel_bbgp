@@ -60,14 +60,17 @@ class AssessmentScoringService
                 $displayScore = $engineSummary['display_score'];
                 $items = $engineSummary['items'] ?? [];
                 $answeredItems = (int) ($engineSummary['answered_items'] ?? 0);
+                $availableItemsCount = collect($items)
+                    ->filter(fn (array $item) => $item['answered'] || $item['score'] !== null)
+                    ->count();
                 $scoredCount = collect($items)
-                    ->filter(fn (array $item) => $item['answered'] && $item['score'] !== null)
+                    ->filter(fn (array $item) => $item['score'] !== null && ! ($item['manual_pending'] ?? false))
                     ->count();
                 $manualPendingCount = (int) collect($items)
                     ->filter(fn (array $item) => $item['answered'] && ($item['manual_pending'] ?? false))
                     ->count();
 
-                $totalAnsweredScoreableItems += $answeredItems;
+                $totalAnsweredScoreableItems += max($availableItemsCount, $answeredItems);
                 $scoredItems += $scoredCount;
                 $pendingManualItems += $manualPendingCount;
 
